@@ -12,7 +12,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Altora Market",
+  title: "Altora Market - Operasional retail",
   description: "Aplikasi operasional Altora Market.",
 };
 
