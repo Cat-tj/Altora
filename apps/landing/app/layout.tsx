@@ -13,7 +13,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Altora — Sistem operasi bisnis yang fokus",
-  description: "Altora membantu bisnis menjalankan Cafe dan Market dengan aplikasi yang fokus.",
+  description: "Altora membantu bisnis menjalankan Resto dan Market dengan aplikasi yang fokus.",
 };
 
 export default function RootLayout({

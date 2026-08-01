@@ -12,7 +12,7 @@
     "test:versions": "node --test scripts/check-product-versions.test.mjs",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "dev:landing": "npm run dev --workspace=@altora/landing",
-    "dev:cafe": "npm run dev --workspace=@altora/cafe",
+    "dev:resto": "npm run dev --workspace=@altora/resto",
     "dev:market": "npm run dev --workspace=@altora/market",
     "dev:admin": "npm run dev --workspace=@altora/admin"
   },

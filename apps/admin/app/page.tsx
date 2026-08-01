@@ -6,7 +6,7 @@ export default function AdminPage() {
 
   return (
     <AppFrame eyebrow="Area internal" title="Altora Admin" version={product.version}>
-      <p className="lede">Area ini disiapkan untuk administrasi platform, bukan untuk operasional tenant Cafe atau Market.</p>
+      <p className="lede">Area ini disiapkan untuk administrasi platform, bukan untuk operasional tenant Resto atau Market.</p>
       <section className="panel" aria-labelledby="admin-status-title">
         <h2 id="admin-status-title">Belum terhubung ke produksi</h2>
         <p>Autentikasi Super Admin, data tenant, entitlement, dan audit platform akan dibuat sebagai pekerjaan terpisah dengan pengujian keamanan.</p>

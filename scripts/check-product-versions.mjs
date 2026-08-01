@@ -4,7 +4,7 @@ import { getProduct } from "@altora/core/product-catalog";
 
 const appProducts = [
   ["apps/landing/package.json", "landing"],
-  ["apps/cafe/package.json", "cafe"],
+  ["apps/resto/package.json", "resto"],
   ["apps/market/package.json", "market"],
   ["apps/admin/package.json", "admin"],
 ];

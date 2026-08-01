@@ -12,8 +12,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Altora Cafe",
-  description: "Aplikasi operasional Altora Cafe.",
+  title: "Altora Resto - Operasional restoran",
+  description: "Aplikasi operasional Altora Resto.",
 };
 
 export default function RootLayout({

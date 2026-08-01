@@ -15,7 +15,7 @@ Produk memiliki versi mandiri di `packages/core/src/product-catalog.js` dan
 | Produk | Tag rilis |
 | --- | --- |
 | Landing Altora | `web-vX.Y.Z` |
-| Altora Cafe | `cafe-vX.Y.Z` |
+| Altora Resto | `resto-vX.Y.Z` |
 | Altora Market | `market-vX.Y.Z` |
 | Altora Admin | `admin-vX.Y.Z` |
 | Fondasi bersama | `platform-vX.Y.Z` |

@@ -6,7 +6,7 @@ raksasa yang mencampur semua vertical dalam satu source tree.
 ## Aplikasi awal
 
 - `apps/landing` — satu landing utama Altora.
-- `apps/cafe` — aplikasi Altora Cafe.
+- `apps/resto` — aplikasi Altora Resto.
 - `apps/market` — aplikasi Altora Market.
 - `apps/admin` — area internal Super Admin.
 

@@ -12,6 +12,6 @@ test("every launch product has a unique id, version, and valid host", () => {
 });
 
 test("getProduct returns a product and rejects unknown ids", () => {
-  assert.equal(getProduct("market").name, "Altora Market");
+  assert.equal(getProduct("resto").name, "Altora Resto");
   assert.throws(() => getProduct("factory"), /tidak dikenal/);
 });
