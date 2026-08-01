@@ -1,0 +1,10 @@
+{
+  "name": "@altora/market-pos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.js" },
+  "dependencies": { "@altora/pos-core": "*" },
+  "scripts": { "lint": "eslint . --max-warnings 0", "check-types": "node --check src/index.js" },
+  "devDependencies": { "eslint": "^9.39.1" }
+}
