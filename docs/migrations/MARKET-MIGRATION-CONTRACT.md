@@ -1,6 +1,6 @@
 # Kontrak Migrasi Altora Market
 
-## Tujuan rilis 0.2.0
+## Tujuan rilis 0.2.1
 
 Memindahkan slice operasional Market dari donor ShadyERP ke `apps/market`
 tanpa menjadikan donor sebagai kontrak arsitektur atau menyalin domain
@@ -40,7 +40,7 @@ Referensi visual donor berada di
   apa adanya; integrasi Auth.js baru dilakukan sesudah login Market dan session
   tenant sudah dipindahkan bersama-sama.
 
-## Tidak dipindahkan pada rilis 0.2.0
+## Tidak dipindahkan pada rilis 0.2.1
 
 - Promo, member, retur/refund, supplier, penerimaan barang, stock opname,
   impor, laporan lanjutan, dan sinkronisasi offline.
@@ -53,7 +53,8 @@ Referensi visual donor berada di
 ## Bukti yang dibutuhkan sebelum Market dapat disebut siap pakai
 
 1. Auth dan batas tenant/outlet di sisi server.
-2. Transaksi idempoten dan pengurangan/pengembalian stok atomik.
+2. Transaksi idempoten melalui `MarketCheckoutRequest` dan pengurangan/
+   pengembalian stok atomik.
 3. E2E login, redirect, shell desktop/mobile, serta uji integrasi database
    untuk checkout, pembatalan, dan tutup shift.
 4. Review visual 375×812, 768×1024, dan 1440×900, plus audit aksesibilitas.

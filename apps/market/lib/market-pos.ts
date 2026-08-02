@@ -93,15 +93,18 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`market-checkout:${input.tenantId}:${requestId}`]);
-    const existingSale = await client.query<{ id: string; invoice_number: string; total: string; change_amount: string }>(
-      `SELECT id, "invoiceNumber" AS invoice_number, total::text, "changeAmount"::text
-         FROM "Sale" WHERE "tenantId" = $1 AND "promotionSnapshot"->>'marketRequestId' = $2 LIMIT 1`,
+    const existingRequest = await client.query<{ sale_id: string }>(
+      `SELECT "saleId" AS sale_id FROM "MarketCheckoutRequest" WHERE "tenantId" = $1 AND "requestId" = $2 LIMIT 1`,
       [input.tenantId, requestId],
     );
-    if (existingSale.rows[0]) {
+    if (existingRequest.rows[0]) {
+      const sale = await client.query<{ id: string; invoice_number: string; total: string; change_amount: string }>(
+        `SELECT id, "invoiceNumber" AS invoice_number, total::text, "changeAmount"::text FROM "Sale" WHERE id = $1 AND "tenantId" = $2 LIMIT 1`,
+        [existingRequest.rows[0].sale_id, input.tenantId],
+      );
+      if (!sale.rows[0]) throw new Error("Referensi checkout sebelumnya tidak konsisten. Hubungi admin.");
       await client.query("COMMIT");
-      const sale = existingSale.rows[0];
-      return { id: sale.id, invoiceNumber: sale.invoice_number, total: Number(sale.total), change: Number(sale.change_amount), reused: true };
+      return { id: sale.rows[0].id, invoiceNumber: sale.rows[0].invoice_number, total: Number(sale.rows[0].total), change: Number(sale.rows[0].change_amount), reused: true };
     }
     const shiftResult = await client.query<{ id: string; outlet_id: string }>(
       `SELECT id, "outletId" AS outlet_id FROM "CashierShift" WHERE id = $1 AND "tenantId" = $2 AND "userId" = $3 AND status = 'OPEN' FOR UPDATE`,
@@ -147,7 +150,6 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
        VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 0, $7, $8::"PaymentMethod", $9, $10, 'COMPLETED', NOW(), NOW())`,
       [saleId, input.tenantId, shift.outlet_id, input.shiftId, input.userId, invoiceNumber, subtotal, input.paymentMethod, payment.amountPaid, payment.change],
     );
-    await client.query(`UPDATE "Sale" SET "promotionSnapshot" = jsonb_build_object('marketRequestId', $1::text) WHERE id = $2 AND "tenantId" = $3`, [requestId, saleId, input.tenantId]);
     for (const item of saleItems) {
       await client.query(
         `INSERT INTO "SaleItem" (id, "tenantId", "saleId", "productId", "productName", price, qty, "discountAmount", subtotal) VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8)`,
@@ -158,6 +160,10 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
         if (update.rowCount !== 1) throw new Error(`Stok ${item.name} berubah. Muat ulang katalog lalu ulangi transaksi.`);
       }
     }
+    await client.query(
+      `INSERT INTO "MarketCheckoutRequest" (id, "tenantId", "requestId", "saleId", "createdAt") VALUES ($1, $2, $3, $4, NOW())`,
+      [randomUUID(), input.tenantId, requestId, saleId],
+    );
     await client.query("COMMIT");
     return { id: saleId, invoiceNumber, total: subtotal, change: payment.change, reused: false };
   } catch (error) {

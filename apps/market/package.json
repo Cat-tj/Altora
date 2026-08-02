@@ -1,12 +1,13 @@
 {
   "name": "@altora/market",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --port ${PORT:-3002}",
     "build": "next build",
     "start": "next start",
+    "db:ensure": "node scripts/ensure-market-schema.mjs",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit"
   },
