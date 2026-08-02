@@ -12,6 +12,8 @@ raksasa yang mencampur semua vertical dalam satu source tree.
 
 Lihat [batas produk](./docs/architecture/PRODUCT-BOUNDARIES.md) dan
 [aturan versi](./docs/operations/VERSIONING.md) sebelum menambah fitur.
+Untuk tampilan, lihat [brand guide](./docs/design/BRAND-GUIDE.md) dan
+[UI/UX guide](./docs/design/UI-UX-GUIDE.md).
 
 ## Perintah
 
