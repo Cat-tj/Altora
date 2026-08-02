@@ -1,6 +1,6 @@
 # Kontrak Migrasi Altora Market
 
-## Tujuan rilis 0.2.4
+## Tujuan rilis 0.2.5
 
 Memindahkan slice operasional Market dari donor ShadyERP ke `apps/market`
 tanpa menjadikan donor sebagai kontrak arsitektur atau menyalin domain
@@ -40,7 +40,7 @@ Referensi visual donor berada di
   apa adanya; integrasi Auth.js baru dilakukan sesudah login Market dan session
   tenant sudah dipindahkan bersama-sama.
 
-## Tidak dipindahkan pada rilis 0.2.4
+## Tidak dipindahkan pada rilis 0.2.5
 
 - Promo, member, retur/refund, supplier, penerimaan barang, stock opname,
   impor, laporan lanjutan, dan sinkronisasi offline.

@@ -4,7 +4,7 @@ Aplikasi retail Altora untuk kasir, katalog, stok outlet, dan penutupan shift.
 
 ## Status
 
-Versi `0.2.4` adalah rilis MVP operasional yang memakai data tenant/outlet
+Versi `0.2.5` adalah rilis MVP operasional yang memakai data tenant/outlet
 sebenarnya: login, beranda, katalog produk, shift kasir, checkout idempoten,
 riwayat/struk transaksi, pembatalan oleh pemilik/manajer, dan tutup shift.
 
@@ -34,7 +34,7 @@ npm run db:ensure --workspace=@altora/market
 - Market tidak boleh memuat meja, dapur, resep, atau modifier Resto.
 - Kode lintas produk hanya lewat `packages/`, bukan import dari `apps/resto`.
 
-## Batas rilis 0.2.4
+## Batas rilis 0.2.5
 
 - Checkout mengurangi stok di transaksi database dan memiliki kunci request
   idempoten untuk mencegah pengurangan ganda saat request yang sama dikirim ulang.
