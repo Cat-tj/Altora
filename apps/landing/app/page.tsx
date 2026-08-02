@@ -12,8 +12,8 @@ export default function LandingPage() {
       <section aria-labelledby="produk-title">
         <h2 id="produk-title">Produk yang sedang dibangun</h2>
         <div className="product-grid">
-          <ProductCard href={resto.host} name={resto.name} version={resto.version}>POS dan operasional untuk kedai, restoran, dan bisnis F&B.</ProductCard>
-          <ProductCard href={market.host} name={market.name} version={market.version}>Operasional retail untuk barcode, satuan produk, dan stok toko.</ProductCard>
+          <ProductCard href={`${resto.host}/login`} name={resto.name} version={resto.version}>POS dan operasional untuk kedai, restoran, dan bisnis F&B.</ProductCard>
+          <ProductCard href={`${market.host}/login`} name={market.name} version={market.version}>Operasional retail untuk barcode, satuan produk, dan stok toko.</ProductCard>
         </div>
       </section>
       <section className="note" aria-labelledby="cara-kerja-title">

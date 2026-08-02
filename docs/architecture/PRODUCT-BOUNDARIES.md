@@ -2,7 +2,9 @@
 
 Setiap aplikasi adalah batas produk mandiri:
 
-- `apps/landing` melayani satu landing utama di `altora.my.id`.
+- `apps/landing` melayani satu-satunya landing publik di `altora.my.id`.
+- Subdomain produk hanya melayani `/login` dan aplikasi setelah autentikasi;
+  tidak ada landing marketing per produk.
 - `apps/resto` melayani aplikasi Altora Resto.
 - `apps/market` melayani aplikasi Altora Market.
 - `apps/admin` melayani area internal Super Admin.
