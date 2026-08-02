@@ -16,7 +16,7 @@ html { background: var(--market-paper); }
 body { margin: 0; color: var(--market-ink); background: var(--market-paper); font-family: Arial, Helvetica, sans-serif; line-height: 1.45; }
 button, input { font: inherit; }
 button { cursor: pointer; }
-button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--market-focus); outline-offset: 3px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--market-focus); outline-offset: 3px; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
@@ -125,6 +125,19 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .market-cart-total strong { font-size: 1.2rem; }
 .market-checkout-button { min-height: 2.9rem; margin-top: .75rem; border: 0; border-radius: .6rem; color: #fff; background: var(--market-teal); font-weight: 900; }
 .market-checkout-button:not(:disabled):hover { background: var(--market-teal-deep); }
+.market-eyebrow { margin: 0 0 .25rem; color: var(--market-teal); font-size: .78rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.market-open-shift { width: min(100%, 32rem); }
+.market-open-shift h1 { margin: 0; font-size: 1.55rem; }
+.market-open-shift > p:not(.market-eyebrow) { color: var(--market-muted); }
+.market-open-shift form { display: grid; gap: .5rem; margin-top: 1rem; }
+.market-open-shift label, .market-payment legend { font-size: .84rem; font-weight: 800; }
+.market-open-shift select, .market-open-shift input, .market-payment input[type="number"] { min-height: 2.8rem; border: 1px solid #aebfbc; border-radius: .6rem; padding: .55rem .7rem; color: var(--market-ink); background: #fff; }
+.market-field-hint { margin: 0 0 .4rem; color: var(--market-muted); font-size: .78rem; }
+.market-form-error { margin: .5rem 0 0; border-radius: .6rem; padding: .7rem; color: #8a2a0c; background: #fff0e7; font-size: .84rem; font-weight: 700; }
+.market-form-success { margin: .5rem 0 0; border-radius: .6rem; padding: .7rem; color: #075d55; background: var(--market-teal-soft); font-size: .84rem; font-weight: 700; }
+.market-payment { display: grid; gap: .55rem; margin: .9rem 0 0; border: 0; padding: 0; }
+.market-payment > label { display: flex; min-height: 2rem; align-items: center; gap: .5rem; color: var(--market-ink); font-size: .84rem; font-weight: 700; }
+.market-payment > label:has(input[type="radio"]) { border: 1px solid #dce9e6; border-radius: .55rem; padding: .45rem .6rem; }
 .market-product-table { padding: 0; overflow: hidden; }
 .market-product-table .market-panel-heading { padding: 1.15rem 1.15rem 0; }
 .market-table-scroll { overflow-x: auto; }

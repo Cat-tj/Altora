@@ -16,7 +16,8 @@ bersama hanya boleh dipakai melalui `packages/`:
 - `@altora/core`: katalog produk dan aturan inti non-domain.
 - `@altora/pos-core`: kontrak checkout yang benar-benar sama.
 - `@altora/resto-pos`: aturan Resto, seperti meja dan service type.
-- `@altora/market-pos`: aturan Market, seperti barcode dan satuan.
+- `@altora/market-pos`: aturan Market, seperti barcode dan satuan. Katalog
+  Market selalu dibaca dari data tenant, bukan fixture aplikasi.
 
 Script `npm run check:boundaries` memblokir import langsung antar semua aplikasi
 produk. Aplikasi hanya boleh memakai kontrak eksplisit dari `packages/`.

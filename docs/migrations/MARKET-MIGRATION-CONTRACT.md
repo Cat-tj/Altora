@@ -22,7 +22,7 @@ Referensi visual donor berada di
 | --- | --- | --- |
 | `src/components/market-shell.tsx` | `apps/market/app/market-workspace.tsx` + CSS | Port struktur dan istilah, bukan implementasi NextAuth/role donor. |
 | `simple/hari-ini/page.tsx` | layar Beranda pada `market-workspace.tsx` | Port komposisi; data KPI masih demonstrasi lokal. |
-| `kasir/page.tsx` + `pos-screen.tsx` | layar Kasir + `@altora/market-pos` | Port alur katalog/keranjang; checkout belum menyimpan transaksi. |
+| `kasir/page.tsx` + `pos-screen.tsx` | layar Kasir + `apps/market/lib/market-pos.ts` | Port alur katalog/keranjang dari database tenant, shift, pembayaran dasar, transaksi, dan pengurangan stok atomik. Promo, member, retur, dan tutup shift belum dipindahkan. |
 | `produk/page.tsx` | layar Produk & Stok | Port konsep retail; CRUD, stok ledger, dan impor belum dipindah. |
 
 ## Kontrak rute dan autentikasi
