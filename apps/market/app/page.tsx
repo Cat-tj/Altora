@@ -1,8 +1,5 @@
-import { getProduct } from "@altora/core/product-catalog";
-import { MarketWorkspace } from "./market-workspace";
+import { redirect } from "next/navigation";
 
 export default function MarketPage() {
-  getProduct("market");
-
-  return <MarketWorkspace />;
+  redirect("/simple/hari-ini");
 }
