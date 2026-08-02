@@ -25,6 +25,20 @@ Referensi visual donor berada di
 | `kasir/page.tsx` + `pos-screen.tsx` | layar Kasir + `@altora/market-pos` | Port alur katalog/keranjang; checkout belum menyimpan transaksi. |
 | `produk/page.tsx` | layar Produk & Stok | Port konsep retail; CRUD, stok ledger, dan impor belum dipindah. |
 
+## Kontrak rute dan autentikasi
+
+- Market memiliki login pada `/login` di origin Market sendiri.
+- Saat lokal, logout harus kembali ke `http://localhost:3002/login` (atau port
+  lokal aktif), bukan ke aplikasi Altora lain.
+- Saat produksi, logout Market hanya boleh kembali ke
+  `https://market.altora.my.id/login`.
+- Callback dari origin lain, termasuk subdomain Altora lain, harus ditolak dan
+  memakai fallback host Market. Tidak ada `localhost` yang boleh disimpan
+  sebagai URL callback produksi.
+- Source donor yang masih memakai `callbackUrl: "/login"` tidak boleh disalin
+  apa adanya; integrasi Auth.js baru dilakukan sesudah login Market dan session
+  tenant sudah dipindahkan bersama-sama.
+
 ## Tidak dipindahkan pada iterasi ini
 
 - Auth, tenant/outlet persistence, role authorization, dan database.

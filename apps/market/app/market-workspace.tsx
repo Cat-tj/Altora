@@ -73,7 +73,7 @@ export function MarketWorkspace() {
   function selectScreen(next: string) {
     if (next === "home" || next === "cashier" || next === "products") {
       setScreen(next);
-      setNotice(`Membuka ${next === "home" ? "Beranda" : next === "cashier" ? "Kasir" : "Produk & Stok"}.`);
+      setNotice(`Membuka ${next === "home" ? "Beranda" : next === "cashier" ? "Kasir" : "Produk & Stok"}. Fokus dipindahkan ke judul halaman.`);
       window.setTimeout(() => pageTitleRef.current?.focus(), 0);
       return;
     }
@@ -130,8 +130,8 @@ export function MarketWorkspace() {
         </button>
         <nav aria-label="Menu Market">
           {navigation.map((group) => (
-            <section className="market-nav-group" key={group.group} aria-label={group.group}>
-              <p>{group.group}</p>
+            <section className="market-nav-group" key={group.group} aria-labelledby={`market-nav-${group.group}`}>
+              <h2 id={`market-nav-${group.group}`}>{group.group}</h2>
               {group.items.map((item) => {
                 const isActive = screen === item.id;
                 return (
@@ -158,14 +158,14 @@ export function MarketWorkspace() {
           <div className="market-topbar-actions"><span className="market-sync">● Sinkron</span><button type="button" aria-label="Notifikasi">♧</button></div>
         </header>
         <main id="market-main" className="market-main" tabIndex={-1}>
-          <p aria-live="polite" className="market-live-region">{notice}</p>
+          <p aria-live="polite" aria-atomic="true" className="market-live-region">{notice}</p>
           {screen === "home" && <HomeScreen headingRef={pageTitleRef} onOpenCashier={() => selectScreen("cashier")} onOpenProducts={() => selectScreen("products")} />}
           {screen === "cashier" && <CashierScreen cart={cart} cartCount={cartCount} category={category} checkout={checkout} filteredProducts={filteredProducts} headingRef={pageTitleRef} onAddProduct={addProduct} onCheckout={completeCheckout} onCategoryChange={setCategory} onClearCart={clearCart} onQueryChange={setQuery} onUpdateQuantity={updateQuantity} query={query} />}
           {screen === "products" && <ProductsScreen headingRef={pageTitleRef} onOpenCashier={() => selectScreen("cashier")} />}
         </main>
         <nav className="market-mobile-nav" aria-label="Navigasi cepat">
           {mobileNavigation.map((item) => (
-            <button aria-current={screen === item.id ? "page" : undefined} className={screen === item.id ? "is-active" : undefined} key={item.id} onClick={() => selectScreen(item.id)} type="button"><Icon>{item.icon}</Icon>{item.label.split(" ")[0]}</button>
+            <button aria-current={screen === item.id ? "page" : undefined} aria-label={`Buka ${item.label}`} className={screen === item.id ? "is-active" : undefined} key={item.id} onClick={() => selectScreen(item.id)} type="button"><Icon>{item.icon}</Icon>{item.label.split(" ")[0]}</button>
           ))}
           <button onClick={() => setNotice("Navigasi lengkap tersedia di desktop. Item lain dimigrasikan dalam iterasi berikutnya.")} type="button"><Icon>•••</Icon>Lainnya</button>
         </nav>
