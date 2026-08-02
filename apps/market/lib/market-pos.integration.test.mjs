@@ -31,9 +31,17 @@ test("checkout is idempotent, changes stock once, void restores stock, and shift
       assert.equal(Number(afterSale.rows[0].qty), Number(product.qty) - 1);
       const summary = await getMarketShiftSummary({ tenantId: tenant.id, userId: owner.id, shiftId: shift.id });
       assert.equal(summary?.expectedCash, 1_000 + Number(product.price));
+      await assert.rejects(
+        () => voidMarketSale({ ...user, saleId: first.id, reason: "a".repeat(501) }),
+        /maksimal 500 karakter/,
+      );
       await voidMarketSale({ ...user, saleId: first.id, reason: "Uji integrasi rollback" });
       const afterVoid = await client.query(`SELECT qty FROM "ProductStock" WHERE "tenantId" = $1 AND "outletId" = $2 AND "productId" = $3`, [tenant.id, outlet.id, product.id]);
       assert.equal(Number(afterVoid.rows[0].qty), Number(product.qty));
+      await assert.rejects(
+        () => closeMarketShift({ tenantId: tenant.id, userId: owner.id, shiftId: shift.id, closingCash: 1_000, varianceNote: "a".repeat(501) }),
+        /maksimal 500 karakter/,
+      );
       const closed = await closeMarketShift({ tenantId: tenant.id, userId: owner.id, shiftId: shift.id, closingCash: 1_000 });
       assert.equal(closed.expectedCash, 1_000);
     } finally {

@@ -6,6 +6,7 @@ import type { MarketRole } from "./market-user";
 type AccessibleUser = { tenantId: string; userId: string; role: MarketRole };
 type PaymentMethod = "CASH" | "QRIS" | "TRANSFER" | "EWALLET";
 const CASH_VARIANCE_THRESHOLD = 10_000;
+const MAX_AUDIT_NOTE_LENGTH = 500;
 
 export type MarketOutlet = { id: string; name: string; suggestedOpeningCash: number | null };
 export type OpenMarketShift = { id: string; outletId: string; outletName: string; openingCash: number; openedAt: Date };
@@ -215,6 +216,7 @@ export async function getMarketSale({ tenantId, saleId }: { tenantId: string; sa
 export async function voidMarketSale(input: AccessibleUser & { saleId: string; reason: string }) {
   const reason = input.reason.trim();
   if (!reason) throw new Error("Alasan pembatalan wajib diisi.");
+  if (reason.length > MAX_AUDIT_NOTE_LENGTH) throw new Error("Alasan pembatalan maksimal 500 karakter.");
   if (input.role === "STAFF") throw new Error("Hanya pemilik atau manajer yang dapat membatalkan transaksi.");
   const client = await db.connect();
   try {
@@ -276,6 +278,7 @@ export async function closeMarketShift(input: Pick<AccessibleUser, "tenantId" | 
     const cash = await client.query<{ total: string }>(`SELECT COALESCE(SUM(total), 0)::text AS total FROM "Sale" WHERE "tenantId" = $1 AND "shiftId" = $2 AND status = 'COMPLETED' AND "paymentMethod" = 'CASH'`, [input.tenantId, input.shiftId]);
     const expectedCash = Number(current.opening_cash) + Number(cash.rows[0]?.total ?? 0);
     const varianceNote = input.varianceNote?.trim() || null;
+    if (varianceNote && varianceNote.length > MAX_AUDIT_NOTE_LENGTH) throw new Error("Alasan selisih maksimal 500 karakter.");
     if (Math.abs(input.closingCash - expectedCash) > CASH_VARIANCE_THRESHOLD && !varianceNote) throw new Error(`Selisih kas melebihi Rp${CASH_VARIANCE_THRESHOLD.toLocaleString("id-ID")}. Isi alasannya terlebih dahulu.`);
     await client.query(`UPDATE "CashierShift" SET status = 'CLOSED', "closingCash" = $1, "expectedCash" = $2, "varianceNote" = $3, "closedAt" = NOW() WHERE id = $4 AND "tenantId" = $5`, [input.closingCash, expectedCash, varianceNote, input.shiftId, input.tenantId]);
     await client.query("COMMIT");

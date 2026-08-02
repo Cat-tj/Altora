@@ -2,7 +2,9 @@
   "name": "altora",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "npm run build:static && npm run build:market",
+    "build:static": "turbo run build --filter=@altora/landing --filter=@altora/resto --filter=@altora/admin",
+    "build:market": "npm run build --workspace=@altora/market",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -34,7 +36,7 @@
   "devEngines": {
     "packageManager": {
       "name": "npm",
-      "version": ">=11.8.0 <12"
+      "version": "11.8.0"
     }
   },
   "workspaces": [

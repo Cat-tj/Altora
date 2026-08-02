@@ -13,10 +13,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run check:boundaries
-      - run: npm test
-      - run: npm run lint
-      - run: npm run check-types
-      - run: npm run build
+      - name: Install pinned npm runtime
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 --output /tmp/npm-11.8.0.tgz https://registry.npmjs.org/npm/-/npm-11.8.0.tgz
+          echo "9f5f6c25e5be44629d907a3c482739c614b090a8505057d9685cd273e12c6172e34aa215d2d97bd9a0d8415bb356f7eb6f2b06c1d690b0d2cdcb9f09d7410149  /tmp/npm-11.8.0.tgz" | sha512sum --check --status
+          mkdir -p "$RUNNER_TEMP/npm-11.8.0"
+          tar -xzf /tmp/npm-11.8.0.tgz --strip-components=1 -C "$RUNNER_TEMP/npm-11.8.0"
+          "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" --version
+      - name: Install dependencies
+        run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" ci
+      - run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" run check:boundaries
+      - run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" test
+      - run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" run lint
+      - run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" run check-types
+      - run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" run build:static
+      - name: Build Market with isolated test configuration
+        env:
+          AUTH_SECRET: ci-altora-market-build-secret-not-for-production
+          DATABASE_URL: postgresql://altora:altora@127.0.0.1:5432/altora_market_ci
+        run: "$RUNNER_TEMP/npm-11.8.0/bin/npm-cli.js" run build:market
