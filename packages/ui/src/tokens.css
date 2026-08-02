@@ -1,0 +1,134 @@
+/* ============================================================
+   Token desain Altora
+   Sumber: docs/design/BRAND-GUIDE.md dan docs/design/UI-UX-GUIDE.md
+
+   Dipakai semua aplikasi produk. Jangan menulis hex atau radius langsung
+   di komponen — tambahkan tokennya di sini.
+
+   Catatan: gradien lilac pada guide adalah bahasa halaman pemasaran. Di
+   dalam aplikasi, permukaannya tenang dan netral supaya tabel dan angka
+   yang padat tetap terbaca; identitas produk datang dari --accent.
+   ============================================================ */
+
+:root {
+  /* teks */
+  --ink: #10224f;
+  --ink-2: #1c2f5c;
+  --muted: #6b7590;
+  --muted-2: #8792a8;
+
+  /* aksi dan identitas */
+  --green: #0e7a57;
+  --green-2: #12a374;
+  --green-soft: #e4f5ee;
+  --purple: #7c5ce8;
+  --magenta: #c05bc8;
+  --purple-soft: #eee9fd;
+
+  /* status */
+  --red: #ef4444;
+  --red-soft: #fdeaec;
+  --amber: #f59e0b;
+  --amber-soft: #fef2dc;
+  --blue: #3b82f6;
+
+  /* permukaan aplikasi */
+  --paper: #f8f7fc;
+  --surface: #ffffff;
+  --surface-2: #fbfafe;
+  --line: #e9e6f2;
+  --line-2: #f1eef8;
+
+  /* radius */
+  --r-sm: 12px;
+  --r: 18px;
+  --r-lg: 26px;
+  --r-xl: 34px;
+
+  /* bayangan — navy, bukan hitam */
+  --sh-sm: 0 2px 8px rgba(28, 26, 60, 0.05);
+  --sh: 0 10px 30px -12px rgba(38, 32, 84, 0.16);
+  --sh-lg: 0 30px 70px -30px rgba(38, 32, 84, 0.3);
+
+  /* gerak */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* layout shell */
+  --sidebar-w: 250px;
+  --topbar-h: 64px;
+
+  /* Aksen produk. Tiap aplikasi menimpanya di :root sesuai warnanya
+     pada katalog — inilah satu-satunya perbedaan visual antar produk. */
+  --accent: var(--purple);
+  --accent-soft: var(--purple-soft);
+  --accent-ink: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+}
+
+/* Token tipografi hidup di `body`, bukan `:root`.
+   `next/font` memasang --font-jakarta dan --font-mono lewat className di
+   <body>; kalau tokennya dideklarasikan di :root, var() itu tidak terdefinisi
+   di sana dan seluruh nilainya menjadi invalid. */
+body {
+  --font: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--font);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Angka yang bisa dibandingkan selalu monospace supaya digitnya sejajar. */
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}

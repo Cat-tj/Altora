@@ -17,7 +17,7 @@ salinan ShadyERP yang sulit dioperasikan.
 | Produk | Fase | Status | Catatan |
 | --- | --- | --- | --- |
 | Market | 3–6 | MVP operasional diuji lokal | Login, beranda, produk, shift/POS, transaksi, struk, void, dan tutup shift sudah dipindah. Promo, retur, receiving, supplier, impor, dan laporan lanjutan belum dipindah; VPS hanya boleh cutover sesudah schema, healthcheck, rollback, dan review visual final. |
-| Resto | 1–2 | Rename dan audit awal | `Cafe` sudah menjadi `Resto`; alur berikutnya: meja → pesanan → dapur → pembayaran. |
+| Resto | 1–2 | Rename, audit awal, shell terpasang | `Cafe` sudah menjadi `Resto`; navigasi sudah didefinisikan; alur berikutnya: meja → pesanan → dapur → pembayaran. |
 | Teams | 1 | Menunggu | Donor landing diidentifikasi; Teams akan menjadi produk aplikasi/entry point, bukan landing umum kedua. |
 
 Push/tag/deployment VPS hanya boleh dilakukan setelah bukti pengujian lengkap
@@ -34,6 +34,22 @@ healthcheck, atau rollback.
 - Review aksesibilitas mencakup login, navigasi desktop/mobile, fokus, dan
   status transaksi. Tetap lakukan smoke test keyboard dan visual viewport pada
   build rilis sebelum cutover VPS.
+
+## Kerangka tampilan bersama
+
+`@altora/ui/product-shell` memiliki sidebar, topbar, dan navigasi mobile untuk
+semua produk. Kerangka ini tidak mengenal produk mana pun: navigasi masuk
+sebagai data (`ShellNavGroup[]`) dan warna lewat `--accent`, sehingga menambah
+produk tidak pernah mengubah kode bersama.
+
+Tiap aplikasi menyumbang dua hal saja: berkas navigasinya sendiri
+(`app/<produk>-nav.ts`) dan satu blok `--accent` di `globals.css`. Token desain
+ada di `@altora/ui/tokens.css`, diturunkan dari
+[brand guide](../design/BRAND-GUIDE.md) dan [UI/UX guide](../design/UI-UX-GUIDE.md).
+
+Nama token lama tiap aplikasi dipetakan ke token Altora, bukan dicari-ganti di
+seluruh CSS halaman. Migrasikan nama aslinya saat halaman itu memang sedang
+dikerjakan, supaya diff-nya tetap bisa direview.
 
 ## Perapian monorepo
 

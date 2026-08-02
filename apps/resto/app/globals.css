@@ -1,33 +1,22 @@
+/* Aksen produk Resto — satu-satunya beda visual dengan produk lain.
+   Struktur, jarak, dan komponen datang dari @altora/ui. */
 :root {
-  --ink: #17202a;
-  --muted: #53616d;
-  --surface: #ffffff;
-  --canvas: #f4f6f7;
-  --line: #d9e0e4;
-  --brand: #126d64;
-  --brand-dark: #084c46;
-  --focus: #d16700;
+  --accent: var(--purple);
+  --accent-soft: var(--purple-soft);
 }
 
-* { box-sizing: border-box; }
-
-html { background: var(--canvas); }
-
-body {
-  margin: 0;
-  color: var(--ink);
-  background: var(--canvas);
-  font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.5;
+:root {
+  /* Nama lama halaman Resto dipetakan ke token Altora. */
+  --canvas: var(--paper);
+  --brand: var(--accent);
+  --brand-dark: var(--green);
+  --focus: var(--accent);
 }
 
-a { color: inherit; }
 
-a:focus-visible,
-button:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
-}
+
+
+
 
 .skip-link {
   position: fixed;

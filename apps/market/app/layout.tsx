@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import "@altora/ui/tokens.css";
+import "@altora/ui/product-shell.css";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  weight: ["400", "500", "600", "700", "800"],
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,9 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
-      </body>
+      <body className={`${jakarta.variable} ${mono.variable}`}>{children}</body>
     </html>
   );
 }
