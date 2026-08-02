@@ -10,11 +10,8 @@ type NavigationItem = { href: string; label: string; roles: Role[] };
 
 const groups: { label: string; items: NavigationItem[] }[] = [
   { label: "Beranda", items: [{ href: "/simple/hari-ini", label: "Beranda", roles: ["OWNER", "MANAGER"] }] },
-  { label: "Penjualan", items: [{ href: "/kasir", label: "Kasir", roles: ["OWNER", "MANAGER", "STAFF"] }, { href: "/kasir/riwayat", label: "Transaksi", roles: ["OWNER", "MANAGER", "STAFF"] }, { href: "/simple/promo", label: "Promo", roles: ["OWNER", "MANAGER"] }, { href: "/member", label: "Member", roles: ["OWNER", "MANAGER", "STAFF"] }] },
-  { label: "Produk & stok", items: [{ href: "/produk", label: "Produk & Stok", roles: ["OWNER", "MANAGER"] }, { href: "/stock-receipt", label: "Barang Masuk", roles: ["OWNER", "MANAGER"] }, { href: "/stock-count", label: "Penyesuaian Stok", roles: ["OWNER", "MANAGER"] }] },
-  { label: "Mitra", items: [{ href: "/supplier", label: "Supplier", roles: ["OWNER", "MANAGER"] }] },
-  { label: "Analisis", items: [{ href: "/laporan", label: "Laporan", roles: ["OWNER", "MANAGER"] }] },
-  { label: "Sistem", items: [{ href: "/tim", label: "Tim", roles: ["OWNER", "MANAGER"] }, { href: "/pengaturan", label: "Pengaturan", roles: ["OWNER"] }] },
+  { label: "Penjualan", items: [{ href: "/kasir", label: "Kasir", roles: ["OWNER", "MANAGER", "STAFF"] }, { href: "/kasir/riwayat", label: "Transaksi", roles: ["OWNER", "MANAGER", "STAFF"] }] },
+  { label: "Produk & stok", items: [{ href: "/produk", label: "Produk & Stok", roles: ["OWNER", "MANAGER"] }] },
 ];
 
 const roleLabels: Record<Role, string> = { OWNER: "Pemilik", MANAGER: "Manajer", STAFF: "Staf" };
@@ -24,6 +21,7 @@ export function MarketShell({ children, tenantName, userName, role }: { children
   const visibleGroups = groups.map((group) => ({ ...group, items: group.items.filter((item) => item.roles.includes(role)) })).filter((group) => group.items.length);
   const isActive = (href: string) => pathname === href || (href !== "/kasir" && pathname.startsWith(`${href}/`));
   const logout = () => signOut({ callbackUrl: resolveProductLoginUrl(window.location.origin, "market.altora.my.id") });
+  const mobileItems = [...visibleGroups.flatMap((group) => group.items), { href: "__logout", label: "Keluar", roles: [role] }].slice(0, 5);
   return (
     <div className="market-auth-shell">
       <a className="market-skip-link" href="#market-main">Lewati navigasi</a>
@@ -33,6 +31,7 @@ export function MarketShell({ children, tenantName, userName, role }: { children
         <div className="market-auth-user"><strong>{userName}</strong><span>{roleLabels[role]}</span><button onClick={logout} type="button">Keluar</button></div>
       </aside>
       <div className="market-auth-content"><header className="market-auth-topbar"><div><span>{tenantName}</span><strong>Toko · Outlet aktif</strong></div><span className="market-sync">● Sinkron</span></header><main id="market-main" tabIndex={-1}>{children}</main></div>
+      <nav className="market-mobile-nav" aria-label="Navigasi cepat Market">{mobileItems.map((item) => item.href === "__logout" ? <button key={item.href} type="button" onClick={logout}>Keluar</button> : <Link key={item.href} className={isActive(item.href) ? "is-active" : undefined} aria-current={isActive(item.href) ? "page" : undefined} href={item.href}>{item.label}</Link>)}</nav>
     </div>
   );
 }

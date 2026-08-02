@@ -9,18 +9,20 @@ salinan ShadyERP yang sulit dioperasikan.
 4. Tulis dan jalankan test domain, lalu lint/typecheck/build.
 5. Render 375×812, 768×1024, dan 1440×900; lakukan review aksesibilitas.
 6. Lakukan review independen dan koreksi temuan.
-7. Commit lokal kecil; naikkan versi dan tag hanya setelah user menguji.
+7. Commit lokal kecil; naikkan versi dan tag setelah seluruh gate teknis,
+   review independen, dan otorisasi rilis terpenuhi.
 
 ## Status saat ini
 
 | Produk | Fase | Status | Catatan |
 | --- | --- | --- | --- |
-| Market | 1 | Audit source selesai | Donor asli aktif dan dapat login lokal memakai database yang kompatibel. `apps/market` masih baseline sementara dan tidak boleh dipakai sebagai source deploy sampai slice autentikasi + data Market dipindah. |
+| Market | 3–6 | MVP operasional diuji lokal | Login, beranda, produk, shift/POS, transaksi, struk, void, dan tutup shift sudah dipindah. Promo, retur, receiving, supplier, impor, dan laporan lanjutan belum dipindah; VPS hanya boleh cutover sesudah schema, healthcheck, rollback, dan review visual final. |
 | Resto | 1–2 | Rename dan audit awal | `Cafe` sudah menjadi `Resto`; alur berikutnya: meja → pesanan → dapur → pembayaran. |
 | Teams | 1 | Menunggu | Donor landing diidentifikasi; Teams akan menjadi produk aplikasi/entry point, bukan landing umum kedua. |
 
-Tidak ada tahap yang memberi izin untuk push, tag rilis baru, perubahan DNS, atau
-deployment VPS. Itu tetap memerlukan pengujian dan persetujuan user.
+Push/tag/deployment VPS hanya boleh dilakukan setelah bukti pengujian lengkap
+dan otorisasi rilis eksplisit. Otorisasi ini tidak menghapus gate schema,
+healthcheck, atau rollback.
 
 ## Bukti iterasi Market: kontrak rute
 
@@ -29,10 +31,9 @@ deployment VPS. Itu tetap memerlukan pengujian dan persetujuan user.
   origin setelah Market berdiri sendiri.
 - Kontrak yang diuji menerima origin lokal aktif dan host Market produksi saja;
   origin asing atau aplikasi Altora lain kembali ke login Market.
-- Review aksesibilitas pada workspace lokal menghasilkan perbaikan heading grup
-  navigasi, fokus setelah perubahan layar, live-region yang atomik, dan status
-  navigasi cepat. Ini hanya valid untuk UI demonstrasi lokal; belum merupakan
-  bukti aksesibilitas flow login atau transaksi yang terautentikasi.
+- Review aksesibilitas mencakup login, navigasi desktop/mobile, fokus, dan
+  status transaksi. Tetap lakukan smoke test keyboard dan visual viewport pada
+  build rilis sebelum cutover VPS.
 
 ## Perapian monorepo
 

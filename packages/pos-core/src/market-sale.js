@@ -10,6 +10,14 @@ function assertAmount(value, label) {
   }
 }
 
+export function normalizeCheckoutRequestId(value) {
+  const requestId = typeof value === "string" ? value.trim() : "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+    throw new Error("ID transaksi tidak valid.");
+  }
+  return requestId.toLowerCase();
+}
+
 export function normalizeRetailCart(items) {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("Keranjang masih kosong.");

@@ -1,9 +1,10 @@
 # Kontrak Migrasi Altora Market
 
-## Tujuan iterasi pertama
+## Tujuan rilis 0.2.0
 
-Memindahkan pengalaman Market dari donor ShadyERP ke `apps/market` tanpa
-menjadikan donor sebagai kontrak arsitektur atau menyalin domain Cafe/Resto.
+Memindahkan slice operasional Market dari donor ShadyERP ke `apps/market`
+tanpa menjadikan donor sebagai kontrak arsitektur atau menyalin domain
+Cafe/Resto.
 
 ## Baseline UI yang dijaga
 
@@ -20,10 +21,10 @@ Referensi visual donor berada di
 
 | Donor ShadyERP | Target Altora | Keputusan |
 | --- | --- | --- |
-| `src/components/market-shell.tsx` | `apps/market/app/market-workspace.tsx` + CSS | Port struktur dan istilah, bukan implementasi NextAuth/role donor. |
-| `simple/hari-ini/page.tsx` | layar Beranda pada `market-workspace.tsx` | Port komposisi; data KPI masih demonstrasi lokal. |
-| `kasir/page.tsx` + `pos-screen.tsx` | layar Kasir + `apps/market/lib/market-pos.ts` | Port alur katalog/keranjang dari database tenant, shift, pembayaran dasar, transaksi, dan pengurangan stok atomik. Promo, member, retur, dan tutup shift belum dipindahkan. |
-| `produk/page.tsx` | layar Produk & Stok | Port konsep retail; CRUD, stok ledger, dan impor belum dipindah. |
+| `src/components/market-shell.tsx` | `apps/market/app/market-shell.tsx` + CSS | Port struktur/istilah; Auth.js dan role diimplementasikan sendiri. |
+| `simple/hari-ini/page.tsx` | `app/(protected)/simple/hari-ini/page.tsx` | KPI memakai data tenant/outlet sebenarnya. |
+| `kasir/page.tsx` + `pos-screen.tsx` | `app/(protected)/kasir/*` + `lib/market-pos.ts` | Shift, katalog, checkout idempoten, stok atomik, riwayat, struk, pembatalan, dan tutup shift. |
+| `produk/page.tsx` | `app/(protected)/produk/page.tsx` | Katalog dan stok baca-saja; CRUD, ledger, dan impor belum dipindah. |
 
 ## Kontrak rute dan autentikasi
 
@@ -39,18 +40,21 @@ Referensi visual donor berada di
   apa adanya; integrasi Auth.js baru dilakukan sesudah login Market dan session
   tenant sudah dipindahkan bersama-sama.
 
-## Tidak dipindahkan pada iterasi ini
+## Tidak dipindahkan pada rilis 0.2.0
 
-- Auth, tenant/outlet persistence, role authorization, dan database.
-- Pembayaran, shift, promosi, retur, supplier, barang masuk, audit log, dan
-  sinkronisasi offline.
+- Promo, member, retur/refund, supplier, penerimaan barang, stock opname,
+  impor, laporan lanjutan, dan sinkronisasi offline.
+- CRUD katalog dan ledger stok append-only. Pembatalan saat ini mengembalikan
+  saldo `ProductStock` dan mencatat `AuditLog`; ledger penuh tetap pekerjaan
+  rilis selanjutnya.
 - Semua domain meja, dapur, pesanan makan di tempat, modifier menu, dan
   katering. Ini milik Altora Resto, bukan Market.
 
 ## Bukti yang dibutuhkan sebelum Market dapat disebut siap pakai
 
 1. Auth dan batas tenant/outlet di sisi server.
-2. Transaksi idempoten, stock movement append-only, dan rekonsiliasi stok.
-3. E2E POS nyata dengan database seed termasuk otorisasi negatif.
+2. Transaksi idempoten dan pengurangan/pengembalian stok atomik.
+3. E2E login, redirect, shell desktop/mobile, serta uji integrasi database
+   untuk checkout, pembatalan, dan tutup shift.
 4. Review visual 375×812, 768×1024, dan 1440×900, plus audit aksesibilitas.
-5. Uji pemulihan, observabilitas, dan persetujuan user sebelum push/deploy.
+5. Uji healthcheck/rollback pada VPS dan verifikasi schema sebelum cutover.

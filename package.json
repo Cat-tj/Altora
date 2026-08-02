@@ -13,12 +13,14 @@
     "test:repository": "node --test scripts/check-repository-health.test.mjs",
     "check:repository": "node scripts/check-repository-health.mjs",
     "check:boundaries": "node scripts/check-boundaries.mjs",
+    "test:e2e:market": "playwright test",
     "dev:landing": "npm run dev --workspace=@altora/landing",
     "dev:resto": "npm run dev --workspace=@altora/resto",
     "dev:market": "npm run dev --workspace=@altora/market",
     "dev:admin": "npm run dev --workspace=@altora/admin"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "prettier": "^3.7.4",
     "turbo": "^2.10.8",
     "typescript": "5.9.2"

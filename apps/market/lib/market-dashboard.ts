@@ -14,7 +14,7 @@ export type MarketDashboard = {
 };
 
 export async function getMarketDashboard({ tenantId, userId, role }: DashboardInput): Promise<MarketDashboard> {
-  const outletCondition = role === "OWNER" ? "o.\"tenantId\" = $1" : "o.\"tenantId\" = $1 AND EXISTS (SELECT 1 FROM \"UserOutlet\" uo WHERE uo.\"outletId\" = o.id AND uo.\"userId\" = $2)";
+  const outletCondition = role === "OWNER" ? "o.\"tenantId\" = $1 AND $2::text IS NOT NULL" : "o.\"tenantId\" = $1 AND EXISTS (SELECT 1 FROM \"UserOutlet\" uo WHERE uo.\"outletId\" = o.id AND uo.\"userId\" = $2)";
   const values = [tenantId, userId];
   const [summaryResult, topProductResult, alertResult] = await Promise.all([
     db.query<{ today_sales: string; yesterday_sales: string; transaction_count: string; open_shifts: string }>(

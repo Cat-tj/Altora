@@ -18,7 +18,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
       <label htmlFor="password">Kata sandi</label>
       <div className="market-password-field">
         <input autoComplete="current-password" id="password" name="password" placeholder="Minimal 6 karakter" required type={showPassword ? "text" : "password"} />
-        <button aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)} type="button">
+        <button aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)} type="button">
           {showPassword ? "Sembunyikan" : "Tampilkan"}
         </button>
       </div>

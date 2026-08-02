@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizeRetailCart, validateRetailPayment } from "./market-sale.js";
+import { normalizeCheckoutRequestId, normalizeRetailCart, validateRetailPayment } from "./market-sale.js";
 
 test("normalizes duplicate retail cart lines into a single stock demand", () => {
   assert.deepEqual(
@@ -27,4 +27,12 @@ test("requires exact digital payment and sufficient cash", () => {
   assert.deepEqual(validateRetailPayment({ method: "QRIS", total: 15000, amountPaid: 15000 }), { amountPaid: 15000, change: 0 });
   assert.throws(() => validateRetailPayment({ method: "CASH", total: 15000, amountPaid: 14000 }), /kurang/);
   assert.throws(() => validateRetailPayment({ method: "QRIS", total: 15000, amountPaid: 16000 }), /sama persis/);
+});
+
+test("creates a stable idempotency key from a cashier checkout attempt", () => {
+  assert.equal(
+    normalizeCheckoutRequestId("  550e8400-e29b-41d4-a716-446655440000 "),
+    "550e8400-e29b-41d4-a716-446655440000",
+  );
+  assert.throws(() => normalizeCheckoutRequestId("not-a-uuid"), /ID transaksi/);
 });
