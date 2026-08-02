@@ -10,7 +10,8 @@
 ## Versi per produk
 
 Produk memiliki versi mandiri di `packages/core/src/product-catalog.js` dan
-`package.json` aplikasinya:
+`package.json` aplikasinya. `appDirectory` dan `releaseTagPrefix` pada katalog
+adalah manifest resmi; aplikasi tanpa manifest tidak boleh dibuat:
 
 | Produk | Tag rilis |
 | --- | --- |

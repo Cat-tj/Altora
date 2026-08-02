@@ -16,6 +16,5 @@ bersama hanya boleh dipakai melalui `packages/`:
 - `@altora/resto-pos`: aturan Resto, seperti meja dan service type.
 - `@altora/market-pos`: aturan Market, seperti barcode dan satuan.
 
-Script `npm run check:boundaries` memblokir import langsung antara Resto dan
-Market. Perluasan checker mengikuti aplikasi baru saat aplikasi tersebut mulai
-dibangun.
+Script `npm run check:boundaries` memblokir import langsung antar semua aplikasi
+produk. Aplikasi hanya boleh memakai kontrak eksplisit dari `packages/`.

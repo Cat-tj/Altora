@@ -8,6 +8,8 @@ test("every launch product has a unique id, version, and valid host", () => {
   for (const product of products) {
     assert.match(product.version, /^\d+\.\d+\.\d+$/);
     assert.doesNotThrow(() => new URL(product.host));
+    assert.match(product.appDirectory, /^[a-z-]+$/);
+    assert.match(product.releaseTagPrefix, /^[a-z]+$/);
   }
 });
 

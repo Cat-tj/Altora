@@ -15,9 +15,9 @@ salinan ShadyERP yang sulit dioperasikan.
 
 | Produk | Fase | Status | Catatan |
 | --- | --- | --- | --- |
-| Market | 1 | Audit source & kontrak redirect | Baseline UI lokal yang ada bukan source donor dan tidak akan dijadikan fondasi migrasi. Donor memakai `signOut({ callbackUrl: "/login" })`; ini berisiko salah host setelah ekstraksi. Kontrak baru mengizinkan callback hanya ke origin lokal aktif atau host produk yang tepat. Auth, database, transaksi, inventory ledger, dan E2E nyata belum ada. |
-| Resto | 1–2 | Rename dan audit awal | `Cafe` sudah menjadi `Resto`; alur yang akan dipindah berikutnya: meja → pesanan → dapur → pembayaran. |
-| Teams | 1 | Menunggu | Donor landing sudah diidentifikasi; target produk akan diarahkan sebagai aplikasi Teams, bukan landing umum kedua. |
+| Market | 1 | Audit source selesai | Donor asli aktif dan dapat login lokal memakai database yang kompatibel. `apps/market` masih baseline sementara dan tidak boleh dipakai sebagai source deploy sampai slice autentikasi + data Market dipindah. |
+| Resto | 1–2 | Rename dan audit awal | `Cafe` sudah menjadi `Resto`; alur berikutnya: meja → pesanan → dapur → pembayaran. |
+| Teams | 1 | Menunggu | Donor landing diidentifikasi; Teams akan menjadi produk aplikasi/entry point, bukan landing umum kedua. |
 
 Tidak ada tahap yang memberi izin untuk push, tag rilis baru, perubahan DNS, atau
 deployment VPS. Itu tetap memerlukan pengujian dan persetujuan user.
@@ -33,3 +33,11 @@ deployment VPS. Itu tetap memerlukan pengujian dan persetujuan user.
   navigasi, fokus setelah perubahan layar, live-region yang atomik, dan status
   navigasi cepat. Ini hanya valid untuk UI demonstrasi lokal; belum merupakan
   bukti aksesibilitas flow login atau transaksi yang terautentikasi.
+
+## Perapian monorepo
+
+- Manifest katalog produk sekarang menentukan folder aplikasi dan prefix tag
+  rilis setiap produk.
+- Semua `apps/*` wajib punya README produk, bukan README template Next.js.
+- Boundary check sekarang melarang import langsung untuk semua aplikasi produk,
+  bukan hanya Market dan Resto.
