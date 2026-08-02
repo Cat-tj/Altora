@@ -3,6 +3,8 @@
 import { AuthError } from "next-auth";
 import { signIn } from "../../auth";
 import { resolveSafeCallbackPath } from "../../lib/market-auth-policy.mjs";
+import { getMarketClientIp } from "../../lib/market-client-ip";
+import { checkRateLimit, formatRetryMessage } from "../../lib/market-rate-limit.mjs";
 
 export type LoginState = { error?: string; email?: string };
 
@@ -11,6 +13,13 @@ export async function loginAction(_previous: LoginState, formData: FormData): Pr
   const password = String(formData.get("password") ?? "");
   const callbackUrl = resolveSafeCallbackPath(String(formData.get("callbackUrl") ?? ""));
   if (!email || !password) return { error: "Email dan kata sandi wajib diisi.", email };
+
+  const ipLimit = checkRateLimit(`login:ip:${await getMarketClientIp()}`, 20, 60_000);
+  if (!ipLimit.allowed) return { error: formatRetryMessage(ipLimit.retryAfterMs), email };
+
+  const emailLimit = checkRateLimit(`login:email:${email.toLowerCase()}`, 5, 60_000);
+  if (!emailLimit.allowed) return { error: formatRetryMessage(emailLimit.retryAfterMs), email };
+
   try {
     await signIn("credentials", { email, password, redirectTo: callbackUrl });
     return {};

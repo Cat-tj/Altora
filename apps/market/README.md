@@ -4,7 +4,7 @@ Aplikasi retail Altora untuk kasir, katalog, stok outlet, dan penutupan shift.
 
 ## Status
 
-Versi `0.2.5` adalah rilis MVP operasional yang memakai data tenant/outlet
+Versi `0.2.6` adalah rilis MVP operasional yang memakai data tenant/outlet
 sebenarnya: login, beranda, katalog produk, shift kasir, checkout idempoten,
 riwayat/struk transaksi, pembatalan oleh pemilik/manajer, dan tutup shift.
 
