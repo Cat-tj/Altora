@@ -25,6 +25,9 @@
     "turbo": "^2.10.8",
     "typescript": "5.9.2"
   },
+  "overrides": {
+    "next": "16.2.12"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -37,5 +40,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "next": "16.2.12"
+  }
 }
