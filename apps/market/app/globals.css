@@ -220,3 +220,26 @@
 @media (max-width: 720px) {
   .receipt-row { grid-template-columns: 1fr; }
 }
+
+/* ── retur & opname ────────────────────────────────── */
+.return-flow { display: grid; gap: 1rem; }
+.return-lookup { display: flex; align-items: end; gap: .75rem; flex-wrap: wrap; }
+.return-lookup label { display: grid; gap: .35rem; flex: 1; min-width: 260px; font-size: .84rem; font-weight: 700; color: var(--ink-2); }
+.return-lookup input { padding: .7rem .85rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); font-weight: 400; }
+.return-lookup button { flex: none; }
+.return-detail { display: grid; gap: 1rem; }
+.return-detail label { display: grid; gap: .35rem; font-size: .84rem; font-weight: 700; color: var(--ink-2); }
+.return-detail input[type="text"] { padding: .7rem .85rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); font-weight: 400; }
+.return-detail input[type="number"] { width: 5.5rem; padding: .5rem .6rem; border: 1px solid var(--line); border-radius: var(--r-sm); }
+.return-meta { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1rem; border-radius: var(--r); background: var(--surface-2); }
+.return-meta span { display: block; color: var(--muted-2); font-size: .72rem; }
+.return-meta strong { font-size: .95rem; }
+.count-skip { color: var(--muted-2); font-size: .8rem; }
+.count-match { color: var(--green); font-size: .8rem; font-weight: 700; }
+.count-surplus { color: var(--blue); font-size: .8rem; font-weight: 700; }
+.count-shortage { color: var(--red); font-size: .8rem; font-weight: 700; }
+.receipt-status.is-applied { color: var(--green); background: var(--green-soft); }
+
+@media (max-width: 720px) {
+  .return-meta { grid-template-columns: 1fr; }
+}
