@@ -47,6 +47,11 @@ const PRODUK = [
   { id: "seed_p_roti", categoryId: "seed_cat_snack", name: "Roti Tawar Gandum", sku: "8991234500103", price: 18500, qty: 12 },
 ];
 
+const SUPPLIER = [
+  { id: "seed_sup_sinar", name: "CV Sinar Sembako", phone: "0812-1111-2222", contactPerson: "Pak Hadi", paymentTerms: "Net 30" },
+  { id: "seed_sup_tirta", name: "PT Tirta Minuman", phone: "0813-3333-4444", contactPerson: "Bu Rina", paymentTerms: "COD" },
+];
+
 const PENGGUNA = [
   { id: "seed_user_owner", name: "Pemilik Toko", email: "owner@altora.test", role: "OWNER" },
   { id: "seed_user_manager", name: "Manajer Toko", email: "manajer@altora.test", role: "MANAGER" },
@@ -87,6 +92,15 @@ try {
         [id("uo"), TENANT, user.id, OUTLET],
       );
     }
+  }
+
+  for (const supplier of SUPPLIER) {
+    await client.query(
+      `INSERT INTO "Supplier" (id, "tenantId", name, phone, "contactPerson", "paymentTerms")
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, phone = EXCLUDED.phone`,
+      [supplier.id, TENANT, supplier.name, supplier.phone, supplier.contactPerson, supplier.paymentTerms],
+    );
   }
 
   for (const category of KATEGORI) {
@@ -138,6 +152,7 @@ console.log(`Seed Market selesai.
   Tenant  : Toko Berkah Sejahtera
   Outlet  : Outlet Utama
   Produk  : ${PRODUK.length} (2 di antaranya sudah di bawah ambang restock)
+  Supplier: ${SUPPLIER.length}
 
   Masuk dengan salah satu akun berikut, kata sandi "${PASSWORD}":
 ${PENGGUNA.map((u) => `    ${u.role.padEnd(8)} ${u.email}`).join("\n")}

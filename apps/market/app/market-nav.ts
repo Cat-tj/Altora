@@ -20,6 +20,9 @@ export const marketNav: ShellNavGroup[] = [
   },
   {
     label: "Produk & stok",
-    items: [{ href: "/produk", label: "Produk & Stok", roles: ["OWNER", "MANAGER"] }],
+    items: [
+      { href: "/produk", label: "Produk & Stok", roles: ["OWNER", "MANAGER"] },
+      { href: "/penerimaan", label: "Penerimaan Barang", roles: ["OWNER", "MANAGER"] },
+    ],
   },
 ];

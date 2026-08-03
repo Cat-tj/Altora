@@ -197,3 +197,26 @@
 .market-login-submit:hover:not(:disabled) { background: var(--market-teal-deep); }
 .market-login-error { margin: .3rem 0; border-radius: .6rem; padding: .8rem; color: #8a2a0c; background: #fff0e7; font-size: .86rem; font-weight: 700; }
 @media (max-width: 860px) { .market-auth-sidebar { display: none; } .market-auth-content { padding-left: 0; } .market-auth-topbar, .market-auth-content main { padding-right: 1rem; padding-left: 1rem; } .market-auth-content main { padding-bottom: 6.75rem; } .market-mobile-nav a { display: grid; min-height: 3.3rem; place-items: center; gap: .1rem; border-radius: .5rem; color: #607674; font-size: .62rem; font-weight: 800; text-decoration: none; } .market-mobile-nav a.is-active { color: var(--market-teal-deep); background: var(--market-teal-soft); } }
+
+/* ── penerimaan barang ─────────────────────────────── */
+.receipt-form { display: grid; gap: 1rem; }
+.receipt-row { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+.receipt-form label { display: grid; gap: .35rem; font-size: .84rem; font-weight: 700; color: var(--ink-2); }
+.receipt-form input, .receipt-form select { padding: .7rem .85rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); font-weight: 400; }
+.receipt-form input:focus-visible, .receipt-form select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.receipt-suggest { display: grid; gap: .3rem; margin: 0; padding: .35rem; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface-2); list-style: none; }
+.receipt-suggest button { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 1rem; padding: .6rem .75rem; border: 0; border-radius: var(--r-sm); background: none; text-align: left; }
+.receipt-suggest button:hover { background: var(--accent-soft); }
+.receipt-suggest span { color: var(--muted-2); font-family: var(--mono); font-size: .72rem; }
+.receipt-hint { margin: 0; color: var(--muted); font-size: .86rem; }
+.receipt-meta { display: block; color: var(--muted-2); font-size: .74rem; }
+.receipt-actions { display: flex; align-items: center; gap: .75rem; }
+.receipt-inline-form { display: grid; gap: .3rem; }
+.receipt-status { display: inline-flex; padding: .3rem .7rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+.receipt-status.is-draft { color: var(--amber); background: var(--amber-soft); }
+.receipt-status.is-completed { color: var(--green); background: var(--green-soft); }
+.receipt-status.is-cancelled { color: var(--muted); background: var(--line-2); }
+
+@media (max-width: 720px) {
+  .receipt-row { grid-template-columns: 1fr; }
+}

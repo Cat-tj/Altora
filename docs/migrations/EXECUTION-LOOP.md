@@ -16,7 +16,7 @@ salinan ShadyERP yang sulit dioperasikan.
 
 | Produk | Fase | Status | Catatan |
 | --- | --- | --- | --- |
-| Market | 3–6 | MVP operasional, schema mandiri | Login, beranda, produk, shift/POS, transaksi, struk, void, dan tutup shift sudah dipindah. Schema dan data awal kini milik repo ini (`apps/market/db/migrations`), jadi tidak lagi menumpang database donor. Promo, retur, receiving, supplier, impor, dan laporan lanjutan belum dipindah; VPS hanya boleh cutover sesudah schema, healthcheck, rollback, dan review visual final. |
+| Market | 3–6 | MVP operasional, schema mandiri | Login, beranda, produk, shift/POS, transaksi, struk, void, dan tutup shift sudah dipindah. Schema dan data awal kini milik repo ini (`apps/market/db/migrations`), jadi tidak lagi menumpang database donor. Ledger stok, supplier, dan penerimaan barang sudah dipindah. Promo, retur, stock opname, impor, dan laporan lanjutan belum; VPS hanya boleh cutover sesudah schema, healthcheck, rollback, dan review visual final. |
 | Resto | 1–2 | Rename, audit awal, shell terpasang | `Cafe` sudah menjadi `Resto`; navigasi sudah didefinisikan; alur berikutnya: meja → pesanan → dapur → pembayaran. |
 | Teams | 1 | Menunggu | Donor landing diidentifikasi; Teams akan menjadi produk aplikasi/entry point, bukan landing umum kedua. |
 
@@ -34,6 +34,21 @@ healthcheck, atau rollback.
 - Review aksesibilitas mencakup login, navigasi desktop/mobile, fokus, dan
   status transaksi. Tetap lakukan smoke test keyboard dan visual viewport pada
   build rilis sebelum cutover VPS.
+
+## Ledger stok
+
+Stok punya dua representasi dan keduanya wajib berubah bersamaan: saldo di
+`ProductStock.qty` untuk dibaca cepat, dan `StockLedger` yang append-only untuk
+menjelaskan asal saldo itu.
+
+`applyStockMovement` di `apps/market/lib/market-stock-ledger.ts` adalah
+satu-satunya jalan mengubah stok. Ia menerima `PoolClient`, bukan pool, supaya
+perubahan stok tidak pernah commit terpisah dari peristiwa penyebabnya, dan
+menegakkan dua aturan di database: saldo tidak boleh minus, dan satu kunci
+idempotensi tidak bisa diterapkan dua kali.
+
+Alur baru yang menyentuh stok wajib lewat sana. Menulis `UPDATE "ProductStock"`
+langsung membuat saldo tidak lagi bisa dipertanggungjawabkan.
 
 ## Kerangka tampilan bersama
 
