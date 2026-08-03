@@ -17,8 +17,10 @@ $$;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Promo' AND column_name = 'discountValue') THEN
-    UPDATE "Promo" SET "discountPercent" = "discountValue" WHERE ("discountType" = 'PERCENTAGE' OR "discountType" = 'PERCENT') AND "discountPercent" IS NULL AND "discountValue" IS NOT NULL;
-    UPDATE "Promo" SET "discountAmount" = "discountValue" WHERE ("discountType" = 'FIXED_AMOUNT' OR "discountType" = 'FIXED') AND "discountAmount" IS NULL AND "discountValue" IS NOT NULL;
+    UPDATE "Promo" SET "discountPercent" = "discountValue"
+      WHERE ("discountType"::text IN ('PERCENTAGE', 'PERCENT')) AND "discountPercent" IS NULL AND "discountValue" IS NOT NULL;
+    UPDATE "Promo" SET "discountAmount" = "discountValue"
+      WHERE ("discountType"::text IN ('FIXED_AMOUNT', 'FIXED')) AND "discountAmount" IS NULL AND "discountValue" IS NOT NULL;
   END IF;
 END
 $$;

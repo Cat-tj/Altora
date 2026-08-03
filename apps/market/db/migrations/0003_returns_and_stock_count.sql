@@ -51,7 +51,14 @@ CREATE TABLE IF NOT EXISTS "SaleReturnItem" (
   subtotal      integer NOT NULL,
   CONSTRAINT "SaleReturnItem_return_item_key" UNIQUE ("returnId", "saleItemId")
 );
-CREATE INDEX IF NOT EXISTS "SaleReturnItem_returnId_idx" ON "SaleReturnItem" ("returnId");
+-- Index dibuat kondisional: di schema legacy prod, kolom "returnId" belum ada
+-- (prod memakai "saleReturnId"); migration 0011 menambah kolom + backfill-nya.
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'SaleReturnItem' AND column_name = 'returnId') THEN
+    CREATE INDEX IF NOT EXISTS "SaleReturnItem_returnId_idx" ON "SaleReturnItem" ("returnId");
+  END IF;
+END $$;
 
 -- ── stock opname ────────────────────────────────────────────
 
