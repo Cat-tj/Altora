@@ -8,7 +8,10 @@ function createPool() {
   const value = process.env.DATABASE_URL;
   if (!value) throw new Error("DATABASE_URL Market belum diatur.");
 
-  const pool = new Pool({ connectionString: value });
+  const pool = new Pool({
+    connectionString: value,
+    ssl: value.includes("supabase") || value.includes("pooler") ? { rejectUnauthorized: false } : undefined,
+  });
   if (process.env.NODE_ENV !== "production") global.altoraMarketPool = pool;
   return pool;
 }

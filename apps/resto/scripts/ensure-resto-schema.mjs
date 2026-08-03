@@ -15,7 +15,10 @@ const files = (await readdir(migrationsDir)).filter((name) => name.endsWith(".sq
 
 if (files.length === 0) throw new Error("Tidak ada berkas migrasi di db/migrations.");
 
-const pool = new Pool({ connectionString: databaseUrl });
+const pool = new Pool({
+  connectionString: databaseUrl,
+  ssl: databaseUrl.includes("supabase") || databaseUrl.includes("pooler") ? { rejectUnauthorized: false } : undefined,
+});
 
 try {
   for (const file of files) {
