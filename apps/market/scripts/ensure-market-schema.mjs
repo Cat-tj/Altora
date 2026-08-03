@@ -12,8 +12,8 @@ import { Pool } from "pg";
  * selama schema hanya bertambah; begitu ada migrasi yang mengubah atau
  * menghapus kolom, pencatatan versi menjadi wajib.
  */
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error("DATABASE_URL Market belum diatur.");
+const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL / DIRECT_URL Market belum diatur.");
 
 const migrationsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "db", "migrations");
 const files = (await readdir(migrationsDir)).filter((name) => name.endsWith(".sql")).sort();
