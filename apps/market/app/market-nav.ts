@@ -41,8 +41,9 @@ export const marketNav: ShellNavGroup[] = [
     ],
   },
   {
-    label: "SDM & Kehadiran",
+    label: "Pengaturan & SDM",
     items: [
+      { href: "/pengaturan", label: "Pengaturan Toko", roles: ["OWNER", "MANAGER"] },
       { href: "/absensi", label: "Absensi Staf", roles: ["OWNER", "MANAGER", "STAFF"] },
       { href: "/audit-log", label: "Log Audit", roles: ["OWNER"] },
     ],
