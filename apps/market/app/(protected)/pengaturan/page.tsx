@@ -1,9 +1,8 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { getTenantSettings, listOutlets, listStaff } from "../../../lib/market-settings";
 
 export default async function PengaturanPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER"]);
   const settings = await getTenantSettings(user.tenantId);
   const outlets = await listOutlets(user.tenantId);
   const staffList = await listStaff(user.tenantId);

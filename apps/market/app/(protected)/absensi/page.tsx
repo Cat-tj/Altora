@@ -1,9 +1,8 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { listAttendances } from "../../../lib/market-attendance";
 
 export default async function AbsensiPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
   const records = await listAttendances(user.tenantId);
 
   return (

@@ -1,10 +1,9 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { listMarketPromos } from "../../../lib/market-promos";
 import { formatRupiah } from "../market-page-ui";
 
 export default async function PromoPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const promos = await listMarketPromos(user.tenantId);
 
   return (

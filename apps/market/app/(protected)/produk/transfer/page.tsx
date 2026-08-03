@@ -1,9 +1,8 @@
-import { auth } from "../../../../auth";
+import { requireRole } from "../../../../lib/market-authz";
 import { listStockTransfers } from "../../../../lib/market-stock-transfer";
 
 export default async function TransferStokPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const transfers = await listStockTransfers(user.tenantId);
 
   return (

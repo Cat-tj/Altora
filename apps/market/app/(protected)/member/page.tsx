@@ -1,10 +1,9 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { listMarketMembers } from "../../../lib/market-members";
 import { formatRupiah } from "../market-page-ui";
 
 export default async function MemberPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
   const members = await listMarketMembers(user.tenantId);
 
   return (

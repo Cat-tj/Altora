@@ -1,10 +1,9 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { listGiftCards } from "../../../lib/market-vouchers";
 import { formatRupiah } from "../market-page-ui";
 
 export default async function VoucherPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const cards = await listGiftCards(user.tenantId);
 
   return (
