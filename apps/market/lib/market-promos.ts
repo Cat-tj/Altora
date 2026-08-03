@@ -23,8 +23,8 @@ export async function listMarketPromos(tenantId: string): Promise<MarketPromo[]>
     created_at: Date;
   }>(
     `SELECT id, "tenantId" AS tenant_id, name,
-            COALESCE("discountPercent", CASE WHEN "discountType" IN ('PERCENTAGE', 'PERCENT') THEN "discountValue" ELSE NULL END) AS discount_percent,
-            COALESCE("discountAmount", CASE WHEN "discountType" IN ('FIXED_AMOUNT', 'FIXED') THEN "discountValue" ELSE NULL END) AS discount_amount,
+            COALESCE("discountPercent", CASE WHEN "discountType"::text IN ('PERCENTAGE', 'PERCENT') THEN "discountValue" ELSE NULL END) AS discount_percent,
+            COALESCE("discountAmount", CASE WHEN "discountType"::text IN ('FIXED_AMOUNT', 'FIXED') THEN "discountValue" ELSE NULL END) AS discount_amount,
             COALESCE("minPurchase", "minSpend", 0) AS min_purchase,
             "isActive" AS is_active,
             "createdAt" AS created_at
