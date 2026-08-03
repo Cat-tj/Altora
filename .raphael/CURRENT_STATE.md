@@ -1,16 +1,17 @@
 # CURRENT STATE
 
 Project: Altora
-Current Phase: PLANNING
+Current Phase: AWAITING_APPROVAL (planning selesai)
 Current Objective: Recover Altora using verified ShadyERP business behavior
 Implementation Approval: DENIED
 Migration Approval: DENIED
 Deployment Approval: DENIED
 Current Branch: orchestration/raphael-bootstrap
 Base SHA: 415efc4b4cc6ac8532f0e29608d8bec04e1fed42
-Current SHA: (ledger commit)
-Last verified commit: 415efc4b4cc6ac8532f0e29608d8bec04e1fed42 (archive baseline)
-Last verified result: EXECUTION-LOOP.md status read; canonical ShadyERP SHA 5fb0dfb verified on GitHub
+Current SHA: 49b512a (planning commit)
+Last verified commit: 49b512a491b1157ebc105a013a823aeeb6a9a3f2
+Last verified result: ALT-REC-PLAN-001 DONE — recommended first slice = Migration runner (verdict READY_FOR_USER_APPROVAL)
 Active blocker: NONE
-Next action: Reconcile recovery sources (ALT-REC-PLAN-001), then await user approval
-Next approval gate: First slice implementation approval
+Next action: User decision on first slice (Migration runner) — approval gate
+Next approval gate: First slice implementation approval (ALT-REC-IMP-001)
+Draft PR: https://github.com/Cat-tj/Altora/pull/2
