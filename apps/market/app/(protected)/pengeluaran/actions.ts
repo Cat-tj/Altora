@@ -6,8 +6,10 @@ import { createMarketExpense } from "../../../lib/market-expenses";
 
 export async function addExpenseAction(_previousState: unknown, formData: FormData) {
   const session = await auth();
-  const user = session?.user as { id?: string; tenantId?: string } | undefined;
+  const user = session?.user as { id?: string; tenantId?: string; role?: string } | undefined;
   if (!user?.id || !user?.tenantId) return { error: "Sesi tidak valid." };
+  // Pengeluaran = catatan finansial; hanya pemilik/manajer.
+  if (user.role === "STAFF") return { error: "Hanya pemilik atau manajer yang boleh mencatat pengeluaran." };
 
   const category = String(formData.get("category") ?? "OTHER").trim();
   const amount = Number(formData.get("amount") ?? 0);

@@ -11,6 +11,8 @@ async function requireUser() {
   const session = await auth();
   const user = session?.user as SessionUser | undefined;
   if (!user?.id || !user.role) throw new Error("Sesi berakhir. Masuk kembali.");
+  // Retur = koreksi finansial; hanya pemilik/manajer (sama seperti void).
+  if (user.role === "STAFF") throw new Error("Hanya pemilik atau manajer yang boleh mencatat retur.");
   return { tenantId: user.tenantId, userId: user.id, role: user.role };
 }
 
