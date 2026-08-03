@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { normalizeCheckoutRequestId, normalizeRetailCart, validateRetailPayment } from "@altora/pos-core";
 import { db } from "./db";
+import { InsufficientStockError, applyStockMovement } from "./market-stock-ledger";
 import type { MarketRole } from "./market-user";
 
 type AccessibleUser = { tenantId: string; userId: string; role: MarketRole };
@@ -157,8 +158,23 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
         [randomUUID(), input.tenantId, saleId, item.productId, item.name, item.price, item.quantity, item.subtotal],
       );
       if (item.trackStock) {
-        const update = await client.query(`UPDATE "ProductStock" SET qty = qty - $1, "updatedAt" = NOW() WHERE "tenantId" = $2 AND "productId" = $3 AND "outletId" = $4 AND qty >= $1`, [item.quantity, input.tenantId, item.productId, shift.outlet_id]);
-        if (update.rowCount !== 1) throw new Error(`Stok ${item.name} berubah. Muat ulang katalog lalu ulangi transaksi.`);
+        try {
+          await applyStockMovement(client, {
+            tenantId: input.tenantId,
+            outletId: shift.outlet_id,
+            productId: item.productId,
+            delta: -item.quantity,
+            source: "SALE",
+            sourceId: saleId,
+            actorId: input.userId,
+            idempotencyKey: `sale:${saleId}:${item.productId}`,
+          });
+        } catch (error) {
+          if (error instanceof InsufficientStockError) {
+            throw new Error(`Stok ${item.name} berubah. Muat ulang katalog lalu ulangi transaksi.`);
+          }
+          throw error;
+        }
       }
     }
     await client.query(
@@ -238,7 +254,19 @@ export async function voidMarketSale(input: AccessibleUser & { saleId: string; r
       [sale.id, input.tenantId],
     );
     for (const item of items.rows) {
-      if (item.track_stock) await client.query(`UPDATE "ProductStock" SET qty = qty + $1, "updatedAt" = NOW() WHERE "tenantId" = $2 AND "productId" = $3 AND "outletId" = $4`, [item.qty, input.tenantId, item.product_id, sale.outlet_id]);
+      if (item.track_stock) {
+        await applyStockMovement(client, {
+          tenantId: input.tenantId,
+          outletId: sale.outlet_id,
+          productId: item.product_id,
+          delta: item.qty,
+          source: "SALE_VOID",
+          sourceId: sale.id,
+          actorId: input.userId,
+          note: reason,
+          idempotencyKey: `void:${sale.id}:${item.product_id}`,
+        });
+      }
     }
     await client.query(`UPDATE "Sale" SET status = 'VOIDED', "voidReason" = $1, "updatedAt" = NOW() WHERE id = $2 AND "tenantId" = $3`, [reason, sale.id, input.tenantId]);
     await client.query(`INSERT INTO "AuditLog" (id, "tenantId", "userId", action, description, "createdAt") VALUES ($1, $2, $3, 'SALE_VOID', $4, NOW())`, [randomUUID(), input.tenantId, input.userId, `Membatalkan transaksi ${sale.invoice_number}: ${reason}`]);
