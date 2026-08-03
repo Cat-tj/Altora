@@ -45,3 +45,43 @@ npm run db:ensure --workspace=@altora/market
   stok kedua.
 
 Lihat [kontrak migrasi](../../docs/migrations/MARKET-MIGRATION-CONTRACT.md).
+
+## Menjalankan lokal
+
+```bash
+createdb altora_market_local
+cp .env.example .env.local     # isi DATABASE_URL dan AUTH_SECRET
+npm run db:setup               # migrasi + data awal
+npm run dev                    # http://localhost:3002
+```
+
+Seed membuat satu tenant, satu outlet, sepuluh produk retail, dan tiga akun
+dengan kata sandi `altora123`:
+
+| Peran | Email |
+| --- | --- |
+| Pemilik | `owner@altora.test` |
+| Manajer | `manajer@altora.test` |
+| Kasir | `kasir@altora.test` |
+
+Dua produk sengaja diberi stok di bawah ambang restock supaya layar beranda
+punya sesuatu untuk ditampilkan.
+
+## Schema
+
+`db/migrations/` berisi schema Market — dua belas tabel yang benar-benar
+disentuh aplikasi ini, bukan salinan 118 model donor. Nama tabel dan kolom
+dipertahankan sama dengan donor supaya database yang sudah berjalan bisa
+dipakai apa adanya.
+
+Berkas migrasi ditulis idempoten, jadi `npm run db:migrate` aman diulang.
+
+## Test
+
+```bash
+npm test                          # unit, tanpa database
+npm run test:integration          # butuh DATABASE_URL
+```
+
+Test integrasi memverifikasi kontrak POS: checkout idempoten, stok berkurang
+tepat sekali, void mengembalikan stok, dan shift bisa ditutup.

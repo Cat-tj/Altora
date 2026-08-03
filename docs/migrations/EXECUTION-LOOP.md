@@ -16,7 +16,7 @@ salinan ShadyERP yang sulit dioperasikan.
 
 | Produk | Fase | Status | Catatan |
 | --- | --- | --- | --- |
-| Market | 3–6 | MVP operasional diuji lokal | Login, beranda, produk, shift/POS, transaksi, struk, void, dan tutup shift sudah dipindah. Promo, retur, receiving, supplier, impor, dan laporan lanjutan belum dipindah; VPS hanya boleh cutover sesudah schema, healthcheck, rollback, dan review visual final. |
+| Market | 3–6 | MVP operasional, schema mandiri | Login, beranda, produk, shift/POS, transaksi, struk, void, dan tutup shift sudah dipindah. Schema dan data awal kini milik repo ini (`apps/market/db/migrations`), jadi tidak lagi menumpang database donor. Promo, retur, receiving, supplier, impor, dan laporan lanjutan belum dipindah; VPS hanya boleh cutover sesudah schema, healthcheck, rollback, dan review visual final. |
 | Resto | 1–2 | Rename, audit awal, shell terpasang | `Cafe` sudah menjadi `Resto`; navigasi sudah didefinisikan; alur berikutnya: meja → pesanan → dapur → pembayaran. |
 | Teams | 1 | Menunggu | Donor landing diidentifikasi; Teams akan menjadi produk aplikasi/entry point, bukan landing umum kedua. |
 

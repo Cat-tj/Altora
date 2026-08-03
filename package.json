@@ -9,7 +9,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "test": "npm run test:contracts && npm run test:versions && npm run test:repository",
+    "test": "npm run test:contracts && npm run test:versions && npm run test:repository && npm run test:market",
     "test:contracts": "node --test packages/*/src/*.test.mjs",
     "test:versions": "node --test scripts/check-product-versions.test.mjs",
     "test:repository": "node --test scripts/check-repository-health.test.mjs",
@@ -19,7 +19,9 @@
     "dev:landing": "npm run dev --workspace=@altora/landing",
     "dev:resto": "npm run dev --workspace=@altora/resto",
     "dev:market": "npm run dev --workspace=@altora/market",
-    "dev:admin": "npm run dev --workspace=@altora/admin"
+    "dev:admin": "npm run dev --workspace=@altora/admin",
+    "test:market": "npm run test --workspace=@altora/market",
+    "test:market:integration": "npm run test:integration --workspace=@altora/market"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
