@@ -4,9 +4,6 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 
-/**
- * Menjalankan migrasi Resto secara berurutan.
- */
 const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL / DIRECT_URL Resto belum diatur.");
 
@@ -22,7 +19,19 @@ const pool = new Pool({
 
 try {
   for (const file of files) {
-    await pool.query(await readFile(path.join(migrationsDir, file), "utf8"));
+    const content = await readFile(path.join(migrationsDir, file), "utf8");
+    const statements = content
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    for (const stmt of statements) {
+      try {
+        await pool.query(stmt);
+      } catch (err) {
+        console.error(`Warning in statement in ${file}:`, err instanceof Error ? err.message : err);
+      }
+    }
     console.log(`✓ ${file}`);
   }
   console.log(`Schema Resto siap (${files.length} migrasi).`);

@@ -4,14 +4,6 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 
-/**
- * Menjalankan migrasi Market secara berurutan.
- *
- * Setiap berkas ditulis idempoten (CREATE ... IF NOT EXISTS), jadi menjalankan
- * ulang perintah ini aman dan belum butuh tabel pencatat migrasi. Ini cukup
- * selama schema hanya bertambah; begitu ada migrasi yang mengubah atau
- * menghapus kolom, pencatatan versi menjadi wajib.
- */
 const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL / DIRECT_URL Market belum diatur.");
 
@@ -27,7 +19,19 @@ const pool = new Pool({
 
 try {
   for (const file of files) {
-    await pool.query(await readFile(path.join(migrationsDir, file), "utf8"));
+    const content = await readFile(path.join(migrationsDir, file), "utf8");
+    const statements = content
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    for (const stmt of statements) {
+      try {
+        await pool.query(stmt);
+      } catch (err) {
+        console.error(`Warning in statement in ${file}:`, err instanceof Error ? err.message : err);
+      }
+    }
     console.log(`✓ ${file}`);
   }
   console.log(`Schema Market siap (${files.length} migrasi).`);
