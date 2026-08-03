@@ -9,6 +9,7 @@
       "env": [
         "AUTH_SECRET",
         "DATABASE_URL",
+        "DIRECT_URL",
         "NODE_ENV"
       ],
       "inputs": [
@@ -28,6 +29,7 @@
       "env": [
         "AUTH_SECRET",
         "DATABASE_URL",
+        "DIRECT_URL",
         "NODE_ENV"
       ]
     },
@@ -38,6 +40,7 @@
       "env": [
         "AUTH_SECRET",
         "DATABASE_URL",
+        "DIRECT_URL",
         "NODE_ENV"
       ]
     },
@@ -53,6 +56,7 @@
       "env": [
         "AUTH_SECRET",
         "DATABASE_URL",
+        "DIRECT_URL",
         "NODE_ENV",
         "PORT"
       ]
@@ -60,6 +64,7 @@
   },
   "globalEnv": [
     "ALLOW_PRODUCTION_SEED",
-    "SEED_PASSWORD"
+    "SEED_PASSWORD",
+    "DIRECT_URL"
   ]
 }
