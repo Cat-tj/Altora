@@ -113,7 +113,7 @@ test("stock ops: transfer moves stock with ledger, receiving adds, opname adjust
           await cl.query(`DELETE FROM "Outlet" WHERE id IN ($1, $2)`, [o1, o2]);
           await cl.query(`DELETE FROM "Tenant" WHERE id=$1`, [t]);
           await cl.query("COMMIT");
-        } catch { try { await cl.query("ROLLBACK"); } catch {} } finally { cl.release(); }
+        } catch { try { await cl.query("ROLLBACK"); } catch { /* ignore */ } } finally { cl.release(); }
       } catch (e) { console.error("cleanup failed:", e.message); }
     }
     await pool.end();

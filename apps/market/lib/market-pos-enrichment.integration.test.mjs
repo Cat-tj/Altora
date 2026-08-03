@@ -64,7 +64,6 @@ test("POS enrichment: varian, split, deposit, poin", { skip }, async () => {
     const sale = await createMarketSale({ ...u, requestId: rid1, items: [{ productId: product, quantity: 2, variantOptionIds: [optL] }], paymentMethod: "CASH", amountPaid: variantPrice * 2 });
     saleIds.push(sale.id);
     assert.equal(sale.reused, false);
-    const saleTotal = variantPrice * 2;
 
     // 2) Idempotensi: requestId sama → sale sama, sekali saja
     const retry = await createMarketSale({ ...u, requestId: rid1, items: [{ productId: product, quantity: 2, variantOptionIds: [optL] }], paymentMethod: "CASH", amountPaid: variantPrice * 2 });
@@ -145,7 +144,7 @@ test("POS enrichment: varian, split, deposit, poin", { skip }, async () => {
           await cl.query(`DELETE FROM "Outlet" WHERE id=$1`, [outlet]);
           await cl.query(`DELETE FROM "Tenant" WHERE id=$1`, [t]);
           await cl.query("COMMIT");
-        } catch { try { await cl.query("ROLLBACK"); } catch {} } finally { cl.release(); }
+        } catch { try { await cl.query("ROLLBACK"); } catch { /* ignore */ } } finally { cl.release(); }
       } catch (e) { console.error("cleanup failed:", e.message); }
     }
     await pool.end();

@@ -66,7 +66,7 @@ test("receiving: defect excluded from stock, cancel DRAFT safe, double-complete 
       await assert.rejects(() => completeReceipt({ ...user, receiptId: rc.id }), /sudah diselesaikan/);
 
       // ── 5) Invariant ──
-      for (const [pid, expected] of [[p1, 15], [p2, 7]]) {
+      for (const pid of [p1, p2]) {
         const r = (await v.query(`SELECT (SELECT qty::int FROM "ProductStock" WHERE "productId"=$1 AND "tenantId"=$2) AS qty, COALESCE(SUM(delta),0)::int AS s FROM "StockLedger" WHERE "productId"=$1 AND "tenantId"=$2`, [pid, t])).rows[0];
         assert.equal(r.qty, r.s, `invariant ${pid}`);
       }
@@ -87,7 +87,7 @@ test("receiving: defect excluded from stock, cancel DRAFT safe, double-complete 
           await cl.query(`DELETE FROM "Outlet" WHERE id=$1`, [outlet]);
           await cl.query(`DELETE FROM "Tenant" WHERE id=$1`, [t]);
           await cl.query("COMMIT");
-        } catch { try { await cl.query("ROLLBACK"); } catch {} } finally { cl.release(); }
+        } catch { try { await cl.query("ROLLBACK"); } catch { /* ignore */ } } finally { cl.release(); }
       } catch (e) { console.error("cleanup failed:", e.message); }
     }
     await pool.end();
