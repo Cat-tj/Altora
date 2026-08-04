@@ -19,8 +19,9 @@ export type PosProduct = {
   price: number;
   trackStock: boolean;
   stock: number;
-  variantGroups: VariantGroup[];
   categoryId: string | null;
+  categoryName: string | null;
+  variantGroups: VariantGroup[];
 };
 
 export type CartLine = {
@@ -61,13 +62,23 @@ export function MarketPosScreen({
   const [result, setResult] = useState<{ error?: string; success?: string }>({});
   const { toastMessage, showToast } = useToast();
 
-  // Category chips disabled — MarketPosProduct tidak punya categoryId
-  const categories: { id: string; name: string; count: number }[] = [];
+  // Category chips dari data produk asli
+  const categories = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; count: number }>();
+    for (const p of products) {
+      if (!p.categoryId || !p.categoryName) continue;
+      const key = p.categoryId;
+      const existing = map.get(key);
+      if (existing) existing.count += 1;
+      else map.set(key, { id: key, name: p.categoryName, count: 1 });
+    }
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
     return products.filter((p) => {
-      const matchCat = activeCategory === "ALL";
+      const matchCat = activeCategory === "ALL" || p.categoryId === activeCategory;
       const matchQ = !q || p.name.toLowerCase().includes(q) || (p.sku?.toLowerCase().includes(q) ?? false);
       return matchCat && matchQ;
     });
@@ -237,31 +248,30 @@ export function MarketPosScreen({
                   const outOfStock = product.trackStock && product.stock <= 0;
                   const atLimit = product.trackStock && qtyInCart >= product.stock;
                   const disabled = outOfStock || atLimit;
+                  const promos = disabled ? [] : productPromos(product);
                   return (
                     <button
                       key={product.id}
                       type="button"
                       disabled={disabled}
                       onClick={() => { if (!disabled) addToCart(product); }}
-                      className="pos-card"
-                      style={{ opacity: disabled ? 0.5 : 1 }}
+                      className={`pos-card ${outOfStock ? "pos-card-out" : ""}`}
                     >
                       <div className="pos-card-top">
                         <ProductVisual product={product} />
                         {qtyInCart > 0 && <span className="pos-card-qty">{qtyInCart}</span>}
+                        {outOfStock && <span className="pos-card-ribbon">Habis</span>}
                       </div>
                       <div className="pos-card-info">
                         <p className="pos-card-name">{product.name}</p>
                         {product.sku && <p className="pos-card-sku">{product.sku}</p>}
                         <p className="pos-card-price">{formatRupiah(product.price)}</p>
                         <div className="pos-card-meta">
-                          {product.trackStock && (
-                            <span className={outOfStock ? "pos-stock pos-stock-out" : "pos-stock"}>
-                              {outOfStock ? "Habis" : `Stok ${product.stock}`}
-                            </span>
-                          )}
-                          {productPromos(product).length > 0 && (
-                            <span className="pos-promo-badge">{productPromos(product)[0]?.name}</span>
+                          <span className={outOfStock ? "pos-stock pos-stock-out" : "pos-stock"}>
+                            {product.trackStock ? (outOfStock ? "Stok habis" : `Stok ${product.stock}`) : "Tanpa stok"}
+                          </span>
+                          {promos.length > 0 && (
+                            <span className="pos-promo-badge">{promos[0]?.name}</span>
                           )}
                         </div>
                       </div>
@@ -334,6 +344,10 @@ function CartPanel({
 }) {
   return (
     <div className="flex flex-col h-full">
+      <div className="pos-cart-header">
+        <h2>Keranjang</h2>
+        <span className="pos-cart-count">{cart.reduce((s, l) => s + l.qty, 0)} item</span>
+      </div>
       {cart.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
           <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Belum ada produk. Ketuk produk untuk menambahkan →</p>
@@ -362,7 +376,7 @@ function CartPanel({
                   <span className="tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{formatRupiah(line.price * line.qty - line.discountAmount)}</span>
                 </div>
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  <label className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>Diskon</label>
+                  <label className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>Diskon/item (Rp)</label>
                   <input type="number" min={0} inputMode="numeric" value={line.discountAmount || ""} onChange={(e) => onUpdateLineDiscount(line.cartKey, Number(e.target.value) || 0)} placeholder="0" className="h-7 w-24 rounded border px-2 text-xs tabular-nums outline-none" style={{ borderColor: "var(--color-border)" }} />
                 </div>
               </div>

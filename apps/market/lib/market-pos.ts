@@ -28,6 +28,7 @@ export type MarketPosProduct = {
   trackStock: boolean;
   variantGroups: MarketVariantGroup[];
   categoryId: string | null;
+  categoryName: string | null;
 };
 export type MarketCartLine = {
   productId: string;
@@ -101,9 +102,10 @@ export async function openMarketShift(input: AccessibleUser & { outletId: string
 }
 
 export async function listMarketPosProducts({ tenantId, outletId }: { tenantId: string; outletId: string }): Promise<MarketPosProduct[]> {
-  const result = await db.query<{ id: string; name: string; sku: string | null; price: string; stock: string; track_stock: boolean; category_id: string | null }>(
-    `SELECT p.id, p.name, p.sku, p.price::text, COALESCE(ps.qty, 0)::text AS stock, p."trackStock" AS track_stock, p."categoryId" AS category_id
+  const result = await db.query<{ id: string; name: string; sku: string | null; price: string; stock: string; track_stock: boolean; category_id: string | null; category_name: string | null }>(
+    `SELECT p.id, p.name, p.sku, p.price::text, COALESCE(ps.qty, 0)::text AS stock, p."trackStock" AS track_stock, p."categoryId" AS category_id, c.name AS category_name
        FROM "Product" p
+       LEFT JOIN "Category" c ON c.id = p."categoryId" AND c."tenantId" = p."tenantId"
        LEFT JOIN "ProductStock" ps ON ps."productId" = p.id AND ps."outletId" = $2 AND ps."tenantId" = p."tenantId"
       WHERE p."tenantId" = $1 AND p."isActive" = true AND p.kind = 'GOODS'
       ORDER BY p.name`,
@@ -142,6 +144,7 @@ export async function listMarketPosProducts({ tenantId, outletId }: { tenantId: 
     trackStock: row.track_stock,
     variantGroups: Array.from(groupsByProduct.get(row.id)?.values() ?? []),
     categoryId: row.category_id ?? null,
+    categoryName: row.category_name ?? null,
   }));
 }
 

@@ -742,3 +742,52 @@
   letter-spacing: 0.02em;
   flex-shrink: 0;
 }
+
+/* Card stok habis — grey-out tegas + ribbon */
+.pos-card-out {
+  background: var(--surface-2, #f7f6fa);
+  border-color: var(--line);
+  filter: grayscale(0.9);
+  cursor: not-allowed;
+}
+
+.pos-card-out .pos-card-name,
+.pos-card-out .pos-card-price {
+  color: var(--muted);
+}
+
+.pos-card-ribbon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0 14px 0 8px;
+  background: #b3261e;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.pos-cart-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.85rem;
+  flex-shrink: 0;
+}
+
+.pos-cart-header h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.pos-cart-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
