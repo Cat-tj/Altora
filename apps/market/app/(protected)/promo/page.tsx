@@ -1,18 +1,38 @@
 import { requireRole } from "../../../lib/market-authz";
 import { listMarketPromos } from "../../../lib/market-promos";
 import { formatRupiah } from "../market-page-ui";
+import { PromoForm } from "./promo-form";
 
-export default async function PromoPage() {
+function ruleLabel(rule: string | null): string {
+  switch ((rule ?? "DISCOUNT").toUpperCase()) {
+    case "BOGO":
+    case "BUY_X_GET_Y": return "BOGO";
+    case "BULK": return "BULK";
+    default: return "Diskon";
+  }
+}
+
+export default async function PromoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ created?: string }>;
+}) {
+  const { created } = await searchParams;
   const user = await requireRole(["OWNER", "MANAGER"]);
   const promos = await listMarketPromos(user.tenantId);
 
   return (
     <div className="market-stack">
+      {created && (
+        <div style={{ padding: "0.75rem 1rem", borderRadius: "12px", backgroundColor: "#e4f5ee", color: "#0e7a57", fontWeight: "600", fontSize: "0.9rem" }}>
+          ✅ Promo berhasil dibuat. Promo otomatis aktif di kasir.
+        </div>
+      )}
       <div className="market-page-title">
         <div>
           <p>Pelanggan & Promo</p>
           <h1>Program Promo & Diskon</h1>
-          <span>Kelola diskon otomatis, promo belanja minim, dan campaign diskon persentase/potongan harga.</span>
+          <span>Kelola diskon otomatis, BOGO (beli N gratis M), dan diskon belanja minimum.</span>
         </div>
       </div>
 
@@ -32,35 +52,43 @@ export default async function PromoPage() {
                 <thead>
                   <tr style={{ borderBottom: "2px solid var(--line)" }}>
                     <th style={{ padding: "0.75rem 1rem", color: "var(--muted)" }}>Nama Promo</th>
-                    <th style={{ padding: "0.75rem 1rem", color: "var(--muted)" }}>Nilai Diskon</th>
+                    <th style={{ padding: "0.75rem 1rem", color: "var(--muted)" }}>Tipe</th>
+                    <th style={{ padding: "0.75rem 1rem", color: "var(--muted)" }}>Nilai</th>
                     <th style={{ padding: "0.75rem 1rem", color: "var(--muted)" }}>Min. Belanja</th>
                     <th style={{ padding: "0.75rem 1rem", color: "var(--muted)" }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {promos.map((p) => (
-                    <tr key={p.id} style={{ borderBottom: "1px solid var(--line-2)" }}>
-                      <td style={{ padding: "1rem", fontWeight: "700" }}>{p.name}</td>
-                      <td style={{ padding: "1rem" }}>
-                        {p.discountPercent ? `${p.discountPercent}%` : p.discountAmount ? formatRupiah(p.discountAmount) : "-"}
-                      </td>
-                      <td style={{ padding: "1rem" }} className="num">{formatRupiah(p.minPurchase)}</td>
-                      <td style={{ padding: "1rem" }}>
-                        <span
-                          style={{
-                            padding: "0.25rem 0.5rem",
-                            borderRadius: "8px",
-                            backgroundColor: p.isActive ? "#e4f5ee" : "#f1eef8",
-                            color: p.isActive ? "#0e7a57" : "#6b7590",
-                            fontSize: "0.75rem",
-                            fontWeight: "700",
-                          }}
-                        >
-                          {p.isActive ? "Aktif" : "Nonaktif"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {promos.map((p) => {
+                    let value = "-";
+                    const pRule = (p.ruleType ?? "DISCOUNT").toUpperCase();
+                    if (pRule === "BOGO" || pRule === "BUY_X_GET_Y") {
+                      value = `Beli ${p.qualifyingQty ?? 2} Gratis ${p.rewardQty ?? 1}${p.rewardDiscountPercent != null && p.rewardDiscountPercent < 100 ? ` (${p.rewardDiscountPercent}%)` : ""}`;
+                    } else if ((p.ruleType ?? "DISCOUNT").toUpperCase() === "BULK") {
+                      value = `Beli ${p.qualifyingQty ?? 5}+ · item termurah ${p.rewardDiscountPercent ?? 10}%`;
+                    } else if (p.discountPercent) {
+                      value = `${p.discountPercent}%`;
+                    } else if (p.discountAmount) {
+                      value = formatRupiah(p.discountAmount);
+                    }
+                    return (
+                      <tr key={p.id} style={{ borderBottom: "1px solid var(--line-2)" }}>
+                        <td style={{ padding: "1rem", fontWeight: "700" }}>{p.name}</td>
+                        <td style={{ padding: "1rem" }}>
+                          <span style={{ padding: "0.25rem 0.5rem", borderRadius: "8px", backgroundColor: "#f1eef8", color: "#6b7590", fontSize: "0.75rem", fontWeight: "700" }}>
+                            {ruleLabel(p.ruleType)}
+                          </span>
+                        </td>
+                        <td style={{ padding: "1rem" }}>{value}</td>
+                        <td style={{ padding: "1rem" }} className="num">{formatRupiah(p.minPurchase)}</td>
+                        <td style={{ padding: "1rem" }}>
+                          <span style={{ padding: "0.25rem 0.5rem", borderRadius: "8px", backgroundColor: p.isActive ? "#e4f5ee" : "#f1eef8", color: p.isActive ? "#0e7a57" : "#6b7590", fontSize: "0.75rem", fontWeight: "700" }}>
+                            {p.isActive ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -72,84 +100,7 @@ export default async function PromoPage() {
           <div className="market-panel-heading">
             <h2>Buat Promo Baru</h2>
           </div>
-          <form action="/api/promos" method="POST" style={{ display: "grid", gap: "1rem", marginTop: "1rem" }}>
-            <div>
-              <label htmlFor="name" style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", marginBottom: "0.5rem" }}>
-                Nama Promo
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Contoh: Promo Gajian 10%"
-                style={{
-                  width: "100%",
-                  height: "52px",
-                  borderRadius: "999px",
-                  border: "1px solid var(--line)",
-                  padding: "0 1.25rem",
-                  fontSize: "1rem",
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="discountPercent" style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", marginBottom: "0.5rem" }}>
-                Diskon Persen (%)
-              </label>
-              <input
-                id="discountPercent"
-                name="discountPercent"
-                type="number"
-                placeholder="Contoh: 10"
-                style={{
-                  width: "100%",
-                  height: "52px",
-                  borderRadius: "999px",
-                  border: "1px solid var(--line)",
-                  padding: "0 1.25rem",
-                  fontSize: "1rem",
-                }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="minPurchase" style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", marginBottom: "0.5rem" }}>
-                Minimal Belanja (Rp)
-              </label>
-              <input
-                id="minPurchase"
-                name="minPurchase"
-                type="number"
-                placeholder="0"
-                style={{
-                  width: "100%",
-                  height: "52px",
-                  borderRadius: "999px",
-                  border: "1px solid var(--line)",
-                  padding: "0 1.25rem",
-                  fontSize: "1rem",
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                height: "52px",
-                borderRadius: "999px",
-                backgroundColor: "var(--accent)",
-                color: "#fff",
-                fontWeight: "700",
-                border: "none",
-                marginTop: "0.5rem",
-              }}
-            >
-              Simpan Promo
-            </button>
-          </form>
+          <PromoForm />
         </section>
       </div>
     </div>

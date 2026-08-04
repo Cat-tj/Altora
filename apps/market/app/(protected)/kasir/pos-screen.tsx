@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { formatRupiah } from "../../../lib/format";
+import { computeBestPromoDiscount, type PromoForCalc, type PromoCartLine } from "../../../lib/promo-calc";
 import { ProductVisual } from "./product-visual";
 import { PaymentSheet, type PaymentMethod } from "./payment-sheet";
 import { VariantPickerModal, type VariantGroup } from "./variant-picker-modal";
@@ -19,6 +20,7 @@ export type PosProduct = {
   trackStock: boolean;
   stock: number;
   variantGroups: VariantGroup[];
+  categoryId: string | null;
 };
 
 export type CartLine = {
@@ -38,10 +40,12 @@ export function MarketPosScreen({
   products,
   shift,
   members,
+  promos = [],
 }: {
   products: PosProduct[];
   shift: { id: string; outletName: string };
   members: MemberOption[];
+  promos: PromoForCalc[];
 }) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
@@ -71,8 +75,38 @@ export function MarketPosScreen({
 
   const subtotal = cart.reduce((s, l) => s + l.price * l.qty - l.discountAmount, 0);
   const afterDiscount = Math.max(0, subtotal - cartDiscount);
-  const total = afterDiscount;
+
+  // Promo aktif — hitung diskon terbesar (BOGO / diskon / bulk)
+  const activePromos = promos;
+  const promoCart: PromoCartLine[] = cart.map((l) => {
+    const product = products.find((p) => p.id === l.productId);
+    return {
+      productId: l.productId,
+      categoryId: product?.categoryId ?? null,
+      lineTotal: l.price * l.qty,
+      price: l.price,
+      qty: l.qty,
+      name: l.name,
+    };
+  });
+  const promoResult = computeBestPromoDiscount(activePromos, promoCart, afterDiscount);
+  const promoDiscount = promoResult?.discountAmount ?? 0;
+  const total = Math.max(0, afterDiscount - promoDiscount);
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
+
+  // Badge promo per produk
+  function productPromos(product: PosProduct): PromoForCalc[] {
+    return activePromos.filter((p) => {
+      const rule = (p.ruleType ?? "DISCOUNT").toUpperCase();
+      const normalized = rule === "BUY_X_GET_Y" ? "BOGO" : rule;
+      if (normalized === "BOGO" || normalized === "BULK") {
+        if (p.qualifyingProductId && p.qualifyingProductId !== product.id) return false;
+        if (p.qualifyingCategoryId && p.qualifyingCategoryId !== product.categoryId) return false;
+        return true;
+      }
+      return false;
+    });
+  }
 
   function addToCart(product: PosProduct, variantOptionIds: string[] = [], priceDelta = 0, variantLabel: string | null = null) {
     const cartKey = `${product.id}::${[...variantOptionIds].sort().join(",")}`;
@@ -234,6 +268,16 @@ export function MarketPosScreen({
                             <p className="tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{formatRupiah(product.price)}</p>
                             {product.trackStock && <p className="text-xs" style={{ color: outOfStock ? "var(--color-danger)" : "var(--color-text-secondary)" }}>{outOfStock ? "Stok habis" : `Stok ${product.stock}`}</p>}
                           </div>
+                          {/* Badge promo */}
+                          {productPromos(product).length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {productPromos(product).map((promo) => (
+                                <span key={promo.id} className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ backgroundColor: "var(--color-primary-soft, rgba(167,48,168,0.12))", color: "var(--color-primary-dark, #7e2582)" }}>
+                                  {promo.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {/* Qty stepper */}
@@ -252,7 +296,7 @@ export function MarketPosScreen({
 
         {/* Cart — mobile bottom bar + sheet */}
         <div className="hidden md:flex flex-col border rounded-xl p-4 bg-white" style={{ borderColor: "var(--color-border)" }}>
-          <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => setShowPayment(true)} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
+          <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} promoResult={promoResult} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => setShowPayment(true)} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
         </div>
       </div>
 
@@ -274,7 +318,7 @@ export function MarketPosScreen({
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
-            <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => { setShowCartSheet(false); setShowPayment(true); }} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
+            <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} promoResult={promoResult} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => { setShowCartSheet(false); setShowPayment(true); }} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
           </div>
         </div>
       )}
@@ -301,10 +345,11 @@ export function MarketPosScreen({
 
 /* ─── Cart Panel (shared by desktop sidebar + mobile sheet) ─── */
 function CartPanel({
-  cart, cartDiscount, setCartDiscount, subtotal, total, onUpdateQty, onUpdateLineDiscount, onRemoveLine, onCheckout, posMember, onPickMember, onClearMember,
+  cart, cartDiscount, setCartDiscount, subtotal, total, promoResult, onUpdateQty, onUpdateLineDiscount, onRemoveLine, onCheckout, posMember, onPickMember, onClearMember,
 }: {
   cart: CartLine[]; cartDiscount: number; setCartDiscount: (v: number) => void;
   subtotal: number; total: number;
+  promoResult: { promoId: string; promoName: string; discountAmount: number; label: string } | null;
   onUpdateQty: (key: string, qty: number) => void; onUpdateLineDiscount: (key: string, d: number) => void; onRemoveLine: (key: string) => void;
   onCheckout: () => void; posMember: MemberOption | null; onPickMember: () => void; onClearMember: () => void;
 }) {
@@ -363,6 +408,16 @@ function CartPanel({
               <div className="flex justify-between text-xs" style={{ color: "var(--color-text-secondary)" }}>
                 <span>Subtotal</span><span className="tabular-nums">{formatRupiah(subtotal)}</span>
               </div>
+              {cartDiscount > 0 && (
+                <div className="mt-1 flex justify-between text-xs" style={{ color: "var(--color-good-text, #15803d)" }}>
+                  <span>Diskon transaksi</span><span className="tabular-nums">−{formatRupiah(cartDiscount)}</span>
+                </div>
+              )}
+              {promoResult && (
+                <div className="mt-1 flex justify-between text-xs" style={{ color: "var(--color-good-text, #15803d)" }}>
+                  <span className="truncate pr-2">🎉 {promoResult.label}</span><span className="tabular-nums shrink-0">−{formatRupiah(promoResult.discountAmount)}</span>
+                </div>
+              )}
               <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2" style={{ borderColor: "var(--color-border)" }}>
                 <span className="shrink-0 text-xs font-semibold" style={{ color: "var(--color-text)" }}>Total belanja</span>
                 <span className="truncate tabular-nums text-xl font-bold leading-tight" style={{ color: "var(--color-text)" }}>{formatRupiah(total)}</span>
