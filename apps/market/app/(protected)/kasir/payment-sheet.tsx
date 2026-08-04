@@ -1,135 +1,125 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
-import type { MemberOption } from "./member-picker";
-
-const money = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
+import { useState } from "react";
+import { formatRupiah } from "../../../lib/format";
+import { XIcon } from "./icons";
 
 export type PaymentMethod = "CASH" | "QRIS" | "TRANSFER" | "EWALLET" | "DEPOSIT" | "GIFT_CARD";
-const METHODS: PaymentMethod[] = ["CASH", "QRIS", "TRANSFER", "EWALLET", "DEPOSIT", "GIFT_CARD"];
-const METHOD_LABEL: Record<PaymentMethod, string> = {
-  CASH: "Tunai",
-  QRIS: "QRIS",
-  TRANSFER: "Transfer",
-  EWALLET: "E-Wallet",
-  DEPOSIT: "Deposit",
-  GIFT_CARD: "Voucher",
-};
+
+const PAYMENT_METHODS: { method: PaymentMethod; label: string; icon: string }[] = [
+  { method: "CASH", label: "Tunai", icon: "💵" },
+  { method: "QRIS", label: "QRIS", icon: "📱" },
+  { method: "TRANSFER", label: "Transfer", icon: "🏦" },
+  { method: "EWALLET", label: "E-Wallet", icon: "💳" },
+  { method: "DEPOSIT", label: "Deposit", icon: "💰" },
+  { method: "GIFT_CARD", label: "Gift Card", icon: "🎁" },
+];
 
 export function PaymentSheet({
-  total,
-  member,
-  onClose,
-  onConfirm,
+  total, initialMember, onClose, onConfirm,
 }: {
   total: number;
-  member: MemberOption | null;
+  initialMember: { id: string; name: string; depositBalance: number } | null;
   onClose: () => void;
   onConfirm: (payments: { method: PaymentMethod; amount: number }[], memberId?: string) => void;
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [method, setMethod] = useState<PaymentMethod>("CASH");
-  const [cashPaid, setCashPaid] = useState("");
+  const [cashAmount, setCashAmount] = useState<string>("");
+  const [payments, setPayments] = useState<{ method: PaymentMethod; amount: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    dialogRef.current?.showModal();
-  }, []);
+  const currentPayment = payments.reduce((s, p) => s + p.amount, 0);
+  const remaining = total - currentPayment;
+  const isFullyPaid = currentPayment >= total;
+  const change = method === "CASH" ? Math.max(0, (Number(cashAmount) || 0) - remaining) : 0;
 
-  const amount = Number(cashPaid);
-  const change = method === "CASH" && Number.isFinite(amount) ? Math.max(0, amount - total) : 0;
-  const isDigital = method === "QRIS" || method === "TRANSFER" || method === "EWALLET" || method === "GIFT_CARD";
-
-  function confirm() {
+  function addPayment() {
+    const amount = method === "CASH" ? Math.min(Number(cashAmount) || 0, remaining) : remaining;
+    if (amount <= 0) return;
+    setPayments((prev) => [...prev, { method, amount }]);
+    setCashAmount("");
     setError(null);
-    if (method === "DEPOSIT") {
-      if (!member) {
-        setError("Pilih member dulu untuk membayar dengan deposit.");
-        return;
-      }
-      if (member.depositBalance < total) {
-        setError(`Saldo deposit ${member.name} tidak cukup (tersedia ${money(member.depositBalance)}).`);
-        return;
-      }
-      onConfirm([{ method: "DEPOSIT", amount: total }], member.id);
-      onClose();
+  }
+
+  function submit() {
+    if (!isFullyPaid && method !== "CASH") {
+      setError("Jumlah pembayaran belum mencukupi.");
       return;
     }
-    if (method === "CASH") {
-      if (!Number.isFinite(amount) || amount < total) {
-        setError("Uang tunai yang diterima kurang dari total tagihan.");
-        return;
-      }
-      onConfirm([{ method: "CASH", amount }]);
-      onClose();
-      return;
-    }
-    // Digital / gift card: nominal harus sama persis
-    onConfirm([{ method, amount: total }]);
-    onClose();
+    const finalPayments = payments.length > 0 ? payments : [{ method, amount: total }];
+    onConfirm(finalPayments, initialMember?.id);
   }
 
   return (
-    <dialog ref={dialogRef} className="market-dialog" onClose={onClose}>
-      <div className="market-dialog-body">
-        <div>
-          <h2>Pembayaran</h2>
-          <p>Total tagihan {money(total)}.</p>
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:items-center sm:justify-center" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl p-5 sm:max-w-md sm:rounded-2xl" style={{ backgroundColor: "var(--color-bg)" }}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold" style={{ color: "var(--color-text)" }}>Pembayaran</h2>
+          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ color: "var(--color-text-secondary)" }}>
+            <XIcon className="h-5 w-5" />
+          </button>
         </div>
-        {member && (
-          <p style={{ background: "#e8f4f1", borderRadius: ".55rem", padding: ".6rem .75rem", fontWeight: 700 }}>
-            Member: {member.name} · Deposit {money(member.depositBalance)} · {member.points} poin
-          </p>
-        )}
-        <fieldset style={{ border: 0, margin: 0, padding: 0, display: "grid", gap: ".4rem" }}>
-          <legend style={{ fontWeight: 800, fontSize: ".9rem" }}>Metode</legend>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem" }}>
-            {METHODS.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => { setMethod(m); setError(null); }}
-                aria-pressed={method === m}
-                style={{
-                  minHeight: "2.5rem",
-                  border: `1px solid ${method === m ? "var(--market-accent, #0f6b5c)" : "#aebfbc"}`,
-                  borderRadius: ".55rem",
-                  padding: ".45rem .8rem",
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  background: method === m ? "#e8f4f1" : "#fff",
-                  color: method === m ? "var(--market-accent, #0f6b5c)" : "var(--market-ink)",
-                }}
-              >
-                {METHOD_LABEL[m]}
-              </button>
-            ))}
-          </div>
-        </fieldset>
 
+        {/* Total */}
+        <div className="mb-4 rounded-xl p-4" style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+          <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>Total belanja</p>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: "var(--color-text)" }}>{formatRupiah(total)}</p>
+          {initialMember && <p className="mt-1 text-xs" style={{ color: "var(--color-primary)" }}>👤 {initialMember.name}</p>}
+        </div>
+
+        {/* Method selector */}
+        <div className="mb-4 grid grid-cols-3 gap-2">
+          {PAYMENT_METHODS.map((pm) => (
+            <button key={pm.method} onClick={() => { setMethod(pm.method); setError(null); }}
+              className={`flex flex-col items-center gap-1 rounded-xl border p-3 text-xs font-semibold transition-all`}
+              style={method === pm.method
+                ? { borderColor: "var(--color-primary)", backgroundColor: "var(--color-primary)", color: "var(--color-on-primary)" }
+                : { borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}>
+              <span className="text-lg">{pm.icon}</span>
+              {pm.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Cash input */}
         {method === "CASH" && (
-          <label htmlFor="cash-paid">
-            Uang diterima
-            <input id="cash-paid" inputMode="numeric" value={cashPaid} onChange={(event) => setCashPaid(event.target.value)} placeholder="0" autoFocus />
-          </label>
-        )}
-        {isDigital && <p style={{ color: "var(--market-muted)", fontSize: ".9rem" }}>Nominal otomatis {money(total)} — harus sama persis dengan tagihan.</p>}
-        {method === "DEPOSIT" && !member && <p role="alert" className="market-form-error">Pilih member di kasir untuk membayar dengan deposit.</p>}
-        {method === "GIFT_CARD" && <p style={{ color: "var(--market-muted)", fontSize: ".9rem" }}>Nominal voucher otomatis {money(total)}.</p>}
-
-        {(method === "CASH" && Number.isFinite(amount) && amount >= total) && (
-          <dl className="market-shift-summary">
-            <div><dt>Total</dt><dd>{money(total)}</dd></div>
-            <div><dt>Kembalian</dt><dd>{money(change)}</dd></div>
-          </dl>
+          <div className="mb-4">
+            <label className="mb-1 block text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>Jumlah bayar</label>
+            <input type="number" inputMode="numeric" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)}
+              placeholder={formatRupiah(remaining)} className="min-h-[48px] w-full rounded-lg border bg-white/70 px-4 text-base tabular-nums outline-none focus:ring-2"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }} />
+            {change > 0 && <p className="mt-2 text-sm font-semibold" style={{ color: "var(--color-good-text)" }}>Kembalian: {formatRupiah(change)}</p>}
+          </div>
         )}
 
-        {error && <p role="alert" className="market-form-error">{error}</p>}
-        <div className="market-dialog-actions">
-          <button type="button" onClick={onClose}>Batal</button>
-          <button type="button" className="market-checkout-button" style={{ border: 0, color: "#fff", background: "var(--market-accent, #0f6b5c)" }} onClick={confirm}>Bayar {money(total)}</button>
+        {/* Add payment button for split */}
+        {payments.length > 0 && (
+          <div className="mb-3 space-y-1">
+            {payments.map((p, i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+                <span>{PAYMENT_METHODS.find((m) => m.method === p.method)?.icon} {p.method}</span>
+                <span className="font-bold tabular-nums">{formatRupiah(p.amount)}</span>
+              </div>
+            ))}
+            <p className="text-right text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>Sisa: {formatRupiah(Math.max(0, remaining))}</p>
+          </div>
+        )}
+
+        {error && <p className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}>{error}</p>}
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          {!isFullyPaid && remaining > 0 && method !== "CASH" && (
+            <button onClick={addPayment} className="flex min-h-[52px] flex-1 items-center justify-center rounded-xl border text-sm font-semibold" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>
+              + Tambah bayar
+            </button>
+          )}
+          <button onClick={submit} disabled={!isFullyPaid && method !== "CASH"}
+            className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl text-sm font-bold text-white disabled:opacity-40 hover:opacity-95 transition-opacity"
+            style={{ backgroundColor: "var(--color-primary)" }}>
+            {isFullyPaid ? "Selesaikan" : "Bayar"} {formatRupiah(isFullyPaid ? total : remaining)}
+          </button>
         </div>
       </div>
-    </dialog>
+    </div>
   );
 }

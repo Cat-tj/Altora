@@ -2,6 +2,7 @@
    Aturan halaman di bawah masih memakai nama lama; pemetaan ini yang
    membuat seluruh Market ikut palet brand tanpa disentuh satu per satu.
    Migrasikan ke token asli saat halamannya memang sedang dikerjakan. */
+@import "tailwindcss";
 :root {
   --market-ink: var(--ink);
   --market-muted: var(--muted);
@@ -242,4 +243,67 @@
 
 @media (max-width: 720px) {
   .return-meta { grid-template-columns: 1fr; }
+}
+
+
+/* Token ShadyERP (dari globals.css donor) — dipakai UI POS & login hasil jiplakan */
+:root {
+  --color-bg: #f5f7fa;
+  --color-bg-secondary: #eceef2;
+  --color-surface: #ffffff;
+  --color-border: #e2e6ec;
+  --color-text: #0a1f44;
+  --color-text-secondary: #5b6478;
+  --color-primary: #a730a8;
+  --color-primary-dark: #7e2582;
+  --color-on-primary: #ffffff;
+  --color-gold: #d94a86;
+  --color-gold-soft: rgba(217, 74, 134, 0.4);
+  --color-danger: #dc2626;
+  --color-warning-bg: #fee2e2;
+  --color-warning-text: #991b1b;
+  --color-good-bg: #dcfce7;
+  --color-good-text: #15803d;
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-primary-soft-strong: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --logo-c1: #2f3ba3;
+  --logo-c2: #6a3cc0;
+  --logo-c3: #a730a8;
+  --logo-c4: #d94a86;
+  --logo-c5: #f28a4e;
+  --logo-c6: #f6c945;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 20px 60px rgba(15, 23, 42, 0.18);
+  --shadow-soft: 0 20px 50px -24px rgba(10, 31, 68, 0.18), 0 2px 10px rgba(10, 31, 68, 0.05);
+  --shadow-soft-sm: 0 10px 24px -16px rgba(10, 31, 68, 0.16), 0 1px 4px rgba(10, 31, 68, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: 14px;
+  --ui-scale: 0.98;
+  --bottom-nav-height: 72px;
+  --mobile-cart-height: 64px;
+  --topbar-height: 56px;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --content-max-width: 1280px;
+  --content-padding-x: 16px;
+  --content-padding-y: 16px;
+  --content-padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 24px);
+  --invoice-panel-width: 100%;
+  --ui-scale: 1;
+  --content-padding-x: 20px;
+  --content-padding-y: 20px;
+  --bottom-nav-height: 76px;
+  --topbar-height: 64px;
+  --invoice-panel-width: 380px;
+  --ui-scale: 1;
+  --content-padding-x: 28px;
+  --content-padding-y: 24px;
+  --topbar-height: 72px;
+  --content-max-width: 1600px;
+  --invoice-panel-width: 400px;
+  --content-padding-x: 32px;
+  --invoice-panel-width: 440px;
 }
