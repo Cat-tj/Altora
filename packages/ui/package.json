@@ -11,7 +11,8 @@
     "./product-shell": "./src/product-shell.tsx",
     "./tokens.css": "./src/tokens.css",
     "./product-shell.css": "./src/product-shell.css",
-    "./nav-icons": "./src/nav-icons.tsx"
+    "./nav-icons": "./src/nav-icons.tsx",
+    "./app-sidebar": "./src/app-sidebar.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

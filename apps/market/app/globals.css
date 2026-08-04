@@ -998,6 +998,13 @@
   display: flex;
 }
 
+/* Sidebar shared (AppSidebar) di dalam POS: jangan fixed, ikut flex layout */
+.pos-sb-wrap .shell-side {
+  position: static;
+  width: var(--sidebar-w, 232px);
+  padding: 12px 10px;
+}
+
 .pos-sb {
   display: flex;
   flex-direction: column;

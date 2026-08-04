@@ -291,7 +291,8 @@
   padding-bottom: 12px;
 }
 
-.shell.is-collapsed .shell-side {
+.shell.is-collapsed .shell-side,
+.shell-side.is-collapsed {
   width: 64px;
   padding-left: 8px;
   padding-right: 8px;
@@ -323,25 +324,30 @@
   white-space: nowrap;
 }
 
-.shell.is-collapsed .shell-group > h2 {
+.shell.is-collapsed .shell-group > h2,
+.shell-side.is-collapsed .shell-group > h2 {
   font-size: 0;
 }
 
-.shell.is-collapsed .shell-group > h2::first-letter {
+.shell.is-collapsed .shell-group > h2::first-letter,
+.shell-side.is-collapsed .shell-group > h2::first-letter {
   font-size: 0.6rem;
 }
 
-.shell.is-collapsed .shell-group > a {
+.shell.is-collapsed .shell-group > a,
+.shell-side.is-collapsed .shell-group > a {
   justify-content: center;
   padding: 10px 0;
 }
 
-.shell.is-collapsed .shell-nav-text {
+.shell.is-collapsed .shell-nav-text,
+.shell-side.is-collapsed .shell-nav-text {
   display: none;
 }
 
 /* Tooltip saat collapsed */
-.shell.is-collapsed .shell-group > a:hover::after {
+.shell.is-collapsed .shell-group > a:hover::after,
+.shell-side.is-collapsed .shell-group > a:hover::after {
   content: attr(title);
   position: absolute;
   left: calc(100% + 10px);
@@ -359,13 +365,16 @@
   pointer-events: none;
 }
 
-.shell.is-collapsed .shell-user {
+.shell.is-collapsed .shell-user,
+.shell-side.is-collapsed .shell-user {
   justify-content: center;
   padding: 12px 0 0;
 }
 
 .shell.is-collapsed .shell-user-text,
-.shell.is-collapsed .shell-signout {
+.shell.is-collapsed .shell-signout,
+.shell-side.is-collapsed .shell-user-text,
+.shell-side.is-collapsed .shell-signout {
   display: none;
 }
 

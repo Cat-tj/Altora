@@ -6,13 +6,14 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { resolveProductLoginUrl } from "@altora/core/auth-redirect";
 import { marketNav } from "./market-nav";
+import { AppSidebar } from "@altora/ui/app-sidebar";
 import type { ShellRole } from "@altora/ui/product-shell";
 import { NavIcon } from "@altora/ui/nav-icons";
 
 /**
  * Shell mode kasir (POS):
- *  - Desktop: sidebar ramping yang BISA di-collapse (icon-only + tooltip),
- *    pola Greenie — tetap fokus transaksi, menu back-office selalu di tangan.
+ *  - Desktop: sidebar SAMA dengan halaman lain (AppSidebar shared,
+ *    collapsible + tooltip) — konsisten di seluruh aplikasi.
  *  - Mobile: drawer overlay dari hamburger.
  */
 export function PosShell({
@@ -27,26 +28,8 @@ export function PosShell({
   role: ShellRole;
 }) {
   const [now, setNow] = useState<string>("");
-  const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-
-  // Preferensi collapse tersimpan lintas sesi
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("pos.sidebar.collapsed");
-      if (saved === "1") setCollapsed(true);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("pos.sidebar.collapsed", collapsed ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-  }, [collapsed]);
 
   useEffect(() => {
     const fmt = () =>
@@ -99,52 +82,8 @@ export function PosShell({
     return "produk";
   };
 
-  const sidebar = (
-    <nav className={`pos-sb ${collapsed ? "is-collapsed" : ""}`} aria-label="Navigasi Altora Market">
-      <div className="pos-sb-groups">
-        {groups.map((group) => (
-          <section key={group.label} className="pos-sb-group">
-            <p className="pos-sb-label">{group.label}</p>
-            {group.items.map((item) => {
-              const active = isActive(item.href, item.exact);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`pos-sb-link ${active ? "is-active" : ""}`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <NavIcon name={iconFor(item.href)} className="pos-sb-icon" />
-                  <span className="pos-sb-text">{item.label}</span>
-                </Link>
-              );
-            })}
-          </section>
-        ))}
-      </div>
-
-      <div className="pos-sb-foot">
-        <div className="pos-sb-user">
-          <span className="pos-sb-avatar" aria-hidden="true">{userName.charAt(0).toUpperCase()}</span>
-          <div className="pos-sb-usertext">
-            <strong>{userName}</strong>
-            <span>{role === "OWNER" ? "Pemilik" : role === "MANAGER" ? "Manajer" : "Staf"}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="pos-sb-collapse"
-          onClick={() => setCollapsed((v) => !v)}
-          aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-          title={collapsed ? "Perluas" : "Ciutkan"}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            {collapsed ? <path d="m9 6 6 6-6 6" /> : <path d="m15 6-6 6 6 6" />}
-          </svg>
-        </button>
-      </div>
-    </nav>
-  );
+  const signOutPos = () =>
+    signOut({ callbackUrl: resolveProductLoginUrl(window.location.origin, "market.altora.my.id") });
 
   return (
     <div className="pos-shell">
@@ -167,13 +106,7 @@ export function PosShell({
         </div>
         <div className="pos-topbar-right">
           <span className="pos-clock">{now}</span>
-          <button
-            type="button"
-            className="pos-signout"
-            onClick={() =>
-              signOut({ callbackUrl: resolveProductLoginUrl(window.location.origin, "market.altora.my.id") })
-            }
-          >
+          <button type="button" className="pos-signout" onClick={signOutPos}>
             Keluar
           </button>
         </div>
@@ -214,13 +147,7 @@ export function PosShell({
               ))}
             </div>
             <div className="pos-drawer-foot">
-              <button
-                type="button"
-                className="pos-drawer-signout"
-                onClick={() =>
-                  signOut({ callbackUrl: resolveProductLoginUrl(window.location.origin, "market.altora.my.id") })
-                }
-              >
+              <button type="button" className="pos-drawer-signout" onClick={signOutPos}>
                 Keluar
               </button>
             </div>
@@ -229,7 +156,9 @@ export function PosShell({
       )}
 
       <div className="pos-shell-body">
-        <div className="pos-sb-wrap">{sidebar}</div>
+        <div className="pos-sb-wrap">
+          <AppSidebar nav={marketNav} userName={userName} role={role} onSignOut={signOutPos} />
+        </div>
         <main className="pos-main">{children}</main>
       </div>
     </div>
