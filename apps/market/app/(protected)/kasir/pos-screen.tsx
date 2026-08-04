@@ -168,11 +168,12 @@ export function MarketPosScreen({
     const res = await createMarketSaleAction({
       shiftId: shift.id,
       requestId,
-      items: cart.map((l) => ({ productId: l.productId, quantity: l.qty, variantOptionIds: l.variantOptionIds.length ? l.variantOptionIds : undefined })),
+      items: cart.map((l) => ({ productId: l.productId, quantity: l.qty, variantOptionIds: l.variantOptionIds.length ? l.variantOptionIds : undefined, discountAmount: l.discountAmount || undefined })),
       paymentMethod: single ? payments[0]!.method : undefined,
       amountPaid: single ? payments[0]!.amount : undefined,
       payments: single ? undefined : payments,
       memberId,
+      cartDiscount: cartDiscount || undefined,
     });
     if (res.error) { setResult({ error: res.error }); return; }
     setCart([]); setCartDiscount(0); setPosMember(null); setRequestId(crypto.randomUUID()); setShowPayment(false); setShowCartSheet(false);

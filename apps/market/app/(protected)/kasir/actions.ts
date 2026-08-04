@@ -28,11 +28,12 @@ export async function openMarketShiftAction(formData: FormData): Promise<{ error
 export async function createMarketSaleAction(payload: {
   shiftId: string;
   requestId: string;
-  items: { productId: string; quantity: number; variantOptionIds?: string[] }[];
+  items: { productId: string; quantity: number; variantOptionIds?: string[]; discountAmount?: number }[];
   paymentMethod?: "CASH" | "QRIS" | "TRANSFER" | "EWALLET" | "DEPOSIT" | "GIFT_CARD";
   amountPaid?: number;
   payments?: { method: "CASH" | "QRIS" | "TRANSFER" | "EWALLET" | "DEPOSIT" | "GIFT_CARD"; amount: number }[];
   memberId?: string;
+  cartDiscount?: number;
 }): Promise<{ error?: string; sale?: { id: string; invoiceNumber: string; total: number; change: number } }> {
   const user = await currentUser();
   if (!user) return { error: "Sesi berakhir. Masuk kembali." };
