@@ -12,7 +12,9 @@
     "./tokens.css": "./src/tokens.css",
     "./product-shell.css": "./src/product-shell.css",
     "./nav-icons": "./src/nav-icons.tsx",
-    "./app-sidebar": "./src/app-sidebar.tsx"
+    "./app-sidebar": "./src/app-sidebar.tsx",
+    "./app-drawer": "./src/app-drawer.tsx",
+    "./drawer-shared.css": "./src/drawer-shared.css"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

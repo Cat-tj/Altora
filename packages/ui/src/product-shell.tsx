@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AppSidebar } from "./app-sidebar";
+import { AppDrawer } from "./app-drawer";
 
 export type ShellRole = "OWNER" | "MANAGER" | "STAFF";
 
@@ -36,9 +36,9 @@ export type ProductShellProps = {
 };
 
 /**
- * Kerangka aplikasi bersama: satu sidebar (AppSidebar), topbar, dan
- * navigasi mobile. Navigasi masuk sebagai data sehingga menambah produk
- * baru tidak pernah mengubah kode bersama.
+ * Kerangka aplikasi bersama untuk halaman kelola (non-POS):
+ * satu sidebar (AppSidebar) di desktop, satu drawer (AppDrawer) di mobile —
+ * komponen navigasi SAMA dengan mode kasir, tidak ada bottom-nav.
  */
 export function ProductShell({
   children,
@@ -50,17 +50,7 @@ export function ProductShell({
   role,
   onSignOut,
 }: ProductShellProps) {
-  const pathname = usePathname();
-
-  /* Nav mobile memuat lima tujuan tersering; sisanya tetap lewat sidebar
-     pada layar yang lebih lebar. */
-  const groups = nav
-    .map((group) => ({ ...group, items: group.items.filter((item) => item.roles.includes(role)) }))
-    .filter((group) => group.items.length > 0);
-  const mobileItems = groups.flatMap((group) => group.items).slice(0, 5);
-
-  const isActive = (item: ShellNavItem) =>
-    pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="shell">
@@ -72,9 +62,21 @@ export function ProductShell({
 
       <div className="shell-main" id="shell-main">
         <header className="shell-topbar">
-          <span className="shell-topbar-title">
-            {productName} · {tenantNoun} {tenantName}
-          </span>
+          <div className="shell-topbar-left">
+            <button
+              type="button"
+              className="shell-menu-btn"
+              aria-label="Buka menu navigasi"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <span /><span /><span />
+            </button>
+            <span className="shell-topbar-mark" aria-hidden="true">A</span>
+            <span className="shell-topbar-title">
+              {productName} · {tenantNoun} {tenantName}
+            </span>
+          </div>
           <button className="shell-topbar-signout" onClick={onSignOut} type="button">
             Keluar
           </button>
@@ -82,19 +84,15 @@ export function ProductShell({
         {children}
       </div>
 
-      <nav className="shell-bottom-nav" aria-label="Navigasi utama (mobile)">
-        {mobileItems.map((item) => (
-          <Link
-            aria-current={isActive(item) ? "page" : undefined}
-            className={isActive(item) ? "is-active" : undefined}
-            href={item.href}
-            key={item.href}
-          >
-            {item.icon && <span className="shell-nav-icon" aria-hidden="true">{item.icon}</span>}
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+      <AppDrawer
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        nav={nav}
+        userName={userName}
+        role={role}
+        onSignOut={onSignOut}
+        productName={productName}
+      />
     </div>
   );
 }
