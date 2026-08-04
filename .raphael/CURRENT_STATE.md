@@ -1,25 +1,29 @@
 # CURRENT STATE
 
 Project: Altora
-Current Phase: IMPLEMENTATION (loop running)
+Current Phase: PRODUCTION (deployed)
 Current Objective: Recover Altora using verified ShadyERP business behavior
-Implementation Approval: GRANTED (standing authorization, Level 0–2)
-Migration Approval: DENIED (production); disposable test DB ONLY
-Deployment Approval: DENIED
+Implementation Approval: GRANTED
+Deployment Approval: GRANTED (godemode on)
 Current Branch: orchestration/raphael-bootstrap
-Base SHA: 415efc4b4cc6ac8532f0e29608d8bec04e1fed42
-Current SHA: 665edf7 (IMP-006 receiving)
-Last verified commit: 665edf7 (IMP-006 receiving test)
-Last verified result: IMP-006 receiving maturity — defect excluded from stock, cancel DRAFT safe, double-complete blocked, integration 9/9 PASS
+Current SHA: 59fe0ca (promo engine)
+Deployed: market.altora.my.id → 127.0.0.1:3015 (PM2 altora-market)
+Rollback: app lama :3013 (~/Altora master) + Caddyfile.bak-imp011-*
+Backup: GitHub branch backup/prod-data-20260804
+Prod DB: Supabase — migrations 0001..011 ALL applied (additive, data intact)
 Active blocker: NONE
-Next action: IMP-007 (purchase flow completion)
-Next approval gate: USER_GATE only
-Draft PR: https://github.com/Cat-tj/Altora/pull/2
 
-## COMPLETED IMPs
-- IMP-001: Migration runner (8982a24)
-- IMP-002: Auth foundation + gap closure (866089c2, 39d5d91)
-- IMP-003: Ledger opening-balance seed (d1d34cc)
-- IMP-004: POS enrichment — variants/split/deposit/points (2fc2db4)
-- IMP-005: Stock transfer fix — was a no-op, now atomic (dd3cf01)
-- IMP-006: Receiving maturity — defect excluded, cancel safe (665edf7)
+## COMPLETED
+- IMP-001..011: Recovery loop selesai + deployed ke prod
+- POS UI Port: jiplak ShadyERP → Altora (login, POS screen, payment sheet, product cards, cart panel)
+- Tailwind v4 + CSS vars ShadyERP di globals.css
+- PROMO ENGINE: lib/promo-calc.ts (DISCOUNT/BOGO/BULK), kolom BOGO query di market-promos.ts
+- Promo badge di product card + auto-apply di cart (diskon terbesar)
+- /api/promos route (tadinya MISSING → form promo 404), PromoForm client (pilih jenis promo)
+- Seed: promo "Beli 2 Gratis 1" (BUY_X_GET_Y) aktif di prod
+- Verified: BOGO 3x Air Mineral → subtotal 18.000, diskon 6.000, total 12.000 ✅
+- 7 unit test promo-calc + 23 suite test PASS
+
+## NEXT (bila lanjut)
+- Fitur lain yang masih miss dari ShadyERP (user bilang "banyak yang masih miss"):
+  barcode camera scanner, print struk, cash-out modal, offline sync, favorites

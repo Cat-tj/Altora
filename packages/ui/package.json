@@ -10,7 +10,8 @@
     "./code": "./src/code.tsx",
     "./product-shell": "./src/product-shell.tsx",
     "./tokens.css": "./src/tokens.css",
-    "./product-shell.css": "./src/product-shell.css"
+    "./product-shell.css": "./src/product-shell.css",
+    "./nav-icons": "./src/nav-icons.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

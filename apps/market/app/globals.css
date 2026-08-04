@@ -918,10 +918,10 @@
   text-transform: uppercase;
   color: var(--muted);
 }
-
 .pos-drawer-link {
   display: flex;
   align-items: center;
+  gap: 0.6rem;
   min-height: 42px;
   padding: 0 0.75rem;
   border-radius: 10px;
@@ -930,6 +930,12 @@
   color: var(--ink-2);
   text-decoration: none;
   transition: background 0.13s ease, color 0.13s ease;
+}
+
+.pos-drawer-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .pos-drawer-link:hover {
