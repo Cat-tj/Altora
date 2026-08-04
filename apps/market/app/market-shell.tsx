@@ -27,7 +27,11 @@ export function MarketShell({
   const isPos = pathname === "/kasir" || pathname.startsWith("/kasir/");
 
   if (isPos) {
-    return <PosShell tenantName={tenantName}>{children}</PosShell>;
+    return (
+      <PosShell tenantName={tenantName} userName={userName} role={role}>
+        {children}
+      </PosShell>
+    );
   }
 
   return (
