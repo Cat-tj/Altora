@@ -182,111 +182,90 @@ export function MarketPosScreen({
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--color-text)" }}>Kasir</h1>
-          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{shift.outletName}</p>
+    <div className="pos-layout">
+      {/* Row 1: search + actions */}
+      <div className="pos-row pos-row-top">
+        <div className="pos-search-wrap">
+          <svg aria-hidden viewBox="0 0 24 24" className="pos-search-icon" fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" strokeLinecap="round" />
+          </svg>
+          <input
+            id="pos-search-input"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Cari produk atau scan barcode…"
+            className="pos-search-input"
+          />
         </div>
-        <div className="flex flex-wrap gap-2 sm:justify-end">
-          <Link href="/kasir/riwayat" className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg border px-5 text-sm font-medium sm:flex-none" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>
-            Riwayat
-          </Link>
-          <Link href="/kasir/tutup" className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg border px-5 text-sm font-medium sm:flex-none" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>
-            Tutup shift
-          </Link>
+        <div className="pos-actions">
+          <Link href="/kasir/riwayat" className="pos-btn">Riwayat</Link>
+          <Link href="/kasir/tutup" className="pos-btn pos-btn-primary">Tutup Shift</Link>
         </div>
       </div>
 
       {result.error && <div className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }} role="alert">{result.error}</div>}
       {result.success && <div className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-good-bg)", color: "var(--color-good-text)" }} role="status">{result.success}</div>}
 
-      {/* Main 2-col */}
-      <div className="flex-1 flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_minmax(280px,380px)] gap-4 overflow-hidden">
+      {/* Main 2-col: products + cart */}
+      <div className="pos-body">
         {/* Products */}
-        <div className="min-w-0 flex flex-col h-full overflow-hidden">
-          {/* Search */}
-          <div className="relative mb-3 shrink-0">
-            <svg aria-hidden viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: "var(--color-text-secondary)" }} fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" strokeLinecap="round" />
-            </svg>
-            <input
-              id="pos-search-input"
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Cari nama produk, SKU, atau scan barcode"
-              className="min-h-[48px] w-full rounded-xl border bg-white/70 pl-11 pr-4 text-sm outline-none transition-colors focus:bg-white focus:ring-2"
-              style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
-            />
-          </div>
-
+        <div className="pos-products">
           {/* Category chips */}
-          <div className="mb-3 flex gap-2 overflow-x-auto pb-1 shrink-0" style={{ scrollbarWidth: "none" }}>
-            <button onClick={() => setActiveCategory("ALL")} className="flex min-h-[42px] shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-all active:scale-[0.98]" style={activeCategory === "ALL" ? { borderColor: "var(--color-primary)", backgroundColor: "var(--color-primary)", color: "var(--color-on-primary)" } : { borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}>
-              Semua <span className="text-xs">{products.length}</span>
+          <div className="pos-chips">
+            <button onClick={() => setActiveCategory("ALL")} className="pos-chip" style={activeCategory === "ALL" ? { backgroundColor: "var(--accent)", color: "var(--accent-ink, #fff)", borderColor: "var(--accent)" } : {}}>
+              Semua <span className="pos-chip-count">{products.length}</span>
             </button>
             {categories.map((c) => (
-              <button key={c.id} onClick={() => setActiveCategory(c.id)} className="flex min-h-[42px] shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition-all active:scale-[0.98]" style={activeCategory === c.id ? { borderColor: "var(--color-primary)", backgroundColor: "var(--color-primary)", color: "var(--color-on-primary)" } : { borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)" }}>
-                {c.name} <span className="text-xs">{c.count}</span>
+              <button key={c.id} onClick={() => setActiveCategory(c.id)} className="pos-chip" style={activeCategory === c.id ? { backgroundColor: "var(--accent)", color: "var(--accent-ink, #fff)", borderColor: "var(--accent)" } : {}}>
+                {c.name} <span className="pos-chip-count">{c.count}</span>
               </button>
             ))}
           </div>
 
           {/* Product grid */}
-          <div className="flex-1 overflow-y-auto pb-24 md:pb-0" style={{ scrollbarWidth: "none" }}>
+          <div className="pos-grid-scroll">
             {filteredProducts.length === 0 ? (
-              <div className="rounded-xl border px-6 py-16 text-center" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
-                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Produk tidak ditemukan.</p>
+              <div className="pos-empty">
+                <p>Produk tidak ditemukan.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3.5">
+              <div className="pos-grid">
                 {filteredProducts.map((product) => {
-                  const linesForProduct = cart.filter((l) => l.productId === product.id);
-                  const qtyInCart = linesForProduct.reduce((s, l) => s + l.qty, 0);
+                  const qtyInCart = cart.filter((l) => l.productId === product.id).reduce((s, l) => s + l.qty, 0);
                   const outOfStock = product.trackStock && product.stock <= 0;
                   const atLimit = product.trackStock && qtyInCart >= product.stock;
                   const disabled = outOfStock || atLimit;
                   return (
-                    <div
+                    <button
                       key={product.id}
-                      role="button"
-                      tabIndex={disabled ? -1 : 0}
+                      type="button"
+                      disabled={disabled}
                       onClick={() => { if (!disabled) addToCart(product); }}
-                      onKeyDown={(e) => { if (!disabled && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); addToCart(product); } }}
-                      className={`flex min-h-[112px] flex-col gap-3 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.98]"}`}
-                      style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}
+                      className="pos-card"
+                      style={{ opacity: disabled ? 0.5 : 1 }}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="pos-card-top">
                         <ProductVisual product={product} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>{product.name}</p>
-                          {product.sku && <p className="mt-0.5 truncate font-mono text-[11px]" style={{ color: "var(--color-text-secondary)" }}>{product.sku}</p>}
-                          <div className="mt-1.5 flex items-center gap-2">
-                            <p className="tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{formatRupiah(product.price)}</p>
-                            {product.trackStock && <p className="text-xs" style={{ color: outOfStock ? "var(--color-danger)" : "var(--color-text-secondary)" }}>{outOfStock ? "Stok habis" : `Stok ${product.stock}`}</p>}
-                          </div>
-                          {/* Badge promo */}
+                        {qtyInCart > 0 && <span className="pos-card-qty">{qtyInCart}</span>}
+                      </div>
+                      <div className="pos-card-info">
+                        <p className="pos-card-name">{product.name}</p>
+                        {product.sku && <p className="pos-card-sku">{product.sku}</p>}
+                        <p className="pos-card-price">{formatRupiah(product.price)}</p>
+                        <div className="pos-card-meta">
+                          {product.trackStock && (
+                            <span className={outOfStock ? "pos-stock pos-stock-out" : "pos-stock"}>
+                              {outOfStock ? "Habis" : `Stok ${product.stock}`}
+                            </span>
+                          )}
                           {productPromos(product).length > 0 && (
-                            <div className="mt-1.5 flex flex-wrap gap-1">
-                              {productPromos(product).map((promo) => (
-                                <span key={promo.id} className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ backgroundColor: "var(--color-primary-soft, rgba(167,48,168,0.12))", color: "var(--color-primary-dark, #7e2582)" }}>
-                                  {promo.name}
-                                </span>
-                              ))}
-                            </div>
+                            <span className="pos-promo-badge">{productPromos(product)[0]?.name}</span>
                           )}
                         </div>
                       </div>
-                      {/* Qty stepper */}
-                      <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-2 rounded-full p-1 border" style={{ backgroundColor: "var(--color-bg)", borderColor: "var(--color-border)" }}>
-                        <button type="button" onClick={() => { const line = [...cart].reverse().find((l) => l.productId === product.id); if (line) updateQty(line.cartKey, line.qty - 1); }} disabled={qtyInCart <= 0} className="flex h-8 w-8 items-center justify-center rounded-full border bg-white text-base font-bold disabled:opacity-30" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>−</button>
-                        <span className="w-6 text-center tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{qtyInCart}</span>
-                        <button type="button" onClick={() => addToCart(product)} disabled={disabled} className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-white disabled:opacity-35" style={{ backgroundColor: "var(--color-primary)" }}>+</button>
-                      </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -294,10 +273,10 @@ export function MarketPosScreen({
           </div>
         </div>
 
-        {/* Cart — mobile bottom bar + sheet */}
-        <div className="hidden md:flex flex-col border rounded-xl p-4 bg-white" style={{ borderColor: "var(--color-border)" }}>
+        {/* Cart — desktop sidebar */}
+        <aside className="pos-cart-panel">
           <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} promoResult={promoResult} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => setShowPayment(true)} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
-        </div>
+        </aside>
       </div>
 
       {/* Mobile cart bar */}
