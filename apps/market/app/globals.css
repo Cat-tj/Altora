@@ -16,10 +16,21 @@
   --market-warning: var(--amber);
 }
 
-/* Aksen produk Market — satu-satunya beda visual dengan produk lain. */
+/* Aksen produk Market — identitas brand Altora (navy → magenta).
+   Override token bersama supaya seluruh UI Market (POS, dashboard, form)
+   memakai warna brand, bukan hijau teal bawaan. */
 :root {
-  --accent: var(--green-2);
-  --accent-soft: var(--green-soft);
+  --accent: #a730a8;
+  --accent-2: #c93fd0;
+  --accent-soft: #f3e4f6;
+  --accent-ink: #ffffff;
+  --green: #a730a8;
+  --green-2: #a730a8;
+  --green-soft: #f3e4f6;
+  --market-teal: #a730a8;
+  --market-teal-deep: #7e2582;
+  --market-teal-soft: #f3e4f6;
+  --market-focus: #a730a8;
 }
 
 
@@ -655,10 +666,11 @@
 
 .pos-card-price {
   margin-top: 0.2rem;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: var(--ink);
+  color: #000;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .pos-card-meta {
@@ -679,9 +691,9 @@
 }
 
 .pos-promo-badge {
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.55rem;
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
@@ -716,4 +728,17 @@
   .pos-cart-panel {
     display: none;
   }
+}
+
+.pos-avatar {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
