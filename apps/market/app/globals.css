@@ -976,3 +976,276 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   POS SIDEBAR — ramping, collapsible (pola Greenie)
+   Expanded: label + ikon (~232px) · Collapsed: ikon saja (~64px)
+   ═══════════════════════════════════════════════════════════ */
+.pos-shell-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.pos-sb-wrap {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.pos-sb {
+  display: flex;
+  flex-direction: column;
+  width: 232px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  transition: width 0.18s cubic-bezier(0.32, 0.72, 0.24, 1);
+  overflow: hidden;
+}
+
+.pos-sb.is-collapsed {
+  width: 64px;
+}
+
+.pos-sb-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 62px;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.pos-sb-brand {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pos-sb-brand strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.pos-sb-brand span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-sb-collapse {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.13s ease, color 0.13s ease;
+  flex-shrink: 0;
+}
+
+.pos-sb-collapse:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.pos-sb-collapse svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pos-sb-groups {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.55rem 1rem;
+  scrollbar-width: thin;
+}
+
+.pos-sb-group {
+  margin-bottom: 0.3rem;
+}
+
+.pos-sb-label {
+  margin: 0.75rem 0.55rem 0.3rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pos-sb.is-collapsed .pos-sb-label {
+  font-size: 0;
+}
+
+.pos-sb.is-collapsed .pos-sb-label::first-letter {
+  font-size: 0.6rem;
+}
+
+.pos-sb-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 40px;
+  padding: 0 0.65rem;
+  border-radius: 9px;
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.pos-sb-link:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.pos-sb-link.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.pos-sb-icon {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+
+.pos-sb-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-sb.is-collapsed .pos-sb-text {
+  display: none;
+}
+
+.pos-sb.is-collapsed .pos-sb-link {
+  justify-content: center;
+  padding: 0;
+}
+
+.pos-sb.is-collapsed .pos-sb-brand {
+  display: none;
+}
+
+.pos-sb.is-collapsed .pos-sb-head {
+  justify-content: center;
+  padding: 0;
+}
+
+.pos-sb-foot {
+  padding: 0.6rem 0.55rem 0.75rem;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.pos-sb-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 9px;
+}
+
+.pos-sb-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, #5b2f9e 100%);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.pos-sb-usertext {
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pos-sb-usertext strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.pos-sb-usertext span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.pos-sb.is-collapsed .pos-sb-user {
+  justify-content: center;
+  padding: 0.3rem 0;
+}
+
+.pos-sb.is-collapsed .pos-sb-usertext {
+  display: none;
+}
+
+/* Tooltip saat collapsed — tampil di kanan ikon */
+.pos-sb.is-collapsed .pos-sb-link:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  padding: 0.35rem 0.6rem;
+  border-radius: 7px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px -4px rgba(10, 31, 68, 0.35);
+  pointer-events: none;
+}
+
+/* Mobile: hamburger + drawer, sidebar desktop disembunyikan */
+.pos-menu-btn-mobile {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .pos-sb-wrap {
+    display: none;
+  }
+  .pos-menu-btn-mobile {
+    display: inline-flex;
+  }
+  .pos-drawer-link {
+    gap: 0.6rem;
+  }
+  .pos-drawer-link svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Desktop: hamburger di topbar tidak perlu (ada sidebar) */
+@media (min-width: 901px) {
+  .pos-drawer-layer-mobile {
+    display: none;
+  }
+}
