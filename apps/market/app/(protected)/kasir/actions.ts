@@ -3,10 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../auth";
 import { closeMarketShift, createMarketSale, openMarketShift, voidMarketSale } from "../../../lib/market-pos";
+import { buildDynamicQris } from "../../../lib/market-qris";
 
 type User = { id: string; tenantId: string; role: "OWNER" | "MANAGER" | "STAFF" };
 function currentUser() {
   return auth().then((session) => session?.user as User | undefined);
+}
+
+/** Ambil payload QRIS dinamis untuk nominal transaksi tertentu. */
+export async function getDynamicQrisAction(amount: number): Promise<{ error?: string; payload?: string; merchantName?: string }> {
+  const user = await currentUser();
+  if (!user) return { error: "Sesi berakhir. Masuk kembali." };
+  try {
+    const { payload, merchantName } = await buildDynamicQris(user.tenantId, amount);
+    return { payload, merchantName };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Gagal membuat QRIS dinamis." };
+  }
 }
 
 export async function openMarketShiftAction(formData: FormData): Promise<{ error?: string; success?: true }> {

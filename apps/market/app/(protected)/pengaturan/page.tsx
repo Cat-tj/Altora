@@ -63,6 +63,30 @@ export default async function PengaturanPage() {
               />
             </div>
 
+            <div>
+              <label htmlFor="staticQrisPayload" style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", marginBottom: "0.5rem" }}>
+                Payload QRIS Statis (untuk QRIS dinamis di kasir)
+              </label>
+              <textarea
+                id="staticQrisPayload"
+                name="staticQrisPayload"
+                rows={3}
+                defaultValue={settings?.staticQrisPayload ?? ""}
+                placeholder="Tempel string QRIS statis dari bank/aggregator (contoh: 0002010102112657…6304XXXX)"
+                style={{
+                  width: "100%",
+                  borderRadius: "18px",
+                  border: "1px solid var(--line)",
+                  padding: "1rem 1.25rem",
+                  fontSize: "0.9rem",
+                  fontFamily: "monospace",
+                }}
+              />
+              <p style={{ fontSize: "0.8rem", color: "var(--ink-2)", marginTop: "0.35rem" }}>
+                Kasir memilih QRIS → sistem membuat QR dinamis berisi nominal transaksi otomatis.
+              </p>
+            </div>
+
             <button
               type="submit"
               style={{
