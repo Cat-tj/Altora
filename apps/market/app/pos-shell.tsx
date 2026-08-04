@@ -108,25 +108,6 @@ export function PosShell({
 
   const sidebar = (
     <nav className={`pos-sb ${collapsed ? "is-collapsed" : ""}`} aria-label="Navigasi Altora Market">
-      <div className="pos-sb-head">
-        <span className="pos-mark" aria-hidden="true">A</span>
-        <div className="pos-sb-brand">
-          <strong>Altora Market</strong>
-          <span>{tenantName}</span>
-        </div>
-        <button
-          type="button"
-          className="pos-sb-collapse"
-          onClick={() => setCollapsed((v) => !v)}
-          aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-          title={collapsed ? "Perluas" : "Ciutkan"}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            {collapsed ? <path d="m9 6 6 6-6 6" /> : <path d="m15 6-6 6 6 6" />}
-          </svg>
-        </button>
-      </div>
-
       <div className="pos-sb-groups">
         {groups.map((group) => (
           <section key={group.label} className="pos-sb-group">
@@ -157,6 +138,17 @@ export function PosShell({
             <span>{role === "OWNER" ? "Pemilik" : role === "MANAGER" ? "Manajer" : "Staf"}</span>
           </div>
         </div>
+        <button
+          type="button"
+          className="pos-sb-collapse"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-label={collapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
+          title={collapsed ? "Perluas" : "Ciutkan"}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            {collapsed ? <path d="m9 6 6 6-6 6" /> : <path d="m15 6-6 6 6 6" />}
+          </svg>
+        </button>
       </div>
     </nav>
   );
