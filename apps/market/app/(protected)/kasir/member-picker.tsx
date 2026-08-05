@@ -37,7 +37,36 @@ export function MemberPicker({
         <label htmlFor="member-search">Cari member</label>
         <input id="member-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nama atau nomor HP" autoFocus autoComplete="off" />
         <div style={{ display: "grid", gap: ".4rem", maxHeight: "18rem", overflowY: "auto" }}>
-          {visible.length === 0 && <p style={{ color: "var(--market-muted)" }}>Member tidak ditemukan.</p>}
+          {visible.length === 0 && (
+            <div style={{ display: "grid", gap: ".5rem", padding: ".5rem 0" }}>
+              <p style={{ color: "var(--market-muted)", margin: 0 }}>
+                {query ? `Tidak ada member "${query}"` : "Belum ada member terdaftar."}
+              </p>
+              <a
+                href="/member"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: ".4rem",
+                  minHeight: "2.4rem",
+                  padding: ".45rem .9rem",
+                  border: "1px solid var(--market-teal)",
+                  borderRadius: ".55rem",
+                  background: "var(--market-teal)",
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: ".82rem",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                }}
+              >
+                + Buat member baru
+              </a>
+            </div>
+          )}
           {visible.map((member) => (
             <button
               key={member.id}
