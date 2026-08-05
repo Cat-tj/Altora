@@ -4,6 +4,7 @@ import { createMarketExpense } from "../../../lib/market-expenses";
 
 export async function POST(request: Request) {
   const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const user = session.user as { id?: string; tenantId?: string; role?: string };
   try {
     const body = await request.json();
