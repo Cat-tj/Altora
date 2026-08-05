@@ -1,5 +1,5 @@
-import { requireRole } from "../../../lib/market-authz";
-import { listMarketCategories } from "../../../lib/market-products";
+import { requireRole } from "../../../../lib/market-authz";
+import { listMarketCategories } from "../../../../lib/market-products";
 import Link from "next/link";
 
 export default async function TambahProdukPage() {
