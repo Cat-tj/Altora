@@ -34,7 +34,7 @@ const roleLabels: Record<ShellRole, string> = {
  * Arsitektur:
  *   AppShell
  *   ├── Sidebar (floating, collapsible, persistent)
- *   ├── Header (brand + keluar)
+ *   ├── Header slot (optional — brand header above main)
  *   ├── Main / children (hanya ini yang berubah)
  *   └── Drawer (mobile, shared)
  *
@@ -49,6 +49,8 @@ export function AppShell({
   role,
   onSignOut,
   nav,
+  header,
+  "data-theme": dataTheme,
 }: {
   children: ReactNode;
   productName: string;
@@ -57,6 +59,8 @@ export function AppShell({
   role: ShellRole;
   onSignOut: () => void;
   nav: ShellNavGroup[];
+  header?: ReactNode;
+  "data-theme"?: string;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -91,7 +95,10 @@ export function AppShell({
     pathname === href || (!exact && pathname.startsWith(`${href}/`));
 
   return (
-    <div className={`app-shell ${collapsed ? "is-collapsed" : ""}`}>
+    <div
+      className={`app-shell ${collapsed ? "is-collapsed" : ""}`}
+      {...(dataTheme ? { "data-theme": dataTheme } : {})}
+    >
       {/* Skip link */}
       <a className="app-shell-skip" href="#app-main">Lewati navigasi</a>
 
@@ -161,6 +168,8 @@ export function AppShell({
 
       {/* Main area */}
       <div className="app-shell-main" id="app-main">
+        {/* Optional header slot — brand header above main content */}
+        {header && <div className="app-shell-header">{header}</div>}
         {/* Children — konten halaman */}
         <main className="app-shell-content">{children}</main>
       </div>

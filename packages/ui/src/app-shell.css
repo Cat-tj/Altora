@@ -274,6 +274,12 @@
   background: var(--accent);
 }
 
+/* ─── Header slot (optional brand header above content) ─── */
+.app-shell-header {
+  flex-shrink: 0;
+  padding: 24px 24px 0;
+}
+
 /* ─── Content ─── */
 .app-shell-content {
   flex: 1;

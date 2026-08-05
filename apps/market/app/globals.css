@@ -16,6 +16,178 @@
   --market-warning: var(--amber);
 }
 
+/* ── Market ambient gradient (semi-glassmorphism foundation) ──
+   Soft radial glows on off-white base. Applied via [data-theme="market"].
+   Fallback: solid #f8f8fc when backdrop-filter unsupported. */
+
+[data-theme="market"] .app-shell {
+  background:
+    radial-gradient(circle at 8% 6%, rgba(168, 85, 247, 0.09), transparent 32%),
+    radial-gradient(circle at 91% 8%, rgba(96, 165, 250, 0.08), transparent 30%),
+    radial-gradient(circle at 88% 90%, rgba(236, 72, 153, 0.055), transparent 34%),
+    radial-gradient(circle at 15% 92%, rgba(129, 140, 248, 0.05), transparent 30%),
+    #f8f8fc;
+}
+
+/* ── Glass surfaces (sidebar, header, KPI cards) ──
+   Semi-transparent white with subtle border.
+   Only on specific surfaces, NOT on every element. */
+
+[data-theme="market"] .app-shell-sidebar {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  [data-theme="market"] .app-shell-sidebar {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
+/* ── Market header (brand bar above main content) ── */
+.market-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0;
+}
+
+.market-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.market-header-left p {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.market-header-left h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.market-header-left span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.market-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.market-header-actions a,
+.market-header-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.market-header-actions .btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2, var(--accent)));
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(167, 48, 168, 0.25);
+}
+
+.market-header-actions .btn-primary:hover {
+  box-shadow: 0 4px 16px rgba(167, 48, 168, 0.35);
+}
+
+.market-header-actions .btn-secondary {
+  background: var(--surface);
+  color: var(--accent);
+  border: 1px solid var(--line);
+}
+
+.market-header-actions .btn-secondary:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* ── Market KPI glass card ── */
+.market-kpi-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 12px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.market-kpi-glass:hover {
+  box-shadow:
+    0 4px 20px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .market-kpi-glass {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
+/* ── Market hero KPI (omzet) ── */
+.market-kpi-hero {
+  background: linear-gradient(135deg, #a730a8 0%, #c93fd0 50%, #a99bf0 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(167, 48, 168, 0.25);
+}
+
+.market-kpi-hero:hover {
+  box-shadow: 0 6px 28px rgba(167, 48, 168, 0.35);
+}
+
+.market-kpi-hero small {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Market panel (content cards) ── */
+.market-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 12px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .market-panel {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
 /* Aksen produk Market — identitas brand Altora (navy → magenta).
    Override token bersama supaya seluruh UI Market (POS, dashboard, form)
    memakai warna brand, bukan hijau teal bawaan. */
