@@ -213,7 +213,7 @@ export function MarketPosScreen({
         </div>
         <div className="pos-actions">
           <Link href="/kasir/riwayat" className="pos-btn">Riwayat</Link>
-          <Link href="/kasir/tutup" className="pos-btn pos-btn-primary">Tutup Shift</Link>
+          <Link href={`/kasir/tutup/${shift.id}`} className="pos-btn pos-btn-primary">Tutup Shift</Link>
         </div>
       </div>
 
