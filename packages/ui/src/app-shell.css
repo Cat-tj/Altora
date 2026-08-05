@@ -48,10 +48,12 @@
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   transition: width 0.22s cubic-bezier(0.32, 0.72, 0.24, 1),
               left 0.22s cubic-bezier(0.32, 0.72, 0.24, 1);
 }
+.app-shell-sidebar::-webkit-scrollbar { display: none; }
 
 /* ─── Brand ─── */
 .app-shell-brand {
