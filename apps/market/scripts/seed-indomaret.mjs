@@ -305,8 +305,8 @@ try {
   }
 
   // ── Stock Transfer ──
-  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", "transferredById", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 20, 'COMPLETED', $7) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[0].id, OUTLETS[0].id, OUTLETS[1].id, USERS.find(u => u.role === 'MANAGER').id, daysAgo(3)]);
-  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", "transferredById", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 15, 'PENDING', $7) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[13].id, OUTLETS[2].id, OUTLETS[0].id, USERS.find(u => u.role === 'MANAGER').id, daysAgo(1)]);
+  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", "transferredById", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 20, 'RECEIVED', $7) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[0].id, OUTLETS[0].id, OUTLETS[1].id, USERS.find(u => u.role === 'MANAGER').id, daysAgo(3)]);
+  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", "transferredById", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 15, 'REQUESTED', $7) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[13].id, OUTLETS[2].id, OUTLETS[0].id, USERS.find(u => u.role === 'MANAGER').id, daysAgo(1)]);
 
   await client.query("COMMIT");
 } catch (err) {
