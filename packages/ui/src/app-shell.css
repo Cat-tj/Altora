@@ -248,68 +248,6 @@
   transition: margin-left 0.22s cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 
-/* ─── Header ─── */
-.app-shell-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  padding: 0 24px;
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-  flex-shrink: 0;
-}
-
-.app-shell-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.app-shell-header-mark {
-  display: none;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--ink), var(--accent));
-  color: #fff;
-  font-weight: 800;
-  font-size: 0.8rem;
-}
-
-.app-shell-header-title {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.app-shell-header-kicker {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--muted-2, var(--muted));
-}
-
-.app-shell-header-tenant {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.app-shell-header-clock {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--muted);
-  margin-left: 12px;
-}
-
 /* ─── Hamburger (mobile) ─── */
 .app-shell-menu-btn {
   display: none;
@@ -394,16 +332,6 @@
     display: flex;
   }
 
-  .app-shell-header-mark {
-    display: grid;
-  }
-
-  .app-shell-header {
-    border-radius: 0;
-    padding: 0 16px;
-    height: 52px;
-  }
-
   .app-shell-content {
     padding: 16px;
   }
@@ -413,19 +341,6 @@
    Mobile small (<480px) — scale down ~20% agar lega
    ═══════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
-  .app-shell-header {
-    height: 44px;
-    padding: 0 10px;
-  }
-  .app-shell-header-brand {
-    font-size: 0.82rem;
-  }
-  .app-shell-header-tenant {
-    font-size: 0.72rem;
-  }
-  .app-shell-header-clock {
-    font-size: 0.7rem;
-  }
   .app-shell-menu-btn {
     width: 32px;
     height: 32px;
@@ -437,10 +352,5 @@
   }
   .app-shell-content {
     padding: 10px;
-  }
-  .app-shell-header-mark {
-    width: 28px;
-    height: 28px;
-    font-size: 0.72rem;
   }
 }

@@ -1,5 +1,6 @@
 import { requireRole } from "../../../../lib/market-authz";
 import { listStockTransfers } from "../../../../lib/market-stock-transfer";
+import Link from "next/link";
 
 export default async function TransferStokPage() {
   const user = await requireRole(["OWNER", "MANAGER"]);
@@ -13,6 +14,14 @@ export default async function TransferStokPage() {
           <h1>Transfer Stok Inter-Outlet</h1>
           <span>Mutasi pengiriman barang dan persediaan stok antar cabang outlet.</span>
         </div>
+        <Link href="/produk/transfer/baru" style={{
+          display: "inline-flex", alignItems: "center", gap: ".4rem",
+          height: 36, padding: "0 .9rem", borderRadius: 8,
+          background: "var(--accent)", color: "#fff",
+          fontWeight: 700, fontSize: ".78rem", textDecoration: "none",
+        }}>
+          + Transfer Baru
+        </Link>
       </div>
 
       <section className="market-panel">

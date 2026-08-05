@@ -61,7 +61,6 @@ export function AppShell({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [now, setNow] = useState("");
 
   // Restore collapse state dari localStorage
   useEffect(() => {
@@ -80,23 +79,7 @@ export function AppShell({
   // Tutup drawer — stabil agar AppDrawer useEffect tidak infinite-loop
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // Clock (untuk POS)
-  useEffect(() => {
-    const fmt = () =>
-      new Intl.DateTimeFormat("id-ID", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(new Date());
-    setNow(fmt());
-    const t = setInterval(() => setNow(fmt()), 30_000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Filter nav by role
+  /* Filter nav by role */
   const groups = nav
     .map((g) => ({
       ...g,
@@ -178,27 +161,6 @@ export function AppShell({
 
       {/* Main area */}
       <div className="app-shell-main" id="app-main">
-        {/* Header — persistent di SEMUA halaman */}
-        <header className="app-shell-header">
-          <div className="app-shell-header-left">
-            <button
-              type="button"
-              className="app-shell-menu-btn"
-              aria-label="Buka menu navigasi"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((v) => !v)}
-            >
-              <span /><span /><span />
-            </button>
-            <span className="app-shell-header-mark" aria-hidden="true">A</span>
-            <div className="app-shell-header-title">
-              <span className="app-shell-header-kicker">{productName}</span>
-              <span className="app-shell-header-tenant">{tenantName}</span>
-            </div>
-            {now && <span className="app-shell-header-clock">{now}</span>}
-          </div>
-          </header>
-
         {/* Children — konten halaman */}
         <main className="app-shell-content">{children}</main>
       </div>
