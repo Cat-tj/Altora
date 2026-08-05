@@ -208,23 +208,23 @@ try {
 
   // ── Users ──
   for (const u of USERS) {
-    await client.query(`INSERT INTO "User" (id, "tenantId", name, email, "passwordHash", role) VALUES ($1, $2, $3, $4, $5, $6::"UserRole") ON CONFLICT (id) DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`, [u.id, TENANT.id, u.name, u.email, passHash, u.role]);
+    await client.query(`INSERT INTO "User" (id, "tenantId", name, email, "passwordHash", role, "isActive", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6::"UserRole", true, NOW(), NOW()) ON CONFLICT (id) DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`, [u.id, TENANT.id, u.name, u.email, passHash, u.role]);
     if (u.role !== "OWNER") {
       // Assign ke semua outlet untuk kemudahan demo
       for (const o of OUTLETS) {
-        await client.query(`INSERT INTO "UserOutlet" (id, "tenantId", "userId", "outletId") VALUES ($1, $2, $3, $4) ON CONFLICT ("userId", "outletId") DO NOTHING`, [uid("uo"), TENANT.id, u.id, o.id]);
+        await client.query(`INSERT INTO "UserOutlet" (id, "tenantId", "userId", "outletId", "createdAt") VALUES ($1, $2, $3, $4, NOW()) ON CONFLICT ("userId", "outletId") DO NOTHING`, [uid("uo"), TENANT.id, u.id, o.id]);
       }
     }
   }
 
   // ── Suppliers ──
   for (const s of SUPPLIERS) {
-    await client.query(`INSERT INTO "Supplier" (id, "tenantId", name, phone, "contactPerson", "paymentTerms") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [s.id, TENANT.id, s.name, s.phone, s.contact, s.terms]);
+    await client.query(`INSERT INTO "Supplier" (id, "tenantId", name, phone, "contactPerson", "paymentTerms", status, "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, 'ACTIVE', NOW(), NOW()) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [s.id, TENANT.id, s.name, s.phone, s.contact, s.terms]);
   }
 
   // ── Categories ──
   for (const c of CATEGORIES) {
-    await client.query(`INSERT INTO "Category" (id, "tenantId", name) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [c.id, TENANT.id, c.name]);
+    await client.query(`INSERT INTO "Category" (id, "tenantId", name, "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW()) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [c.id, TENANT.id, c.name]);
   }
 
   // ── Products + Stock ──
@@ -232,18 +232,18 @@ try {
   for (const p of PRODUCTS) {
     const pid = `idm_p_${p.sku.slice(-5)}`;
     productIds.push({ id: pid, ...p });
-    await client.query(`INSERT INTO "Product" (id, "tenantId", "categoryId", name, sku, price) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price = EXCLUDED.price`, [pid, TENANT.id, p.cat, p.name, p.sku, p.price]);
+    await client.query(`INSERT INTO "Product" (id, "tenantId", "categoryId", name, sku, price, "trackStock", "isActive", "createdAt", "updatedAt", kind, "trackExpiry", "trackSerial") VALUES ($1, $2, $3, $4, $5, $6, true, true, NOW(), NOW(), 'PHYSICAL', false, false) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price = EXCLUDED.price`, [pid, TENANT.id, p.cat, p.name, p.sku, p.price]);
 
     // Stok di semua outlet (variasi qty)
     for (const o of OUTLETS) {
       const qtyVariation = Math.max(1, p.qty + Math.floor((Math.random() - 0.5) * p.qty * 0.3));
-      const psResult = await client.query(`INSERT INTO "ProductStock" (id, "tenantId", "productId", "outletId", qty) VALUES ($1, $2, $3, $4, $5) ON CONFLICT ("productId", "outletId") DO UPDATE SET qty = EXCLUDED.qty RETURNING id`, [uid("ps"), TENANT.id, pid, o.id, qtyVariation]);
+      const psResult = await client.query(`INSERT INTO "ProductStock" (id, "tenantId", "productId", "outletId", qty, "updatedAt") VALUES ($1, $2, $3, $4, $5, NOW()) ON CONFLICT ("productId", "outletId") DO UPDATE SET qty = EXCLUDED.qty RETURNING id`, [uid("ps"), TENANT.id, pid, o.id, qtyVariation]);
       const psId = psResult.rows[0].id;
 
-      await client.query(`INSERT INTO "StockLedger" (id, "tenantId", "outletId", "productId", delta, "balanceAfter", source, "sourceId", note, "idempotencyKey") VALUES ($1, $2, $3, $4, $5, $5, 'OPENING', $6, $7, $8) ON CONFLICT ("idempotencyKey") DO NOTHING`, [uid("sl"), TENANT.id, o.id, pid, qtyVariation, psId, "Saldo awal seed", `opening_indomaret:${psId}`]);
+      await client.query(`INSERT INTO "StockLedger" (id, "tenantId", "outletId", "productId", delta, "balanceAfter", source, note, "idempotencyKey", "createdAt") VALUES ($1, $2, $3, $4, $5, $5, 'OPENING', $6, $7, NOW()) ON CONFLICT ("idempotencyKey") DO NOTHING`, [uid("sl"), TENANT.id, o.id, pid, qtyVariation, "Saldo awal seed", `opening_indomaret:${psId}`]);
 
       // Reorder point
-      await client.query(`INSERT INTO "StockReorderPoint" (id, "tenantId", "productId", "outletId", "minQty") VALUES ($1, $2, $3, $4, $5) ON CONFLICT ("productId", "outletId") DO NOTHING`, [uid("rp"), TENANT.id, pid, o.id, Math.max(3, Math.floor(p.qty * 0.15))]);
+      await client.query(`INSERT INTO "StockReorderPoint" (id, "tenantId", "productId", "outletId", "minQty", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) ON CONFLICT ("productId", "outletId") DO NOTHING`, [uid("rp"), TENANT.id, pid, o.id, Math.max(3, Math.floor(p.qty * 0.15))]);
     }
   }
 
