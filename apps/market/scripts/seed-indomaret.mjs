@@ -201,7 +201,7 @@ try {
   await client.query("BEGIN");
 
   // ── Tenant & Outlets ──
-  await client.query(`INSERT INTO "Tenant" (id, name, slug, "businessType", plan) VALUES ($1, $2, $3, 'RETAIL', 'FREE') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [TENANT.id, TENANT.name, "indomaret"]);
+  await client.query(`INSERT INTO "Tenant" (id, name, slug, "businessType", plan, "updatedAt") VALUES ($1, $2, $3, 'RETAIL', 'FREE', NOW()) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, "updatedAt" = NOW()`, [TENANT.id, TENANT.name, "indomaret"]);
   for (const o of OUTLETS) {
     await client.query(`INSERT INTO "Outlet" (id, "tenantId", name) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`, [o.id, TENANT.id, o.name]);
   }
