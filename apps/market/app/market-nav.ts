@@ -1,9 +1,9 @@
-import type { ShellNavGroup } from "@altora/ui/product-shell";
+import type { ShellNavGroup } from "@altora/ui/app-shell";
 import { NAV_ICONS } from "@altora/ui/nav-icons";
 
 /**
  * Navigasi Altora Market lengkap.
- * Ikon dari NAV_ICONS (shared) — sidebar, drawer POS, dan bottom-nav
+ * Ikon dari NAV_ICONS (shared) — sidebar, drawer, dan header
  * memakai data ini supaya tidak ada duplikasi menu.
  */
 export const marketNav: ShellNavGroup[] = [

@@ -1,0 +1,424 @@
+/* ============================================================
+   AppShell — Shell induk Altora Market (SEMUA halaman).
+   
+   Desain: floating sidebar, margin24-32px dari edge, radius 16px,
+   shadow 0 20px 40px rgba(15,23,42,0.08), transisi200-250ms ease-out.
+   ============================================================ */
+
+/* ─── Layout root ─── */
+.app-shell {
+  display: flex;
+  min-height: 100dvh;
+  padding: 24px;
+  gap: 20px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+/* ─── Skip link ─── */
+.app-shell-skip {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--ink);
+  font-weight: 700;
+  transform: translateY(-200%);
+  transition: transform 0.2s var(--ease, ease);
+}
+.app-shell-skip:focus {
+  transform: translateY(0);
+}
+
+/* ─── Sidebar (floating) ─── */
+.app-shell-sidebar {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  bottom: 24px;
+  z-index: 20;
+  display: flex;
+  width: var(--sidebar-w, 232px);
+  flex-direction: column;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  transition: width 0.22s cubic-bezier(0.32, 0.72, 0.24, 1),
+              left 0.22s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+/* ─── Brand ─── */
+.app-shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 18px 16px 16px;
+}
+
+.app-shell-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--ink), var(--accent));
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.app-shell-brand-text {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app-shell-brand-text strong {
+  overflow: hidden;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.app-shell-brand-text small {
+  color: var(--muted-2, var(--muted));
+  font-size: 0.72rem;
+}
+
+/* ─── Nav ─── */
+.app-shell-nav {
+  flex: 1;
+  padding: 4px 10px;
+  overflow-y: auto;
+}
+
+.app-shell-group {
+  margin-bottom: 18px;
+}
+
+.app-shell-group h2 {
+  margin: 0 8px 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-2, var(--muted));
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.app-shell-group a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink-2, var(--ink));
+  text-decoration: none;
+  transition: background 0.13s ease, color 0.13s ease;
+}
+
+.app-shell-group a:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.app-shell-group a.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.app-shell-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── User footer ─── */
+.app-shell-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.app-shell-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.app-shell-user-text {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app-shell-user-text strong {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell-user-text small {
+  font-size: 0.7rem;
+  color: var(--muted-2, var(--muted));
+}
+
+.app-shell-signout {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+.app-shell-signout:hover {
+  border-color: #b3261e;
+  color: #b3261e;
+}
+
+/* ─── Collapse toggle ─── */
+.app-shell-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px 10px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+.app-shell-collapse:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+.app-shell-collapse svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─── Main area ─── */
+.app-shell-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: calc(var(--sidebar-w, 232px) + 20px);
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.22s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+/* ─── Header ─── */
+.app-shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  flex-shrink: 0;
+}
+
+.app-shell-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-shell-header-mark {
+  display: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--ink), var(--accent));
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.app-shell-header-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-shell-header-kicker {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted-2, var(--muted));
+}
+
+.app-shell-header-tenant {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell-header-clock {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 12px;
+}
+
+.app-shell-header-signout {
+  padding: 6px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.app-shell-header-signout:hover {
+  border-color: #b3261e;
+  color: #b3261e;
+}
+
+/* ─── Hamburger (mobile) ─── */
+.app-shell-menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 38px;
+  height: 38px;
+  padding: 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.app-shell-menu-btn span {
+  display: block;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--ink-2);
+  transition: background 0.15s ease;
+}
+.app-shell-menu-btn:hover span {
+  background: var(--accent);
+}
+
+/* ─── Content ─── */
+.app-shell-content {
+  flex: 1;
+  padding: 24px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Collapsed state
+   ═══════════════════════════════════════════════════════════ */
+.app-shell.is-collapsed .app-shell-sidebar {
+  width: 72px;
+}
+
+.app-shell.is-collapsed .app-shell-main {
+  margin-left: calc(72px + 20px);
+}
+
+/* Sembunyi teks */
+.app-shell.is-collapsed .app-shell-brand-text,
+.app-shell.is-collapsed .app-shell-group > h2,
+.app-shell.is-collapsed .app-shell-nav-text,
+.app-shell.is-collapsed .app-shell-user-text,
+.app-shell.is-collapsed .app-shell-signout {
+  font-size: 0;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+/* Center icon saat collapse */
+.app-shell.is-collapsed .app-shell-group a {
+  justify-content: center;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive: mobile (<860px)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  .app-shell {
+    padding: 0;
+    gap: 0;
+  }
+
+  .app-shell-sidebar {
+    display: none;
+  }
+
+  .app-shell-main {
+    margin-left: 0;
+  }
+
+  .app-shell-menu-btn {
+    display: flex;
+  }
+
+  .app-shell-header-mark {
+    display: grid;
+  }
+
+  .app-shell-header {
+    border-radius: 0;
+    padding: 0 16px;
+    height: 52px;
+  }
+
+  .app-shell-content {
+    padding: 16px;
+  }
+}

@@ -1,16 +1,15 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { resolveProductLoginUrl } from "@altora/core/auth-redirect";
-import { ProductShell, type ShellRole } from "@altora/ui/product-shell";
+import { AppShell, type ShellRole } from "@altora/ui/app-shell";
 import { marketNav } from "./market-nav";
-import { PosShell } from "./pos-shell";
 
 /**
- * Market: mode kasir (/kasir*) render fullscreen tanpa sidebar back-office
- * (kasir tidak butuh laporan/produk/member saat melayani). Semua rute lain
- * memakai kerangka bersama dengan sidebar.
+ * MarketShell — wrapper tipis yang memanggil AppShell dengan nav Market.
+ *
+ * SATU komponen untuk SEMUA halaman (kasir, produk, transaksi, dll).
+ * Tidak ada PosShell / ProductShell terpisah.
  */
 export function MarketShell({
   children,
@@ -23,30 +22,18 @@ export function MarketShell({
   userName: string;
   role: ShellRole;
 }) {
-  const pathname = usePathname();
-  const isPos = pathname === "/kasir" || pathname.startsWith("/kasir/");
-
-  if (isPos) {
-    return (
-      <PosShell tenantName={tenantName} userName={userName} role={role}>
-        {children}
-      </PosShell>
-    );
-  }
-
   return (
-    <ProductShell
+    <AppShell
+      productName="Altora Market"
+      tenantName={tenantName}
+      userName={userName}
+      role={role}
       nav={marketNav}
       onSignOut={() =>
         signOut({ callbackUrl: resolveProductLoginUrl(window.location.origin, "market.altora.my.id") })
       }
-      productName="Altora Market"
-      role={role}
-      tenantName={tenantName}
-      tenantNoun="Toko"
-      userName={userName}
     >
       {children}
-    </ProductShell>
+    </AppShell>
   );
 }

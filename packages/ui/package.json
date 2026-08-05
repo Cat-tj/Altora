@@ -14,7 +14,9 @@
     "./nav-icons": "./src/nav-icons.tsx",
     "./app-sidebar": "./src/app-sidebar.tsx",
     "./app-drawer": "./src/app-drawer.tsx",
-    "./drawer-shared.css": "./src/drawer-shared.css"
+    "./drawer-shared.css": "./src/drawer-shared.css",
+    "./app-shell": "./src/app-shell.tsx",
+    "./app-shell.css": "./src/app-shell.css"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

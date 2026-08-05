@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "@altora/ui/tokens.css";
-import "@altora/ui/product-shell.css";
+import "@altora/ui/app-shell.css";
 import "@altora/ui/drawer-shared.css";
 import "./globals.css";
 
