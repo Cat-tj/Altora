@@ -5,6 +5,58 @@ import { applyCountAction, cancelCountAction, createCountAction, type CountState
 
 const initial: CountState = {};
 
+function CameraModal({ onScan, onClose }: { onScan: (code: string) => void; onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scannerRef = useRef<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      if (cancelled || !containerRef.current) return;
+      const scanner = new Html5Qrcode("opname-camera");
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
+        (text: string) => {
+          onScan(text);
+          scanner.stop().catch(() => {});
+          onClose();
+        },
+        () => {},
+      );
+    })();
+    return () => {
+      cancelled = true;
+      scannerRef.current?.stop().catch(() => {});
+      scannerRef.current?.clear().catch(() => {});
+    };
+  }, [onScan, onClose]);
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,.6)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem",
+      }}
+    >
+      <div style={{
+        background: "#fff", borderRadius: 12, padding: "1rem", width: "100%", maxWidth: 360,
+        display: "flex", flexDirection: "column", gap: ".6rem",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <strong style={{ fontSize: ".85rem" }}>📷 Scan Barcode</strong>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
+        </div>
+        <div id="opname-camera" ref={containerRef} style={{ width: "100%", borderRadius: 8, overflow: "hidden" }} />
+        <p style={{ fontSize: ".7rem", color: "#888", textAlign: "center" }}>Arahkan kamera ke barcode produk</p>
+      </div>
+    </div>
+  );
+}
+
 function Notice({ state }: { state: CountState }) {
   if (state.error) return <p className="market-form-error" role="alert">{state.error}</p>;
   if (state.success) return <p className="market-form-success" role="status">{state.success}</p>;
@@ -22,6 +74,7 @@ export function CountSheetForm({
   const [counted, setCounted] = useState<Record<string, string>>({});
   const [scanInput, setScanInput] = useState("");
   const [scanFeedback, setScanFeedback] = useState<{ type: "found" | "notfound"; name: string } | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const scanRef = useRef<HTMLInputElement>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
@@ -127,6 +180,18 @@ export function CountSheetForm({
             }}
           />
         </div>
+        <button
+          type="button"
+          onClick={() => setCameraOpen(true)}
+          style={{
+            flexShrink: 0, height: 36, padding: "0 .7rem", borderRadius: 8,
+            border: "1.5px solid var(--market-teal)", background: "#fff",
+            color: "var(--market-teal)", fontWeight: 700, fontSize: ".75rem",
+            cursor: "pointer", whiteSpace: "nowrap",
+          }}
+        >
+          📷 Kamera
+        </button>
         {scanFeedback && (
           <span style={{
             fontSize: ".78rem",
@@ -224,6 +289,13 @@ export function CountSheetForm({
       <button className="market-checkout-button" disabled={pending || filled.length === 0} type="submit" style={{ marginTop: ".5rem" }}>
         {pending ? "Menyimpan…" : `Simpan draft (${filled.length} produk dihitung)`}
       </button>
+
+      {cameraOpen && (
+        <CameraModal
+          onScan={handleScan}
+          onClose={() => setCameraOpen(false)}
+        />
+      )}
     </form>
   );
 }
