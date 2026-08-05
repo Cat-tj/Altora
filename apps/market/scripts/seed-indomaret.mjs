@@ -249,17 +249,17 @@ try {
 
   // ── Members ──
   for (const m of MEMBERS) {
-    await client.query(`INSERT INTO "Member" (id, "tenantId", name, phone, points) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`, [m.id, TENANT.id, m.name, m.phone, m.points]);
+    await client.query(`INSERT INTO "Member" (id, "tenantId", name, phone, points, "depositBalance", "joinedAt", "createdAt", "updatedAt", "stampCount") VALUES ($1, $2, $3, $4, $5, 0, NOW(), NOW(), NOW(), 0) ON CONFLICT (id) DO NOTHING`, [m.id, TENANT.id, m.name, m.phone, m.points]);
   }
 
   // ── Promos ──
   for (const pr of PROMOS) {
-    await client.query(`INSERT INTO "Promo" (id, "tenantId", name, type, "isActive") VALUES ($1, $2, $3, $4, true) ON CONFLICT (id) DO NOTHING`, [pr.id, TENANT.id, pr.name, pr.type]);
+    await client.query(`INSERT INTO "Promo" (id, "tenantId", name, "discountType", "discountValue", scope, "minSpend", "startTime", "endTime", "isActive", "createdAt", "updatedAt", "ruleType", priority, stackable, "usageCount", "ruleVersion", "qualifyingQty", "rewardQty", "rewardDiscountPercent") VALUES ($1, $2, $3, 'FIXED', 0, 'ALL', 0, NOW(), NOW() + INTERVAL '30 days', true, NOW(), NOW(), 'SIMPLE', 1, false, 0, 1, 0, 0, 0) ON CONFLICT (id) DO NOTHING`, [pr.id, TENANT.id, pr.name]);
   }
 
   // ── Expenses ──
   for (const e of EXPENSES) {
-    await client.query(`INSERT INTO "Expense" (id, "tenantId", "outletId", name, amount, "createdAt") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO NOTHING`, [e.id, TENANT.id, OUTLETS[0].id, e.name, e.amount, daysAgo(Math.floor(Math.random() * 7))]);
+    await client.query(`INSERT INTO "Expense" (id, "tenantId", "outletId", "createdById", category, name, amount, "spentAt", "createdAt") VALUES ($1, $2, $3, $4, 'OPERATIONAL', $5, $6, $7, NOW()) ON CONFLICT (id) DO NOTHING`, [e.id, TENANT.id, OUTLETS[0].id, USERS.find(u => u.role === 'MANAGER').id, e.name, e.amount, daysAgo(Math.floor(Math.random() * 7))]);
   }
 
   // ── Sales (7 hari terakhir) ──
@@ -274,8 +274,10 @@ try {
       const itemCount = 1 + Math.floor(Math.random() * 5);
       let total = 0;
       const saleDate = daysAgo(day);
+      const paymentMethod = randomChoice(["CASH", "QRIS", "E_WALLET"]);
+      const memberId = Math.random() > 0.6 ? randomChoice(MEMBERS).id : null;
 
-      await client.query(`INSERT INTO "Sale" (id, "tenantId", "outletId", "userId", "memberId", total, "paymentMethod", "createdAt") VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`, [saleId, TENANT.id, outlet.id, cashier.id, Math.random() > 0.6 ? randomChoice(MEMBERS).id : null, 0, randomChoice(["CASH", "QRIS", "E_WALLET"]), saleDate]);
+      await client.query(`INSERT INTO "Sale" (id, "tenantId", "outletId", "cashierId", "invoiceNumber", subtotal, "discountAmount", "taxAmount", total, "paymentMethod", "amountPaid", "changeAmount", status, "createdAt", "updatedAt", "cashbackAmount", "orderType", "parkingFee", "channelMarkupAmount", "isSplitPayment") VALUES ($1, $2, $3, $4, $5, 0, 0, 0, 0, $6, 0, 0, 'COMPLETED', $7, $7, 0, 'DINE_IN', 0, 0, false) ON CONFLICT (id) DO NOTHING`, [saleId, TENANT.id, outlet.id, cashier.id, `INV-${saleId.slice(-8).toUpperCase()}`, paymentMethod, saleDate]);
 
       for (let i = 0; i < itemCount; i++) {
         const prod = randomChoice(popularProducts);
@@ -286,26 +288,26 @@ try {
         // Kurangi stok
         await client.query(`UPDATE "ProductStock" SET qty = qty - $1 WHERE "productId" = $2 AND "outletId" = $3 AND qty >= $1`, [qty, prod.id, outlet.id]);
 
-        await client.query(`INSERT INTO "SaleItem" (id, "tenantId", "saleId", "productId", qty, "unitPrice", subtotal) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING`, [uid("si"), TENANT.id, saleId, prod.id, qty, prod.price, subtotal]);
+        await client.query(`INSERT INTO "SaleItem" (id, "tenantId", "saleId", "productId", "productName", price, qty, "discountAmount", subtotal, "returnedQty", "isFavoritePick", "variantPriceDelta") VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8, 0, false, 0) ON CONFLICT (id) DO NOTHING`, [uid("si"), TENANT.id, saleId, prod.id, prod.name, prod.price, qty, subtotal]);
       }
 
       // Update total sale
       await client.query(`UPDATE "Sale" SET total = $1 WHERE id = $2`, [total, saleId]);
 
       // Point transaction untuk member
-      if (Math.random() > 0.6) {
+      if (memberId) {
         const points = Math.floor(total / 1000);
-        await client.query(`UPDATE "Member" SET points = points + $1 WHERE id = (SELECT "memberId" FROM "Sale" WHERE id = $2)`, [points, saleId]);
+        await client.query(`UPDATE "Member" SET points = points + $1 WHERE id = $2`, [points, memberId]);
       }
 
       // Audit log
-      await client.query(`INSERT INTO "AuditLog" (id, "tenantId", "userId", action, "entityType", "entityId", "createdAt") VALUES ($1, $2, $3, 'CREATE', 'Sale', $4, $5) ON CONFLICT (id) DO NOTHING`, [uid("al"), TENANT.id, cashier.id, saleId, saleDate]);
+      await client.query(`INSERT INTO "AuditLog" (id, "tenantId", "userId", action, description, "createdAt") VALUES ($1, $2, $3, 'CREATE', $4, $5) ON CONFLICT (id) DO NOTHING`, [uid("al"), TENANT.id, cashier.id, `Sale ${saleId.slice(-8)} created`, saleDate]);
     }
   }
 
   // ── Stock Transfer ──
-  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, 20, 'COMPLETED', $6) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[0].id, OUTLETS[0].id, OUTLETS[1].id, daysAgo(3)]);
-  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, 15, 'PENDING', $6) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[13].id, OUTLETS[2].id, OUTLETS[0].id, daysAgo(1)]);
+  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", "transferredById", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 20, 'COMPLETED', $7) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[0].id, OUTLETS[0].id, OUTLETS[1].id, USERS.find(u => u.role === 'MANAGER').id, daysAgo(3)]);
+  await client.query(`INSERT INTO "StockTransfer" (id, "tenantId", "productId", "fromOutletId", "toOutletId", "transferredById", qty, status, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, 15, 'PENDING', $7) ON CONFLICT (id) DO NOTHING`, [uid("st"), TENANT.id, productIds[13].id, OUTLETS[2].id, OUTLETS[0].id, USERS.find(u => u.role === 'MANAGER').id, daysAgo(1)]);
 
   await client.query("COMMIT");
 } catch (err) {
