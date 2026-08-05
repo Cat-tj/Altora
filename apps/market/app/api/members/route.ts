@@ -1,29 +1,29 @@
 import { NextResponse } from "next/server";
-import { auth } from "../../auth";
-import { db } from "../../lib/db";
+import { auth } from "../../../auth";
+import { createMarketMember } from "../../../lib/market-members";
 
 export async function POST(request: Request) {
   const session = await auth();
-  const user = session?.user as { id?: string; tenantId?: string; role?: string } | undefined;
-  if (!user?.id || !user?.tenantId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await request.json();
-  const { name, phone, email } = body ?? {};
-  if (!name?.trim() || !phone?.trim()) return NextResponse.json({ error: "Nama dan No. HP wajib diisi." }, { status: 400 });
-
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
-    const member = await db.member.create({
-      data: {
-        tenantId: user.tenantId,
-        name: name.trim(),
-        phone: phone.trim(),
-        email: email?.trim() || null,
-        points: 0,
-        deposit: 0,
-      },
+    const body = await request.json();
+    const { name, phone, email, point, tier } = body;
+    if (!name || !phone) {
+      return NextResponse.json({ error: "Name & phone wajib." }, { status: 400 });
+    }
+    const member = await createMarketMember({
+      tenantId: session.user.tenantId ?? "default",
+      name,
+      phone,
+      email: email || undefined,
+      points: Number(point) || 0,
+      tier: tier || "BASIC",
     });
-    return NextResponse.json({ success: true, id: member.id });
-  } catch (err: unknown) {
-    return NextResponse.json({ error: (err as Error).message || "Gagal menyimpan." }, { status: 500 });
+    return NextResponse.json({ member }, { status: 201 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
