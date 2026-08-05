@@ -1,0 +1,687 @@
+/* ============================================================
+   Dashboard Hari Ini — scoped CSS module
+   Semi-glassmorphism + Altora gradient theme
+   ============================================================ */
+
+/* ─── Layout ─── */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1400px;
+}
+
+/* ─── KPI Grid ─── */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.kpiCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 2px 12px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.kpiCard:hover {
+  box-shadow:
+    0 4px 20px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .kpiCard {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
+.kpiLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.kpiValue {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpiSub {
+  font-size: 0.75rem;
+  color: var(--muted-2, var(--muted));
+}
+
+/* Hero KPI (Omzet) */
+.kpiHero {
+  background: linear-gradient(135deg, #a730a8 0%, #c93fd0 50%, #a99bf0 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(167, 48, 168, 0.25);
+}
+
+.kpiHero:hover {
+  box-shadow: 0 6px 28px rgba(167, 48, 168, 0.35);
+}
+
+.kpiHero .kpiLabel {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.kpiHero .kpiValue {
+  color: #fff;
+}
+
+.kpiHero .kpiSub {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Trend indicator */
+.kpiTrend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+  width: fit-content;
+}
+
+.kpiTrendUp {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.kpiTrendDown {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.kpiTrendNeutral {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+/* ─── Content Grid ─── */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.contentGrid > .fullWidth {
+  grid-column: 1 / -1;
+}
+
+/* ─── Panel (shared card style) ─── */
+.panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 12px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  padding: 20px;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .panel {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
+.panelHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panelHeading h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.panelHeading p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.panelLink {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.panelLink:hover {
+  color: var(--ink);
+}
+
+/* ─── Sales Trend Chart ─── */
+.chartContainer {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+.chartYAxis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 24px;
+  width: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.chartArea {
+  margin-left: 68px;
+  height: 200px;
+  position: relative;
+  border-bottom: 1px solid var(--line);
+}
+
+.chartBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 100%;
+  padding: 0 4px;
+}
+
+.chartBar {
+  flex: 1;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--accent) 0%, rgba(167, 48, 168, 0.4) 100%);
+  min-height: 4px;
+  transition: height 0.4s var(--ease);
+  position: relative;
+}
+
+.chartBar:hover {
+  opacity: 0.85;
+}
+
+.chartBarTooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.chartBar:hover .chartBarTooltip {
+  opacity: 1;
+}
+
+.chartLabels {
+  display: flex;
+  gap: 8px;
+  padding: 6px 4px 0;
+  margin-left: 68px;
+}
+
+.chartLabel {
+  flex: 1;
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.chartLegend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.chartLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chartLegendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ─── Action Items ─── */
+.alertList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alertItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--line-2);
+  transition: background 0.15s ease;
+}
+
+.alertItem:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.alertDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.alertDotWarning {
+  background: var(--amber);
+}
+
+.alertDotDanger {
+  background: var(--red);
+}
+
+.alertDotInfo {
+  background: var(--blue);
+}
+
+.alertContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.alertTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.alertBody {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.alertAction {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.alertAction:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* ─── Top Products ─── */
+.topList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.topItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.topItem:last-child {
+  border-bottom: none;
+}
+
+.topRank {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.topInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.topName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topMeta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.topOmzet {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ─── Stock Health ─── */
+.stockGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stockStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--line-2);
+}
+
+.stockStatLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.stockStatValue {
+  font-size: 1.2rem;
+  font-weight: 800;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.stockStatPct {
+  font-size: 0.68rem;
+  color: var(--muted-2, var(--muted));
+}
+
+.stockSafe { color: var(--green); }
+.stockLow { color: var(--amber); }
+.stockOut { color: var(--red); }
+
+/* Progress bar */
+.stockBar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--line-2);
+  margin-top: 8px;
+}
+
+.stockBarSegment {
+  height: 100%;
+  transition: width 0.4s var(--ease);
+}
+
+/* ─── Payment Breakdown ─── */
+.paymentList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paymentItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paymentIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.paymentIconCash { background: var(--green-soft); color: var(--green); }
+.paymentIconQris { background: var(--blue); color: #fff; background: rgba(59, 130, 246, 0.12); color: var(--blue); }
+.paymentIconTransfer { background: var(--purple-soft); color: var(--purple); }
+.paymentIconOther { background: var(--amber-soft); color: var(--amber); }
+
+.paymentInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.paymentMethod {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.paymentCount {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.paymentAmount {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.paymentBar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-2);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.paymentBarFill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.4s var(--ease);
+}
+
+/* ─── Cashier Activity ─── */
+.cashierList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cashierItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--line-2);
+}
+
+.cashierAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.cashierInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cashierName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cashierMeta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.cashierStats {
+  display: flex;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cashierStat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cashierStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+/* ─── Empty States ─── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.emptyIcon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.emptyTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-2, var(--ink));
+}
+
+.emptyDesc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  max-width: 280px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .kpiValue {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stockGrid {
+    grid-template-columns: 1fr;
+  }
+}
