@@ -336,6 +336,7 @@
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
+  margin-bottom: 0.25rem;
 }
 
 .pos-search-wrap {
@@ -637,13 +638,13 @@
 .pos-card-out {
   background: var(--surface-2, #f7f6fa);
   border-color: var(--line);
-  filter: grayscale(0.9);
+  filter: grayscale(0.5);
   cursor: not-allowed;
 }
 
 .pos-card-out .pos-card-name,
 .pos-card-out .pos-card-price {
-  color: var(--muted);
+  color: #6b7280;
 }
 
 .pos-card-ribbon {

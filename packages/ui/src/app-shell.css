@@ -308,22 +308,6 @@
   margin-left: 12px;
 }
 
-.app-shell-header-signout {
-  padding: 6px 16px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--ink-2);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-.app-shell-header-signout:hover {
-  border-color: #b3261e;
-  color: #b3261e;
-}
-
 /* ─── Hamburger (mobile) ─── */
 .app-shell-menu-btn {
   display: none;

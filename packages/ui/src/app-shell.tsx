@@ -194,10 +194,7 @@ export function AppShell({
             </div>
             {now && <span className="app-shell-header-clock">{now}</span>}
           </div>
-          <button className="app-shell-header-signout" onClick={onSignOut} type="button">
-            Keluar
-          </button>
-        </header>
+          </header>
 
         {/* Children — konten halaman */}
         <main className="app-shell-content">{children}</main>
