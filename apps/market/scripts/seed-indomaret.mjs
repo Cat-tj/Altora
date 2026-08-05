@@ -259,7 +259,7 @@ try {
 
   // ── Expenses ──
   for (const e of EXPENSES) {
-    await client.query(`INSERT INTO "Expense" (id, "tenantId", "outletId", "createdById", category, name, amount, "spentAt", "createdAt") VALUES ($1, $2, $3, $4, 'OPERATIONAL', $5, $6, $7, NOW()) ON CONFLICT (id) DO NOTHING`, [e.id, TENANT.id, OUTLETS[0].id, USERS.find(u => u.role === 'MANAGER').id, e.name, e.amount, daysAgo(Math.floor(Math.random() * 7))]);
+    await client.query(`INSERT INTO "Expense" (id, "tenantId", "outletId", "createdById", category, note, description, amount, "spentAt", "createdAt") VALUES ($1, $2, $3, $4, 'LAINNYA', $5, $5, $6, $7, NOW()) ON CONFLICT (id) DO NOTHING`, [e.id, TENANT.id, OUTLETS[0].id, USERS.find(u => u.role === 'MANAGER').id, e.name, e.amount, daysAgo(Math.floor(Math.random() * 7))]);
   }
 
   // ── Sales (7 hari terakhir) ──
