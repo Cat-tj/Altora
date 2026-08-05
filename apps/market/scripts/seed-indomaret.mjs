@@ -254,7 +254,7 @@ try {
 
   // ── Promos ──
   for (const pr of PROMOS) {
-    await client.query(`INSERT INTO "Promo" (id, "tenantId", name, "discountType", "discountValue", scope, "minSpend", "startTime", "endTime", "isActive", "createdAt", "updatedAt", "ruleType", priority, stackable, "usageCount", "ruleVersion", "qualifyingQty", "rewardQty", "rewardDiscountPercent") VALUES ($1, $2, $3, 'FIXED', 0, 'ALL', 0, NOW(), NOW() + INTERVAL '30 days', true, NOW(), NOW(), 'SIMPLE', 1, false, 0, 1, 0, 0, 0) ON CONFLICT (id) DO NOTHING`, [pr.id, TENANT.id, pr.name]);
+    await client.query(`INSERT INTO "Promo" (id, "tenantId", name, "discountType", "discountValue", scope, "minSpend", "startTime", "endTime", "isActive", "createdAt", "updatedAt", "ruleType", priority, stackable, "usageCount", "ruleVersion", "qualifyingQty", "rewardQty", "rewardDiscountPercent") VALUES ($1, $2, $3, 'FIXED', 0, 'ALL', 0, NOW(), NOW() + INTERVAL '30 days', true, NOW(), NOW(), 'DISCOUNT', 1, false, 0, 1, 0, 0, 0) ON CONFLICT (id) DO NOTHING`, [pr.id, TENANT.id, pr.name]);
   }
 
   // ── Expenses ──
@@ -274,7 +274,7 @@ try {
       const itemCount = 1 + Math.floor(Math.random() * 5);
       let total = 0;
       const saleDate = daysAgo(day);
-      const paymentMethod = randomChoice(["CASH", "QRIS", "E_WALLET"]);
+      const paymentMethod = randomChoice(["CASH", "QRIS", "EWALLET"]);
       const memberId = Math.random() > 0.6 ? randomChoice(MEMBERS).id : null;
 
       await client.query(`INSERT INTO "Sale" (id, "tenantId", "outletId", "cashierId", "invoiceNumber", subtotal, "discountAmount", "taxAmount", total, "paymentMethod", "amountPaid", "changeAmount", status, "createdAt", "updatedAt", "cashbackAmount", "orderType", "parkingFee", "channelMarkupAmount", "isSplitPayment") VALUES ($1, $2, $3, $4, $5, 0, 0, 0, 0, $6, 0, 0, 'COMPLETED', $7, $7, 0, 'DINE_IN', 0, 0, false) ON CONFLICT (id) DO NOTHING`, [saleId, TENANT.id, outlet.id, cashier.id, `INV-${saleId.slice(-8).toUpperCase()}`, paymentMethod, saleDate]);
