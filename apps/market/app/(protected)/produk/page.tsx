@@ -1,11 +1,15 @@
 import { requireRole } from "../../../lib/market-authz";
-import { listMarketProducts } from "../../../lib/market-products";
+import { listMarketProducts, listMarketCategories } from "../../../lib/market-products";
 import { EmptyMarketState, formatRupiah } from "../market-page-ui";
-import Link from "next/link";
+import { ProductFormModal } from "./product-form-modal";
 
 export default async function ProductsPage() {
   const user = await requireRole(["OWNER", "MANAGER"]);
-  const products = await listMarketProducts(user.tenantId, user.id, user.role);
+  const [products, categories] = await Promise.all([
+    listMarketProducts(user.tenantId, user.id, user.role),
+    listMarketCategories(user.tenantId),
+  ]);
+
   return (
     <div className="market-stack">
       <div className="market-page-title">
@@ -14,14 +18,7 @@ export default async function ProductsPage() {
           <h1>Katalog retail</h1>
           <span>Harga dan stok dari data Market pada outlet yang Anda akses.</span>
         </div>
-        <Link href="/produk/tambah" style={{
-          display: "inline-flex", alignItems: "center", gap: ".4rem",
-          height: 36, padding: "0 .9rem", borderRadius: 8,
-          background: "var(--accent)", color: "#fff",
-          fontWeight: 700, fontSize: ".78rem", textDecoration: "none",
-        }}>
-          + Tambah
-        </Link>
+        <ProductFormModal categories={categories} />
       </div>
       <section className="market-panel market-product-table">
         <div className="market-panel-heading">
