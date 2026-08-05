@@ -229,10 +229,13 @@ try {
 
   // ── Products + Stock ──
   const productIds = [];
+  let productCount = 0;
   for (const p of PRODUCTS) {
     const pid = `idm_p_${p.sku.slice(-5)}`;
     productIds.push({ id: pid, ...p });
     await client.query(`INSERT INTO "Product" (id, "tenantId", "categoryId", name, sku, price, "trackStock", "isActive", "createdAt", "updatedAt", kind, "trackExpiry", "trackSerial") VALUES ($1, $2, $3, $4, $5, $6, true, true, NOW(), NOW(), 'GOODS', false, false) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price = EXCLUDED.price`, [pid, TENANT.id, p.cat, p.name, p.sku, p.price]);
+    productCount++;
+    if (productCount % 10 === 0) console.log(`  ... ${productCount} products inserted`);
 
     // Stok di semua outlet (variasi qty)
     for (const o of OUTLETS) {
@@ -323,7 +326,7 @@ console.log(`
 ╠══════════════════════════════════════════════╣
 ║  Tenant  : Indomaret                         ║
 ║  Outlet  : ${OUTLETS.length} cabang                           ║
-║  Produk  : ${PRODUCTS.length} item retail                    ║
+  console.log(`║  Produk  : ${productCount} item retail                    ║`);
 ║  Member  : ${MEMBERS.length} pelanggan                      ║
 ║  Staf    : ${USERS.length} orang                          ║
 ║  Penjualan: ~63 transaksi (7 hari)            ║
