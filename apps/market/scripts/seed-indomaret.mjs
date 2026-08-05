@@ -326,7 +326,7 @@ console.log(`
 ╠══════════════════════════════════════════════╣
 ║  Tenant  : Indomaret                         ║
 ║  Outlet  : ${OUTLETS.length} cabang                           ║
-  console.log(`║  Produk  : ${productCount} item retail                    ║`);
+║  Produk  : ${productCount} item retail                    ║
 ║  Member  : ${MEMBERS.length} pelanggan                      ║
 ║  Staf    : ${USERS.length} orang                          ║
 ║  Penjualan: ~63 transaksi (7 hari)            ║
