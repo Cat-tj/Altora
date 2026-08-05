@@ -4,9 +4,7 @@ import { createMarketExpense } from "../../../lib/market-expenses";
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const user = session.user as { id?: string; tenantId?: string; role?: string };
   try {
     const body = await request.json();
     const { outletId, category, amount, description } = body;
@@ -14,12 +12,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "outletId, category, amount wajib." }, { status: 400 });
     }
     const expense = await createMarketExpense({
-      tenantId: session.user.tenantId ?? "default",
+      tenantId: user.tenantId ?? "default",
       outletId,
       category,
       amount: Number(amount),
       description: description || "",
-      createdById: session.user.id ?? "",
+      createdById: user.id ?? "",
     });
     return NextResponse.json({ expense }, { status: 201 });
   } catch (e: unknown) {

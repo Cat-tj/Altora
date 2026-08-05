@@ -4,24 +4,20 @@ import { createMarketMember } from "../../../lib/market-members";
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const user = session.user as { id?: string; tenantId?: string; role?: string };
   try {
     const body = await request.json();
-    const { name, phone, email, point, tier } = body;
+    const { name, phone, email } = body;
     if (!name || !phone) {
       return NextResponse.json({ error: "Name & phone wajib." }, { status: 400 });
     }
-    const member = await createMarketMember({
-      tenantId: session.user.tenantId ?? "default",
+    await createMarketMember({
+      tenantId: user.tenantId ?? "default",
       name,
       phone,
       email: email || undefined,
-      points: Number(point) || 0,
-      tier: tier || "BASIC",
     });
-    return NextResponse.json({ member }, { status: 201 });
+    return NextResponse.json({ ok: true }, { status: 201 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
