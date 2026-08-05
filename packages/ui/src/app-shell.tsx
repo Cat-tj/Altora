@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AppDrawer } from "./app-drawer";
 
 /* ─── Types ─── */
@@ -76,6 +76,9 @@ export function AppShell({
       localStorage.setItem("app.sidebar.collapsed", collapsed ? "1" : "0");
     } catch { /* ok */ }
   }, [collapsed]);
+
+  // Tutup drawer — stabil agar AppDrawer useEffect tidak infinite-loop
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   // Clock (untuk POS)
   useEffect(() => {
@@ -203,7 +206,7 @@ export function AppShell({
       {/* Drawer mobile — shared, SATU untuk semua halaman */}
       <AppDrawer
         open={menuOpen}
-        onClose={() => setMenuOpen(false)}
+        onClose={closeMenu}
         nav={nav}
         userName={userName}
         role={role}

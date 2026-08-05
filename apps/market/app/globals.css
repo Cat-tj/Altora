@@ -683,3 +683,58 @@
   color: var(--muted);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Mobile small (<480px) — scale down ~20% agar lega di HP
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* --- Dashboard Beranda --- */
+  .market-page-title h1 { font-size: 1rem; }
+  .market-page-title p { font-size: 0.72rem; }
+  .market-page-title span { font-size: 0.68rem; }
+  .market-primary-actions { gap: 0.5rem; }
+  .market-primary-actions a { padding: 0.45rem 0.9rem; font-size: 0.78rem; border-radius: 0.55rem; }
+  .market-stat-grid { gap: 0.5rem; }
+  .market-stat-card { padding: 0.65rem; border-radius: 0.6rem; }
+  .market-stat-card span { font-size: 0.7rem; }
+  .market-stat-card strong { font-size: 1.15rem; }
+  .market-stat-card small { font-size: 0.65rem; }
+  .market-panel { padding: 0.7rem; border-radius: 0.65rem; }
+  .market-panel-heading h2 { font-size: 0.92rem; }
+  .market-panel-heading p { font-size: 0.68rem; }
+  .market-alert-list article { padding: 0.55rem; }
+  .market-alert-list strong { font-size: 0.76rem; }
+  .market-alert-list p { font-size: 0.66rem; }
+  .market-content-grid { gap: 0.5rem; }
+  .market-stack { gap: 0.7rem; }
+
+  /* --- POS content --- */
+  .pos-layout { gap: 0.65rem; }
+  .pos-row-top { gap: 0.5rem; margin-bottom: 0.15rem; }
+  .pos-search { min-height: 2.2rem; font-size: 0.82rem; padding: 0 0.6rem; }
+  .pos-search-wrap { padding: 0 0.5rem; }
+  .pos-chips { padding: 0 0.5rem; }
+  .pos-chip { height: 2rem; font-size: 0.72rem; padding: 0 0.5rem; }
+  .pos-card { border-radius: 0.55rem; padding: 0.5rem; gap: 0.2rem; min-height: 4.5rem; }
+  .pos-card-name { font-size: 0.72rem; line-height: 1.2; }
+  .pos-card-price { font-size: 0.78rem; }
+  .pos-card-stock { font-size: 0.58rem; }
+  .pos-card-avatar { width: 26px; height: 26px; border-radius: 0.45rem; font-size: 0.62rem; }
+  .pos-card-ribbon { font-size: 0.52rem; padding: 0.12rem 0.35rem; }
+  .pos-promo-badge { font-size: 0.52rem; }
+  .pos-body { padding: 0 0.5rem; gap: 0.5rem; }
+  .pos-empty { padding: 1rem; }
+  .pos-empty p { font-size: 0.75rem; }
+  .pos-btn { height: 2rem; font-size: 0.72rem; }
+  .pos-btn-text { font-size: 0.78rem; }
+  .pos-btn-count { font-size: 0.6rem; min-width: 1.2rem; height: 1.2rem; }
+  .pos-product-list { gap: 0.55rem; }
+  .pos-product-header { gap: 0.5rem; margin-bottom: 0.2rem; }
+  .pos-product-header strong { font-size: 0.82rem; }
+  .pos-product-header span { font-size: 0.68rem; }
+
+  /* --- POS Cart (mobile full-width) --- */
+  .pos-cart-panel { position: static; border-radius: 0.65rem; padding: 0.7rem; }
+  .pos-cart-title { font-size: 0.88rem; }
+  .pos-cart-count { font-size: 0.68rem; }
+}
+

@@ -406,3 +406,39 @@
     padding: 16px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile small (<480px) — scale down ~20% agar lega
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .app-shell-header {
+    height: 44px;
+    padding: 0 10px;
+  }
+  .app-shell-header-brand {
+    font-size: 0.82rem;
+  }
+  .app-shell-header-tenant {
+    font-size: 0.72rem;
+  }
+  .app-shell-header-clock {
+    font-size: 0.7rem;
+  }
+  .app-shell-menu-btn {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    gap: 3px;
+  }
+  .app-shell-menu-btn span {
+    height: 2px;
+  }
+  .app-shell-content {
+    padding: 10px;
+  }
+  .app-shell-header-mark {
+    width: 28px;
+    height: 28px;
+    font-size: 0.72rem;
+  }
+}
