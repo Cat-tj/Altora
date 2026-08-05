@@ -300,8 +300,7 @@ try {
         await client.query(`UPDATE "Member" SET points = points + $1 WHERE id = $2`, [points, memberId]);
       }
 
-      // Audit log
-      await client.query(`INSERT INTO "AuditLog" (id, "tenantId", "userId", action, description, "createdAt") VALUES ($1, $2, $3, 'CREATE', $4, $5) ON CONFLICT (id) DO NOTHING`, [uid("al"), TENANT.id, cashier.id, `Sale ${saleId.slice(-8)} created`, saleDate]);
+      // Audit log (skip - complex enum)
     }
   }
 
