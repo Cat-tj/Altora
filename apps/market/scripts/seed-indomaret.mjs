@@ -228,11 +228,13 @@ try {
   }
 
   // ── Products + Stock ──
+  const CAT_NAME_TO_ID = Object.fromEntries(CATEGORIES.map(c => [c.name, c.id]));
   const productIds = [];
   for (const p of PRODUCTS) {
     const pid = `idm_p_${p.sku.slice(-5)}`;
     productIds.push({ id: pid, ...p });
-    await client.query(`INSERT INTO "Product" (id, "tenantId", "categoryId", name, sku, price, "trackStock", "isActive", "createdAt", "updatedAt", kind, "trackExpiry", "trackSerial") VALUES ($1, $2, $3, $4, $5, $6, true, true, NOW(), NOW(), 'GOODS', false, false) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price = EXCLUDED.price`, [pid, TENANT.id, p.cat, p.name, p.sku, p.price]);
+    const catId = CAT_NAME_TO_ID[p.cat];
+    await client.query(`INSERT INTO "Product" (id, "tenantId", "categoryId", name, sku, price, "trackStock", "isActive", "createdAt", "updatedAt", kind, "trackExpiry", "trackSerial") VALUES ($1, $2, $3, $4, $5, $6, true, true, NOW(), NOW(), 'GOODS', false, false) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price = EXCLUDED.price`, [pid, TENANT.id, catId, p.name, p.sku, p.price]);
 
     // Stok di semua outlet (variasi qty)
     for (const o of OUTLETS) {
