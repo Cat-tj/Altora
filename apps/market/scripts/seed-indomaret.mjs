@@ -228,7 +228,9 @@ try {
   }
 
   // ── Products + Stock ──
-  const CAT_NAME_TO_ID = Object.fromEntries(CATEGORIES.map(c => [c.name, c.id]));
+  // Load actual category IDs from DB
+  const catRows = (await client.query(`SELECT id, name FROM "Category" WHERE "tenantId" = $1`, [TENANT.id])).rows;
+  const CAT_NAME_TO_ID = Object.fromEntries(catRows.map(c => [c.name, c.id]));
   const productIds = [];
   for (const p of PRODUCTS) {
     const pid = `idm_p_${p.sku.slice(-5)}`;
