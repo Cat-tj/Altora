@@ -204,7 +204,6 @@ export function AppShell({
       <MobileBottomNav
         nav={nav}
         role={role}
-        onMoreClick={() => setMenuOpen(true)}
       />
     </div>
   );

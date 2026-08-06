@@ -13,11 +13,9 @@ import type { ShellNavGroup, ShellRole } from "./app-shell";
 export function MobileBottomNav({
   nav,
   role,
-  onMoreClick,
 }: {
   nav: ShellNavGroup[];
   role: ShellRole;
-  onMoreClick: () => void;
 }) {
   const pathname = usePathname();
 
@@ -26,12 +24,12 @@ export function MobileBottomNav({
     .flatMap((g) => g.items)
     .filter((i) => i.roles.includes(role));
 
-  // 4 shortcut utama: Hari Ini, Kasir, Produk, Transaksi
+  // 3 shortcut utama: Hari Ini, Kasir, Produk
+  // Transaksi masuk drawer (tidak di bottom nav)
   const shortcuts = [
     allItems.find((i) => i.href === "/simple/hari-ini"),
     allItems.find((i) => i.href === "/kasir"),
     allItems.find((i) => i.href === "/produk"),
-    allItems.find((i) => i.href === "/kasir/riwayat"),
   ].filter(Boolean) as typeof allItems;
 
   const isActive = (href: string, exact?: boolean) =>
@@ -52,21 +50,6 @@ export function MobileBottomNav({
           <span className="mobile-bottom-nav-label">{item.label}</span>
         </Link>
       ))}
-      <button
-        type="button"
-        className="mobile-bottom-nav-item"
-        onClick={onMoreClick}
-        aria-label="Buka menu lengkap"
-      >
-        <span className="mobile-bottom-nav-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
-            <circle cx="12" cy="5" r="1.5" />
-            <circle cx="12" cy="12" r="1.5" />
-            <circle cx="12" cy="19" r="1.5" />
-          </svg>
-        </span>
-        <span className="mobile-bottom-nav-label">Lainnya</span>
-      </button>
     </nav>
   );
 }
