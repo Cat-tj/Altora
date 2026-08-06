@@ -7,19 +7,19 @@ type Category = { id: string; name: string };
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  height: "52px",
-  borderRadius: "999px",
+  height: "44px",
+  borderRadius: "10px",
   border: "1px solid var(--line)",
-  padding: "0 1.25rem",
-  fontSize: "1rem",
+  padding: "0 1rem",
+  fontSize: "0.9rem",
   boxSizing: "border-box",
 };
 
 const labelStyle: React.CSSProperties = {
   display: "block",
-  fontSize: "0.875rem",
+  fontSize: "0.8rem",
   fontWeight: "600",
-  marginBottom: "0.5rem",
+  marginBottom: "0.4rem",
   color: "var(--ink)",
 };
 
@@ -29,8 +29,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
   const [error, setError] = useState("");
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const scannerRef = useRef<any>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,15 +38,16 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  // Cleanup camera on unmount or close
+  // Cleanup camera on unmount
   useEffect(() => {
     return () => stopCamera();
   }, []);
 
   function stopCamera() {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(() => {});
+      scannerRef.current.clear().catch(() => {});
+      scannerRef.current = null;
     }
     setScanning(false);
   }
@@ -55,52 +55,24 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
   async function startCamera() {
     setCameraError("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const scanner = new Html5Qrcode("pm-barcode-camera");
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 120 }, aspectRatio: 2 },
+        (text: string) => {
+          const skuInput = document.getElementById("pm-sku") as HTMLInputElement | null;
+          if (skuInput) skuInput.value = text;
+          stopCamera();
+        },
+        () => {},
+      );
       setScanning(true);
-    } catch {
-      setCameraError("Tidak bisa akses kamera. Pastikan izin kamera sudah diberikan.");
+    } catch (err: any) {
+      setCameraError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
     }
   }
-
-  // Barcode detection via BarcodeDetector API (Chrome Android / some browsers)
-  useEffect(() => {
-    if (!scanning || !videoRef.current) return;
-    let raf: number;
-    let detector: any = null;
-
-    const BarcodeDetectorClass = (window as any).BarcodeDetector;
-    if (BarcodeDetectorClass) {
-      detector = new BarcodeDetectorClass({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "qr_code"] });
-    }
-
-    function tick() {
-      if (!detector || !videoRef.current || videoRef.current.readyState < 2) {
-        raf = requestAnimationFrame(tick);
-        return;
-      }
-      detector.detect(videoRef.current).then((barcodes: any[]) => {
-        if (barcodes.length > 0) {
-          const code = barcodes[0].rawValue;
-          const skuInput = document.getElementById("pm-sku") as HTMLInputElement | null;
-          if (skuInput) skuInput.value = code;
-          stopCamera();
-          return;
-        }
-        raf = requestAnimationFrame(tick);
-      }).catch(() => {
-        raf = requestAnimationFrame(tick);
-      });
-    }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [scanning]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -200,9 +172,9 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
                     type="button"
                     onClick={() => scanning ? stopCamera() : startCamera()}
                     style={{
-                      height: 52, width: 52, borderRadius: "999px", border: "1px solid var(--line)",
+                      height: 44, width: 44, borderRadius: "10px", border: "1px solid var(--line)",
                       background: scanning ? "#fef2f2" : "#f0f7ff",
-                      cursor: "pointer", fontSize: "1.3rem", display: "flex",
+                      cursor: "pointer", fontSize: "1.1rem", display: "flex",
                       alignItems: "center", justifyContent: "center", flexShrink: 0,
                     }}
                     title={scanning ? "Matikan kamera" : "Scan barcode dari kamera"}
@@ -212,29 +184,9 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
                 </div>
               </div>
 
-              {/* Camera viewfinder */}
+              {/* Camera viewfinder — Html5Qrcode mounts here */}
               {scanning && (
-                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#000" }}>
-                  <video
-                    ref={videoRef}
-                    style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
-                    playsInline
-                    muted
-                  />
-                  {/* Scan line animation */}
-                  <div style={{
-                    position: "absolute", left: "10%", right: "10%", top: "50%",
-                    height: 2, background: "var(--accent)", boxShadow: "0 0 8px var(--accent)",
-                    transform: "translateY(-50%)", animation: "scanPulse 1.5s ease-in-out infinite",
-                  }} />
-                  <p style={{
-                    position: "absolute", bottom: 8, left: 0, right: 0,
-                    textAlign: "center", color: "#fff", fontSize: ".75rem",
-                    textShadow: "0 1px 4px rgba(0,0,0,.6)", margin: 0,
-                  }}>
-                    Arahkan kamera ke barcode
-                  </p>
-                </div>
+                <div id="pm-barcode-camera" style={{ borderRadius: 10, overflow: "hidden", minHeight: 180 }} />
               )}
 
               {cameraError && (
@@ -274,7 +226,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
                 type="submit"
                 disabled={loading}
                 style={{
-                  width: "100%", height: "52px", borderRadius: "999px",
+                  width: "100%", height: "48px", borderRadius: "10px",
                   backgroundColor: loading ? "var(--muted)" : "var(--accent)",
                   color: "#fff", fontWeight: "700", border: "none",
                   marginTop: ".25rem", cursor: loading ? "wait" : "pointer",
@@ -286,13 +238,6 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes scanPulse {
-          0%, 100% { opacity: .4; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </>
   );
 }
