@@ -1,6 +1,7 @@
 import { requireRole } from "../../../lib/market-authz";
 import { getTenantSettings, listOutlets, listStaff } from "../../../lib/market-settings";
 import QrisScanner from "./qris-scanner";
+import { SettingsFormClient } from "./settings-form-client";
 
 export default async function PengaturanPage() {
   const user = await requireRole(["OWNER"]);
@@ -24,60 +25,11 @@ export default async function PengaturanPage() {
           <div className="market-panel-heading">
             <h2>Profil Toko & Format Struk</h2>
           </div>
-          <form action="/api/settings/business" method="POST" style={{ display: "grid", gap: "0.7rem", marginTop: "0.7rem" }}>
-            <div>
-              <label htmlFor="taxPercent" style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", marginBottom: "0.3rem", color: "var(--ink-2)" }}>
-                Pajak Penjualan (%)
-              </label>
-              <input
-                id="taxPercent"
-                name="taxPercent"
-                type="number"
-                defaultValue={settings?.taxPercent || 0}
-                style={{
-                  width: "100%", height: 36, borderRadius: 8,
-                  border: "1px solid var(--line)", padding: "0 0.75rem",
-                  fontSize: "0.8rem",
-                }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="receiptFooter" style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", marginBottom: "0.3rem", color: "var(--ink-2)" }}>
-                Pesan Footer Struk
-              </label>
-              <textarea
-                id="receiptFooter"
-                name="receiptFooter"
-                rows={2}
-                defaultValue={settings?.receiptFooter || "Terima kasih telah berbelanja di toko kami!"}
-                style={{
-                  width: "100%", borderRadius: 8,
-                  border: "1px solid var(--line)", padding: "0.5rem 0.75rem",
-                  fontSize: "0.8rem", resize: "vertical",
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "600", marginBottom: "0.3rem", color: "var(--ink-2)" }}>
-                QRIS Statis (Upload / Scan QR)
-              </label>
-              <QrisScanner initialPayload={settings?.staticQrisPayload ?? ""} />
-            </div>
-
-            <button
-              type="submit"
-              style={{
-                width: "100%", height: 36, borderRadius: 8,
-                backgroundColor: "var(--accent)", color: "#fff",
-                fontWeight: "700", border: "none", fontSize: "0.8rem",
-                cursor: "pointer", marginTop: "0.3rem",
-              }}
-            >
-              Simpan Pengaturan
-            </button>
-          </form>
+          <SettingsFormClient
+            taxPercent={settings?.taxPercent || 0}
+            receiptFooter={settings?.receiptFooter || "Terima kasih telah berbelanja di toko kami!"}
+            initialQrisPayload={settings?.staticQrisPayload ?? ""}
+          />
         </section>
 
         {/* Panel Daftar Outlet / Cabang */}

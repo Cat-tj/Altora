@@ -1,7 +1,14 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 
+/**
+ * QRIS Scanner — live camera scan via Html5Qrcode.
+ *
+ * Scans real QRIS QR codes from camera in real-time.
+ * Validates payload is hex-encoded EMV QRIS before accepting.
+ * Shows error popup with red icon if validation fails.
+ */
 export default function QrisScanner({
   initialPayload = "",
   onPayloadChange,
@@ -10,112 +17,150 @@ export default function QrisScanner({
   onPayloadChange?: (payload: string) => void;
 }) {
   const [payload, setPayload] = useState(initialPayload);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("");
-  const fileRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [scanning, setScanning] = useState(false);
+  const [status, setStatus] = useState("");
+  const [errorPopup, setErrorPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+  const scannerRef = useRef<any>(null);
 
-  const decodeQR = useCallback(async (file: File) => {
-    setStatus("Membaca QR...");
-    setPreview(URL.createObjectURL(file));
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
 
-    try {
-      // Dynamically import jsQR
-      const jsQR = (await import("jsqr")).default;
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error("Gagal load gambar"));
-        img.src = URL.createObjectURL(file);
-      });
-
-      const canvas = canvasRef.current!;
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, canvas.width, canvas.height, {
-        inversionAttempts: "attemptBoth",
-      });
-
-      if (code?.data) {
-        setPayload(code.data);
-        onPayloadChange?.(code.data);
-        setStatus(`✅ QR terbaca! (${code.data.substring(0, 30)}...)`);
-      } else {
-        setStatus("❌ QR tidak terdeteksi. Coba foto lebih jelas.");
-      }
-    } catch (err: any) {
-      setStatus(`❌ Error: ${err.message}`);
+  function stopCamera() {
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(() => {});
+      scannerRef.current.clear().catch(() => {});
+      scannerRef.current = null;
     }
-  }, [onPayloadChange]);
+    setScanning(false);
+  }
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) decodeQR(file);
-  };
+  function showError(msg: string) {
+    setErrorPopup({ show: true, message: msg });
+    setTimeout(() => setErrorPopup({ show: false, message: "" }), 5000);
+  }
 
-  const handlePaste = async () => {
+  function validateQrisPayload(data: string): { valid: boolean; error?: string } {
+    const trimmed = data.trim();
+    if (!trimmed) return { valid: false, error: "Payload kosong." };
+
+    // Check if it's a URL (some QRIS implementations encode URLs)
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return { valid: false, error: "QR berisi URL, bukan payload QRIS hex. Pastikan QR statis bank yang di-scan, bukan QR dynamic merchant." };
+    }
+
+    // Check if it's valid hex
+    if (!/^[0-9A-Fa-f]+$/.test(trimmed)) {
+      return { valid: false, error: "Payload QRIS harus berisi hex (0-9, A-F). Data yang di-scan bukan QRIS hex yang valid." };
+    }
+
+    // Check minimum length (EMV QRIS is typically 100+ chars)
+    if (trimmed.length < 50) {
+      return { valid: false, error: `Payload terlalu pendek (${trimmed.length} chars). QRIS hex biasanya 100+ karakter.` };
+    }
+
+    // Check starts with 000201 (EMV Merchant Presented QR)
+    if (!trimmed.startsWith("000201")) {
+      return { valid: false, error: "Payload tidak dimulai dengan '000201' (EMV QRIS header). Pastikan ini QRIS statis dari bank." };
+    }
+
+    return { valid: true };
+  }
+
+  async function startCamera() {
+    setStatus("Memulai kamera...");
     try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        for (const type of item.types) {
-          if (type.startsWith("image/")) {
-            const blob = await item.getType(type);
-            const file = new File([blob], "paste.png", { type });
-            decodeQR(file);
-            return;
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const scanner = new Html5Qrcode("qris-camera-container");
+      scannerRef.current = scanner;
+
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+        (decodedText: string) => {
+          // Validate the scanned QR content
+          const validation = validateQrisPayload(decodedText);
+          if (validation.valid) {
+            const hex = decodedText.trim().toUpperCase();
+            setPayload(hex);
+            onPayloadChange?.(hex);
+            setStatus(`✅ QRIS terbaca! (${hex.substring(0, 30)}...)`);
+            stopCamera();
+          } else {
+            showError(validation.error!);
+            setStatus("❌ " + validation.error);
+            // Don't stop camera — let user try again
           }
-        }
-      }
-      setStatus("❌ Tidak ada gambar di clipboard.");
-    } catch {
-      setStatus("❌ Gagal akses clipboard.");
+        },
+        () => {}, // ignore errors during scanning
+      );
+      setScanning(true);
+      setStatus("📷 Arahkan kamera ke QRIS...");
+    } catch (err: any) {
+      setStatus("");
+      showError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
     }
-  };
+  }
 
   return (
     <div style={{ display: "grid", gap: "0.6rem" }}>
-      <canvas ref={canvasRef} style={{ display: "none" }} />
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFile}
-        style={{ display: "none" }}
-      />
-
-      {/* Preview */}
-      {preview && (
+      {/* Error Popup */}
+      {errorPopup.show && (
         <div style={{
-          display: "flex", alignItems: "center", gap: "0.75rem",
-          padding: "0.6rem", borderRadius: "10px",
+          display: "flex", alignItems: "center", gap: "0.6rem",
+          padding: "0.7rem 0.9rem", borderRadius: 10,
+          background: "#fef2f2", border: "1px solid #fecaca",
+          animation: "slideIn 0.2s ease",
+        }}>
+          <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>⚠️</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#b91c1c" }}>Error QRIS</div>
+            <div style={{ fontSize: "0.72rem", color: "#991b1b", marginTop: 2 }}>{errorPopup.message}</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorPopup({ show: false, message: "" })}
+            style={{ background: "none", border: "none", color: "#991b1b", cursor: "pointer", fontSize: "1rem", padding: 4 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Camera container */}
+      <div id="qris-camera-container" style={{ borderRadius: 10, overflow: "hidden", minHeight: scanning ? 200 : 0 }} />
+
+      {/* Status */}
+      {status && !errorPopup.show && (
+        <div style={{
+          fontSize: "0.72rem", fontWeight: 600,
+          color: status.startsWith("✅") ? "#0e7a57" : status.startsWith("❌") ? "#b91c1c" : "var(--muted)",
+          padding: "0.4rem 0.6rem", borderRadius: 8,
+          background: status.startsWith("✅") ? "#e4f5ee" : status.startsWith("❌") ? "#fef2f2" : "#f5f5f5",
+        }}>
+          {status}
+        </div>
+      )}
+
+      {/* Scanned payload preview */}
+      {payload && (
+        <div style={{
+          padding: "0.5rem 0.7rem", borderRadius: 10,
           border: "1px solid var(--line)", background: "#fafafa",
         }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={preview}
-            alt="QR Preview"
-            style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8 }}
-          />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)" }}>
-              {status}
-            </div>
-            {payload && (
-              <div style={{
-                fontSize: "0.65rem", color: "var(--muted)",
-                fontFamily: "var(--font-mono)", marginTop: 2,
-                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              }}>
-                {payload.substring(0, 60)}...
-              </div>
-            )}
+          <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)", marginBottom: 2 }}>
+            ✅ Payload QRIS (hex)
+          </div>
+          <div style={{
+            fontSize: "0.62rem", color: "var(--muted)",
+            fontFamily: "monospace", wordBreak: "break-all",
+            lineHeight: 1.4,
+          }}>
+            {payload.substring(0, 120)}{payload.length > 120 ? "..." : ""}
+          </div>
+          <div style={{ fontSize: "0.6rem", color: "var(--muted)", marginTop: 4 }}>
+            {payload.length} karakter
           </div>
         </div>
       )}
@@ -124,35 +169,25 @@ export default function QrisScanner({
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => scanning ? stopCamera() : startCamera()}
           style={{
-            flex: 1, height: 36, borderRadius: 8, border: "1px solid var(--accent)",
-            background: "#fff", color: "var(--accent)", fontWeight: 700,
-            fontSize: "0.75rem", cursor: "pointer",
+            flex: 1, height: 38, borderRadius: 10,
+            border: scanning ? "1px solid #b91c1c" : "1px solid var(--accent)",
+            background: scanning ? "#fef2f2" : "#fff",
+            color: scanning ? "#b91c1c" : "var(--accent)",
+            fontWeight: 700, fontSize: "0.78rem", cursor: "pointer",
           }}
         >
-          📷 Scan / Upload QR
-        </button>
-        <button
-          type="button"
-          onClick={handlePaste}
-          style={{
-            height: 36, padding: "0 0.75rem", borderRadius: 8,
-            border: "1px solid var(--line)", background: "#fff",
-            color: "var(--ink-2)", fontWeight: 600, fontSize: "0.75rem",
-            cursor: "pointer",
-          }}
-        >
-          📋 Paste
+          {scanning ? "⏹ Stop Kamera" : "📷 Scan QRIS dari Kamera"}
         </button>
       </div>
 
       {/* Hidden payload for form submission */}
       <input type="hidden" name="staticQrisPayload" value={payload} />
 
-      {/* Manual override (collapsible) */}
+      {/* Manual override */}
       <details style={{ fontSize: "0.7rem", color: "var(--muted)" }}>
-        <summary style={{ cursor: "pointer" }}>Atau tempel string manual</summary>
+        <summary style={{ cursor: "pointer" }}>Atau tempel hex manual</summary>
         <textarea
           name="staticQrisPayload"
           rows={2}
@@ -169,6 +204,13 @@ export default function QrisScanner({
           }}
         />
       </details>
+
+      <style>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
