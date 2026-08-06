@@ -257,6 +257,33 @@
   transition: margin-left 0.22s cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 
+/* ─── Mobile topbar ─── */
+.app-shell-topbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.app-shell-topbar-brand {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ─── Hamburger (mobile) ─── */
 .app-shell-menu-btn {
   display: none;
@@ -333,14 +360,21 @@
   .app-shell {
     padding: 0;
     gap: 0;
+    overflow: visible;
   }
 
   .app-shell-sidebar {
     display: none;
   }
 
+  .app-shell-topbar {
+    display: flex;
+  }
+
   .app-shell-main {
     margin-left: 0;
+    padding-top: 52px;
+    padding-bottom: 64px;
   }
 
   .app-shell-menu-btn {
@@ -348,7 +382,7 @@
   }
 
   .app-shell-content {
-    padding: 16px;
+    padding: 14px;
   }
 }
 
@@ -367,5 +401,23 @@
   }
   .app-shell-content {
     padding: 10px;
+  }
+  .app-shell-topbar {
+    height: 48px;
+    padding: 0 12px;
+  }
+  .app-shell-main {
+    padding-top: 48px;
+  }
+}
+
+/* ═══ Safe area (iOS notch) ═══ */
+@supports (padding: env(safe-area-inset-top)) {
+  .app-shell-topbar {
+    padding-top: env(safe-area-inset-top);
+    height: calc(52px + env(safe-area-inset-top));
+  }
+  .app-shell-main {
+    padding-top: calc(52px + env(safe-area-inset-top));
   }
 }

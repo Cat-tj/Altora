@@ -685,3 +685,188 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile Responsive — Dashboard
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══ Tablet (≤1024px) ═══ */
+@media (max-width: 1024px) {
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+/* ═══ Mobile (≤768px) ═══ */
+@media (max-width: 768px) {
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .kpiCard {
+    padding: 10px 12px;
+  }
+
+  .kpiHero {
+    grid-column: 1 / -1;
+  }
+
+  .chartContainer {
+    height: 130px;
+  }
+
+  .chartArea {
+    height: 140px;
+    margin-left: 55px;
+  }
+
+  .chartYAxis {
+    width: 50px;
+  }
+
+  .chartLabels {
+    margin-left: 55px;
+  }
+
+  .chartBars {
+    gap: 5px;
+  }
+
+  /* Stock health — compact summary rows */
+  .stockGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  /* Action items — grid layout for text + button */
+  .alertItem {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Cashier stats wrap */
+  .cashierStats {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Empty state compact */
+  .empty {
+    padding: 14px 10px;
+  }
+
+  .emptyIcon {
+    font-size: 1.5rem;
+  }
+}
+
+/* ═══ Small mobile (≤480px) ═══ */
+@media (max-width: 480px) {
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .kpiCard {
+    padding: 8px 10px;
+  }
+
+  .kpiValue {
+    font-size: 1.05rem;
+  }
+
+  .kpiHero {
+    grid-column: 1 / -1;
+    padding: 12px 14px;
+  }
+
+  .contentGrid {
+    gap: 8px;
+  }
+
+  .panel {
+    padding: 8px 10px;
+  }
+
+  .panelHeading h2 {
+    font-size: 0.8rem;
+  }
+
+  /* Stock health — single column on very small */
+  .stockGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Alert items — stack CTA below on small screens */
+  .alertItem {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .alertAction {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 2px;
+  }
+
+  .chartContainer {
+    height: 110px;
+  }
+
+  .chartArea {
+    height: 120px;
+    margin-left: 48px;
+  }
+
+  .chartYAxis {
+    width: 44px;
+    font-size: 0.6rem;
+  }
+
+  .chartLabels {
+    margin-left: 48px;
+    font-size: 0.6rem;
+  }
+
+  .chartBars {
+    gap: 4px;
+  }
+
+  /* Top products — more compact */
+  .topRank {
+    width: 24px;
+    height: 24px;
+    font-size: 0.68rem;
+  }
+
+  .topName {
+    font-size: 0.78rem;
+  }
+
+  .topOmzet {
+    font-size: 0.75rem;
+  }
+
+  /* Cashier item */
+  .cashierItem {
+    padding: 6px 8px;
+  }
+
+  .cashierAvatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .cashierName {
+    font-size: 0.78rem;
+  }
+
+  /* Payment */
+  .paymentAmount {
+    font-size: 0.75rem;
+  }
+}

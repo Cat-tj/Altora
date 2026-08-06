@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AppDrawer } from "./app-drawer";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 
 /* ─── Types ─── */
 export type ShellRole = "OWNER" | "MANAGER" | "STAFF";
@@ -102,6 +103,20 @@ export function AppShell({
       {/* Skip link */}
       <a className="app-shell-skip" href="#app-main">Lewati navigasi</a>
 
+      {/* Mobile topbar — hanya muncul di mobile */}
+      <div className="app-shell-topbar">
+        <button
+          type="button"
+          className="app-shell-menu-btn"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Buka menu navigasi"
+          aria-expanded={menuOpen}
+        >
+          <span /><span /><span />
+        </button>
+        <span className="app-shell-topbar-brand">Altora Market</span>
+      </div>
+
       {/* Sidebar — floating, persistent, SEMUA halaman */}
       <aside className="app-shell-sidebar" aria-label="Navigasi utama">
         {/* Brand */}
@@ -183,6 +198,13 @@ export function AppShell({
         role={role}
         onSignOut={onSignOut}
         productName={productName}
+      />
+
+      {/* Bottom navigation — mobile only */}
+      <MobileBottomNav
+        nav={nav}
+        role={role}
+        onMoreClick={() => setMenuOpen(true)}
       />
     </div>
   );

@@ -972,3 +972,145 @@
   .pos-cart-count { font-size: 0.68rem; }
 }
 
+
+/* ═══════════════════════════════════════════════════════════
+   Market Dashboard — Responsive Layout
+   ═══════════════════════════════════════════════════════════ */
+
+/* Root layout */
+.market-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Page header */
+.market-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.market-page-eyebrow {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.market-page-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 2px 0 0;
+  letter-spacing: -0.02em;
+}
+
+.market-page-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.market-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #0f1b3d;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.market-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #0f1b3d;
+  color: #0f1b3d;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+/* Two-column grid */
+.market-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Three-column grid → responsive */
+.market-three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+/* All children should not overflow */
+.market-dashboard > * {
+  min-width: 0;
+}
+
+/* ═══ Responsive: Tablet (≤1024px) ═══ */
+@media (max-width: 1024px) {
+  .market-three-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ═══ Responsive: Mobile (≤768px) ═══ */
+@media (max-width: 768px) {
+  .market-page-title {
+    font-size: 1.15rem;
+  }
+
+  .market-page-actions {
+    width: 100%;
+  }
+
+  .market-btn-primary,
+  .market-btn-secondary {
+    flex: 1;
+    justify-content: center;
+    height: 38px;
+  }
+
+  .market-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .market-three-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══ Responsive: Small mobile (≤480px) ═══ */
+@media (max-width: 480px) {
+  .market-dashboard {
+    gap: 10px;
+  }
+
+  .market-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .market-page-actions {
+    width: 100%;
+  }
+
+  .market-page-title {
+    font-size: 1.05rem;
+  }
+}

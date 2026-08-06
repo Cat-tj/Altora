@@ -3,6 +3,7 @@ import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "@altora/ui/tokens.css";
 import "@altora/ui/app-shell.css";
 import "@altora/ui/drawer-shared.css";
+import "@altora/ui/mobile-bottom-nav.css";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({

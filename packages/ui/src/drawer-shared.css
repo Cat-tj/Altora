@@ -273,10 +273,7 @@
   font-size: 0.85rem;
 }
 
-/* Sembunyikan bottom-nav lama — navigasi mobile = drawer, bukan bottom tabs */
-.shell-bottom-nav {
-  display: none !important;
-}
+/* Bottom nav sekarang di mobile-bottom-nav.css */
 
 @media (max-width: 860px) {
   .shell-menu-btn {

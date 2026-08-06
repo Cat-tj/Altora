@@ -16,7 +16,9 @@
     "./app-drawer": "./src/app-drawer.tsx",
     "./drawer-shared.css": "./src/drawer-shared.css",
     "./app-shell": "./src/app-shell.tsx",
-    "./app-shell.css": "./src/app-shell.css"
+    "./app-shell.css": "./src/app-shell.css",
+    "./mobile-bottom-nav": "./src/mobile-bottom-nav.tsx",
+    "./mobile-bottom-nav.css": "./src/mobile-bottom-nav.css"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
