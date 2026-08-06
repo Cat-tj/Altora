@@ -350,29 +350,29 @@ function CartPanel({
         <span className="pos-cart-count">{cart.reduce((s, l) => s + l.qty, 0)} item</span>
       </div>
       {cart.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center py-3 text-center">
           <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Belum ada produk. Ketuk produk untuk menambahkan →</p>
         </div>
       ) : (
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto pr-0.5 mb-3 min-h-[180px] space-y-3" style={{ scrollbarWidth: "none" }}>
+          <div className="flex-1 overflow-y-auto pr-0.5 mb-2 min-h-[120px] space-y-2" style={{ scrollbarWidth: "none" }}>
             {cart.map((line) => (
-              <div key={line.cartKey} className="border-b pb-3 last:border-0 last:pb-0" style={{ borderColor: "var(--color-border)" }}>
+              <div key={line.cartKey} className="border-b pb-2 last:border-0 last:pb-0" style={{ borderColor: "var(--color-border)" }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold" style={{ color: "var(--color-text)" }}>{line.name}</p>
                     {line.variantLabel && <p className="truncate text-xs" style={{ color: "var(--color-text-secondary)" }}>{line.variantLabel}</p>}
                     <p className="tabular-nums text-xs" style={{ color: "var(--color-text-secondary)" }}>{formatRupiah(line.price)} / item</p>
                   </div>
-                  <button onClick={() => onRemoveLine(line.cartKey)} className="flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-medium" style={{ color: "var(--color-danger)" }}>
+                  <button onClick={() => onRemoveLine(line.cartKey)} className="flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-medium" style={{ color: "var(--color-danger)" }}>
                     <XIcon className="h-3.5 w-3.5" /> Hapus
                   </button>
                 </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => onUpdateQty(line.cartKey, line.qty - 1)} className="flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-semibold" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>−</button>
-                    <span className="min-w-[1.5rem] text-center tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{line.qty}</span>
-                    <button onClick={() => onUpdateQty(line.cartKey, line.qty + 1)} disabled={line.trackStock && line.qty >= line.stock} className="flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-semibold disabled:opacity-40" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>+</button>
+                <div className="mt-1 flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => onUpdateQty(line.cartKey, line.qty - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border text-sm font-semibold" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>−</button>
+                    <span className="min-w-[1.25rem] text-center tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{line.qty}</span>
+                    <button onClick={() => onUpdateQty(line.cartKey, line.qty + 1)} disabled={line.trackStock && line.qty >= line.stock} className="flex h-7 w-7 items-center justify-center rounded-lg border text-sm font-semibold disabled:opacity-40" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>+</button>
                   </div>
                   <span className="tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{formatRupiah(line.price * line.qty - line.discountAmount)}</span>
                 </div>
@@ -417,7 +417,7 @@ function CartPanel({
                 <span className="truncate tabular-nums text-xl font-bold leading-tight" style={{ color: "var(--color-text)" }}>{formatRupiah(total)}</span>
               </div>
             </div>
-            <button onClick={onCheckout} disabled={cart.length === 0} className="flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold text-white disabled:opacity-40 hover:opacity-95 transition-opacity" style={{ backgroundColor: "var(--color-primary)" }}>
+            <button onClick={onCheckout} disabled={cart.length === 0} className="flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold text-white disabled:opacity-40 hover:opacity-95 transition-opacity" style={{ backgroundColor: "var(--color-primary)" }}>
               <span>Bayar</span><span className="truncate tabular-nums">• {formatRupiah(total)}</span>
             </button>
           </div>
