@@ -38,8 +38,8 @@ export function ReturnWorkflow() {
             type="text"
           />
         </label>
-        <button className="market-checkout-button" disabled={looking} type="submit">
-          {looking ? "Mencari…" : "Cari nota"}
+        <button className="market-checkout-button" disabled={looking} type="submit" style={{ padding: "0 .7rem", minWidth: 36, height: 36 }}>
+          {looking ? "…" : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>}
         </button>
       </form>
 

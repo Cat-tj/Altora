@@ -397,3 +397,221 @@
     transition: none;
   }
 }
+
+/* ═══ Update collapsible sidebar + ikon + topbar (2026-08) ═══ */
+.shell {
+  min-height: 100dvh;
+}
+
+.shell-side {
+  width: var(--sidebar-w, 232px);
+  transition: width 0.18s cubic-bezier(0.32, 0.72, 0.24, 1);
+  padding-bottom: 12px;
+}
+
+.shell.is-collapsed .shell-side,
+.shell-side.is-collapsed {
+  width: 64px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.shell.is-collapsed .shell-brand {
+  justify-content: center;
+  padding: 8px 0 20px;
+}
+
+.shell.is-collapsed .shell-brand-text {
+  display: none;
+}
+
+.shell-nav-icon {
+  display: inline-flex;
+  width: 19px;
+  height: 19px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.shell-group > a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.shell.is-collapsed .shell-group > h2,
+.shell-side.is-collapsed .shell-group > h2 {
+  font-size: 0;
+}
+
+.shell.is-collapsed .shell-group > h2::first-letter,
+.shell-side.is-collapsed .shell-group > h2::first-letter {
+  font-size: 0.6rem;
+}
+
+.shell.is-collapsed .shell-group > a,
+.shell-side.is-collapsed .shell-group > a {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.shell.is-collapsed .shell-nav-text,
+.shell-side.is-collapsed .shell-nav-text {
+  display: none;
+}
+
+/* Tooltip saat collapsed */
+.shell.is-collapsed .shell-group > a:hover::after,
+.shell-side.is-collapsed .shell-group > a:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  padding: 0.35rem 0.6rem;
+  border-radius: 7px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px -4px rgba(10, 31, 68, 0.35);
+  pointer-events: none;
+}
+
+.shell.is-collapsed .shell-user,
+.shell-side.is-collapsed .shell-user {
+  justify-content: center;
+  padding: 12px 0 0;
+}
+
+.shell.is-collapsed .shell-user-text,
+.shell.is-collapsed .shell-signout,
+.shell-side.is-collapsed .shell-user-text,
+.shell-side.is-collapsed .shell-signout {
+  display: none;
+}
+
+.shell-collapse {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 10px auto 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.13s ease, color 0.13s ease;
+  flex-shrink: 0;
+}
+
+.shell-collapse:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.shell-collapse svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Topbar baru */
+.shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-h, 56px);
+  padding: 0 clamp(16px, 3vw, 32px);
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.shell-topbar-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.shell-topbar-signout {
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.shell-topbar-signout:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.shell-main {
+  margin-left: var(--sidebar-w, 232px);
+  min-height: 100dvh;
+  padding: clamp(20px, 3vw, 34px) clamp(16px, 3vw, 32px);
+}
+
+.shell.is-collapsed .shell-main {
+  margin-left: 64px;
+}
+
+.shell-main:focus {
+  outline: none;
+}
+
+/* Bottom nav mobile */
+.shell-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .shell-side {
+    display: none;
+  }
+  .shell-main {
+    margin-left: 0;
+    padding-bottom: 76px;
+  }
+  .shell-bottom-nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .shell-bottom-nav > a {
+    display: grid;
+    gap: 3px;
+    place-items: center;
+    padding: 10px 4px;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .shell-bottom-nav > a.is-active {
+    color: var(--accent);
+  }
+  .shell-bottom-nav .shell-nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+}

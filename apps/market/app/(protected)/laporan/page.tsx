@@ -1,10 +1,9 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { getMarketReportSummary } from "../../../lib/market-reports";
 import { formatRupiah } from "../market-page-ui";
 
 export default async function LaporanPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const summary = await getMarketReportSummary(user.tenantId);
 
   return (

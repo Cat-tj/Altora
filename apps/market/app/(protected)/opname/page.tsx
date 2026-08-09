@@ -1,7 +1,6 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { db } from "../../../lib/db";
 import { getCountSheet, listStockCounts } from "../../../lib/market-stock-count";
-import type { MarketRole } from "../../../lib/market-user";
 import { EmptyMarketState } from "../market-page-ui";
 import { ApplyCountButton, CancelCountButton, CountSheetForm } from "./count-forms";
 
@@ -16,8 +15,7 @@ function formatDate(value: string) {
 }
 
 export default async function StockCountPage() {
-  const session = await auth();
-  const sessionUser = session!.user as { id: string; tenantId: string; role: MarketRole };
+  const sessionUser = await requireRole(["OWNER", "MANAGER"]);
   const user = { tenantId: sessionUser.tenantId, userId: sessionUser.id, role: sessionUser.role };
   const canManage = user.role !== "STAFF";
 

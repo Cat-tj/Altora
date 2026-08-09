@@ -1,11 +1,10 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { db } from "../../../lib/db";
 import { listMarketExpenses } from "../../../lib/market-expenses";
 import { formatRupiah } from "../market-page-ui";
 
 export default async function PengeluaranPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const expenses = await listMarketExpenses(user.tenantId);
 
   const outletsResult = await db.query<{ id: string; name: string }>(

@@ -12,7 +12,14 @@ ALTER TABLE "StockCountItem" ADD COLUMN IF NOT EXISTS "countedQty" integer DEFAU
 ALTER TABLE "StockCountItem" ADD COLUMN IF NOT EXISTS "productName" text;
 ALTER TABLE "StockCountItem" ADD COLUMN IF NOT EXISTS "tenantId" text REFERENCES "Tenant"(id);
 
-UPDATE "StockCountItem" SET "countedQty" = "physicalQty" WHERE ("countedQty" IS NULL OR "countedQty" = 0) AND "physicalQty" IS NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'StockCountItem' AND column_name = 'physicalQty') THEN
+    UPDATE "StockCountItem" SET "countedQty" = "physicalQty"
+    WHERE ("countedQty" IS NULL OR "countedQty" = 0) AND "physicalQty" IS NOT NULL;
+  END IF;
+END
+$$;
 UPDATE "StockCountItem" i SET "productName" = p.name FROM "Product" p WHERE i."productId" = p.id AND i."productName" IS NULL;
 
 -- ── 3. Expense (Pengeluaran Operasional) ────────────────────
