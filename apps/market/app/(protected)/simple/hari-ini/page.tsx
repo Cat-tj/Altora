@@ -85,7 +85,7 @@ export default async function MarketHomePage() {
       {/* 2-Column Content Tables: Perlu Ditindak & Produk Terlaris */}
       <div className="market-content-grid">
         {/* Table 1: Perlu Ditindak */}
-        <section className="market-panel">
+        <section className="bento-card p-4">
           <div className="market-panel-heading">
             <div>
               <h2>Perlu ditindak</h2>
@@ -138,7 +138,7 @@ export default async function MarketHomePage() {
         </section>
 
         {/* Table 2: Produk Terlaris */}
-        <section className="market-panel">
+        <section className="bento-card p-4">
           <div className="market-panel-heading">
             <div>
               <h2>Produk terlaris</h2>
