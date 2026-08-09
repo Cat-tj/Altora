@@ -27,6 +27,7 @@ export function MarketShell({
         signOut({ callbackUrl: resolveProductLoginUrl(window.location.origin, "market.altora.my.id") })
       }
       productName="Altora Market"
+      logoUrl="/altora-icon.svg"
       role={role}
       tenantName={tenantName}
       tenantNoun="Toko"
