@@ -186,7 +186,7 @@ export function ProductShell({
                   title={item.label}
                 >
                   <span className="shell-nav-icon" aria-hidden="true">
-                    {item.label.charAt(0)}
+                    {item.icon || item.label.charAt(0)}
                   </span>
                   {!isCollapsed && <span className="shell-nav-text">{item.label}</span>}
                 </Link>

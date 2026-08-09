@@ -5,7 +5,7 @@ import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
 
-export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
+export function LoginForm({ callbackUrl = "/kasir" }: { callbackUrl?: string }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
   const errorId = useId();
