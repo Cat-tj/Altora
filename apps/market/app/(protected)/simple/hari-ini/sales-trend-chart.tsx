@@ -19,11 +19,11 @@ export function SalesTrendChart({ data }: { data: SalesTrendPoint[] }) {
   const maxOmzet = Math.ceil(rawMax / 100000) * 100000 || 100000;
   const midOmzet = Math.round(maxOmzet / 2);
 
-  // SVG viewport specs
-  const width = 680;
-  const height = 190;
-  const paddingLeft = 85;
-  const paddingRight = 25;
+  // SVG responsive viewBox specs
+  const width = 800;
+  const height = 200;
+  const paddingLeft = 75;
+  const paddingRight = 15;
   const paddingTop = 25;
   const paddingBottom = 45;
 
@@ -31,6 +31,7 @@ export function SalesTrendChart({ data }: { data: SalesTrendPoint[] }) {
   const chartHeight = height - paddingTop - paddingBottom;
 
   const points = data.map((item, i) => {
+    // Spread points all the way from paddingLeft (0%) to width - paddingRight (100%)
     const x = paddingLeft + (i / Math.max(data.length - 1, 1)) * chartWidth;
     const ratio = item.omzet / maxOmzet;
     const y = paddingTop + chartHeight - ratio * chartHeight;
@@ -68,7 +69,12 @@ export function SalesTrendChart({ data }: { data: SalesTrendPoint[] }) {
       </div>
 
       <div className="market-chart-svg-wrap">
-        <svg viewBox={`0 0 ${width} ${height}`} className="market-chart-svg">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="none"
+          className="market-chart-svg"
+          style={{ width: "100%", height: "200px" }}
+        >
           <defs>
             <linearGradient id="marketTrendGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--accent, #7C5CE8)" stopOpacity="0.28" />
@@ -152,9 +158,9 @@ export function SalesTrendChart({ data }: { data: SalesTrendPoint[] }) {
 
                 {/* Hit area for easier hover */}
                 <rect
-                  x={pt.x - 20}
+                  x={pt.x - 30}
                   y={paddingTop}
-                  width="40"
+                  width="60"
                   height={chartHeight + paddingBottom}
                   fill="transparent"
                   onMouseEnter={() => setActiveIndex(pt.i)}
