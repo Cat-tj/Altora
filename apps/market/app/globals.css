@@ -33,6 +33,7 @@
 .market-page-title h1 { margin: 0; font-size: clamp(1.5rem, 2.5vw, 1.95rem); letter-spacing: -.03em; font-weight: 800; }
 .market-page-title p { margin: 0 0 .15rem; color: var(--market-teal); font-size: .82rem; font-weight: 800; }
 .market-page-title span { display: inline-block; color: var(--market-muted); font-size: .85rem; }
+.market-primary-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 
 .market-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; }
 .market-stat-card { display: flex; flex-direction: column; justify-content: space-between; gap: 0.4rem; min-height: 7.2rem; border: 1px solid var(--market-line); border-radius: .85rem; padding: 1rem 1.1rem; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02); }
