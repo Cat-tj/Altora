@@ -92,6 +92,34 @@
 .text-amber { color: #d97706; }
 .text-accent { color: var(--accent, #7C5CE8); }
 
+/* Glassmorphism Bento Card Container */
+.bento-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px -2px rgba(15, 27, 61, 0.04), 0 2px 6px -1px rgba(15, 27, 61, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover {
+  box-shadow: 0 8px 30px -4px rgba(15, 27, 61, 0.08);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+/* Smart AI Summary Banner */
+.raphael-summary-banner {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,253,244,0.85) 100%);
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  border-radius: 0.85rem;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 14px -3px rgba(13, 148, 136, 0.08);
+}
+
 .market-cashier { display: grid; gap: 1rem; }
 .market-page-title.is-cashier { align-items: center; }
 .market-pos-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem); gap: .9rem; align-items: start; }

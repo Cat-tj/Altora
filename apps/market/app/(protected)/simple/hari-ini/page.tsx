@@ -29,6 +29,16 @@ export default async function MarketHomePage() {
         </div>
       </div>
 
+      {/* Smart AI Summary Banner (Project Raphael Touch) */}
+      <div className="raphael-summary-banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--market-teal)", flexShrink: 0 }}>
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--market-ink)" }}>
+          <strong>Smart Summary:</strong> Omzet hari ini mencapai <strong>{formatRupiah(summary.todaySales)}</strong> dari <strong>{summary.transactionCount} transaksi</strong>. {summary.alerts.length > 0 ? `Perhatian: Ada ${summary.alerts.length} pemberitahuan stok & operasional toko.` : "Semua operasional toko dalam kondisi aman."}
+        </span>
+      </div>
+
       {/* 4 Stat KPI Cards */}
       <section className="market-stat-grid" aria-label="Ringkasan hari ini">
         <article className="market-stat-card is-primary">
