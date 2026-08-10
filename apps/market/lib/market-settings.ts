@@ -7,6 +7,11 @@ export type TenantSettingRecord = {
   taxPercent: number;
   staticQrisPayload: string | null;
   pointsPerAmount: number;
+  // Expire discount settings
+  expireDiscountEnabled: boolean;
+  expireDiscountMode: "auto" | "manual";
+  expireDiscountDays: number;
+  expireDiscountPercent: number;
 };
 
 export type OutletRecord = {
@@ -38,8 +43,21 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     tax_percent: number | null;
     static_qris_payload: string | null;
     points_per_amount: number | null;
+    expire_discount_enabled: boolean | null;
+    expire_discount_mode: string | null;
+    expire_discount_days: number | null;
+    expire_discount_percent: number | null;
   }>(
-    `SELECT id, "tenantId" AS tenant_id, "receiptFooter" AS receipt_footer, "taxPercent" AS tax_percent, "staticQrisPayload" AS static_qris_payload, "pointsPerAmount" AS points_per_amount
+    `SELECT id,
+            "tenantId"              AS tenant_id,
+            "receiptFooter"         AS receipt_footer,
+            "taxPercent"            AS tax_percent,
+            "staticQrisPayload"     AS static_qris_payload,
+            "pointsPerAmount"       AS points_per_amount,
+            "expireDiscountEnabled" AS expire_discount_enabled,
+            "expireDiscountMode"    AS expire_discount_mode,
+            "expireDiscountDays"    AS expire_discount_days,
+            "expireDiscountPercent" AS expire_discount_percent
        FROM "TenantSetting"
       WHERE "tenantId" = $1
       LIMIT 1`,
@@ -55,6 +73,10 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     taxPercent: Number(row.tax_percent || 0),
     staticQrisPayload: row.static_qris_payload,
     pointsPerAmount: Number(row.points_per_amount || 0),
+    expireDiscountEnabled: Boolean(row.expire_discount_enabled),
+    expireDiscountMode: (row.expire_discount_mode === "auto" ? "auto" : "manual"),
+    expireDiscountDays: Number(row.expire_discount_days ?? 30),
+    expireDiscountPercent: Number(row.expire_discount_percent ?? 20),
   };
 }
 

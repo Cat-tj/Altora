@@ -2,6 +2,8 @@ import { requireRole } from "../../../lib/market-authz";
 import { getTenantSettings, listOutlets, listStaff } from "../../../lib/market-settings";
 import QrisScanner from "./qris-scanner";
 import { SettingsFormClient } from "./settings-form-client";
+import { ReceiptSettings } from "./receipt-settings";
+import { ExpireDiscountSettings } from "./expire-discount-settings";
 
 export default async function PengaturanPage() {
   const user = await requireRole(["OWNER"]);
@@ -54,6 +56,16 @@ export default async function PengaturanPage() {
             ))}
           </div>
         </section>
+
+        <ReceiptSettings />
+
+        {/* Panel Diskon Kadaluwarsa — full width */}
+        <ExpireDiscountSettings
+          enabled={settings?.expireDiscountEnabled ?? false}
+          mode={settings?.expireDiscountMode ?? "manual"}
+          days={settings?.expireDiscountDays ?? 30}
+          percent={settings?.expireDiscountPercent ?? 20}
+        />
       </div>
 
       {/* Panel Daftar Staf & Akses */}
