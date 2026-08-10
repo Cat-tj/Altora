@@ -1,30 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { startHtml5Scanner } from "../../../lib/camera-scanner";
+import type { MarketCategory, MarketProduct } from "../../../lib/market-products";
 
-type Category = { id: string; name: string };
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  height: "44px",
-  borderRadius: "10px",
-  border: "1px solid var(--line)",
-  padding: "0 1rem",
-  fontSize: "0.9rem",
-  boxSizing: "border-box",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.8rem",
-  fontWeight: "600",
-  marginBottom: "0.4rem",
-  color: "var(--ink)",
-};
-
-export function ProductFormModal({ categories }: { categories: Category[] }) {
+export function ProductFormModal({
+  categories,
+  productToEdit,
+  triggerButton,
+}: {
+  categories: MarketCategory[];
+  productToEdit?: MarketProduct | null;
+  triggerButton?: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,21 +22,21 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
   const scannerRef = useRef<any>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  const isEdit = Boolean(productToEdit);
+  const [trackExpiry, setTrackExpiry] = useState(productToEdit?.trackExpiry ?? false);
+  const defaultExpiredDate = productToEdit?.expiredAt
+    ? new Date(productToEdit.expiredAt).toISOString().split("T")[0]
+    : "";
+  const [expiredAt, setExpiredAt] = useState(defaultExpiredDate);
 
-  // Cleanup camera on unmount
-  useEffect(() => {
-    return () => stopCamera();
-  }, []);
-
-  function stopCamera() {
+  async function stopCamera() {
     if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
-      scannerRef.current.clear().catch(() => {});
+      try {
+        await scannerRef.current.stop();
+      } catch (_) {}
+      try {
+        await scannerRef.current.clear();
+      } catch (_) {}
       scannerRef.current = null;
     }
     setScanning(false);
@@ -79,17 +68,25 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    stopCamera();
 
     const form = new FormData(e.currentTarget);
+    if (isEdit && productToEdit) {
+      form.append("id", productToEdit.id);
+    }
+    form.set("trackExpiry", String(trackExpiry));
+
     try {
       const res = await fetch("/api/products", {
-        method: "POST",
+        method: isEdit ? "PUT" : "POST",
         body: form,
       });
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Gagal menyimpan produk");
       }
+
       setOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -106,17 +103,21 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: ".4rem",
-          height: 36, padding: "0 .9rem", borderRadius: 8,
-          background: "var(--accent)", color: "#fff",
-          fontWeight: 700, fontSize: ".78rem", border: "none", cursor: "pointer",
-        }}
-      >
-        + Tambah
-      </button>
+      {triggerButton ? (
+        <span onClick={() => setOpen(true)} style={{ cursor: "pointer" }}>{triggerButton}</span>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: ".4rem",
+            height: 36, padding: "0 .9rem", borderRadius: 8,
+            background: "var(--accent)", color: "#fff",
+            fontWeight: 700, fontSize: ".78rem", border: "none", cursor: "pointer",
+          }}
+        >
+          + Tambah Produk
+        </button>
+      )}
 
       {open && (
         <div
@@ -137,9 +138,11 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
           >
             <div style={{ padding: "1.5rem 1.5rem 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Tambah Produk</h2>
+                <h2 style={{ margin: 0, fontSize: "1.1rem" }}>
+                  {isEdit ? `Edit Produk` : "Tambah Produk"}
+                </h2>
                 <p style={{ margin: ".25rem 0 0", fontSize: ".8rem", color: "var(--muted)" }}>
-                  Isi data produk baru untuk katalog.
+                  {isEdit ? `Perbarui informasi ${productToEdit?.name}.` : "Isi data produk baru untuk katalog."}
                 </p>
               </div>
               <button
@@ -157,7 +160,11 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
             <form onSubmit={handleSubmit} style={{ padding: "1.25rem 1.5rem 1.5rem", display: "grid", gap: "1rem" }}>
               <div>
                 <label htmlFor="pm-name" style={labelStyle}>Nama Produk *</label>
-                <input id="pm-name" name="name" type="text" required placeholder="Contoh: Indomie Goreng" style={inputStyle} />
+                <input
+                  id="pm-name" name="name" type="text" required
+                  defaultValue={productToEdit?.name ?? ""}
+                  placeholder="Contoh: Indomie Goreng" style={inputStyle}
+                />
               </div>
 
               {/* SKU + Barcode Scanner */}
@@ -166,6 +173,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
                 <div style={{ display: "flex", gap: ".5rem" }}>
                   <input
                     id="pm-sku" name="sku" type="text"
+                    defaultValue={productToEdit?.sku ?? ""}
                     placeholder="8997001201001"
                     style={{ ...inputStyle, flex: 1 }}
                   />
@@ -185,7 +193,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
                 </div>
               </div>
 
-              {/* Camera viewfinder — Html5Qrcode mounts here */}
+              {/* Camera viewfinder */}
               <div
                 id="pm-barcode-camera"
                 style={{
@@ -204,7 +212,11 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
 
               <div>
                 <label htmlFor="pm-cat" style={labelStyle}>Kategori</label>
-                <select id="pm-cat" name="categoryId" style={{ ...inputStyle, background: "#fff" }}>
+                <select
+                  id="pm-cat" name="categoryId"
+                  defaultValue={productToEdit?.categoryId ?? ""}
+                  style={{ ...inputStyle, background: "#fff" }}
+                >
                   <option value="">— Pilih kategori —</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -215,12 +227,48 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".75rem" }}>
                 <div>
                   <label htmlFor="pm-price" style={labelStyle}>Harga Jual (Rp) *</label>
-                  <input id="pm-price" name="price" type="number" min="1" required placeholder="3200" style={inputStyle} />
+                  <input
+                    id="pm-price" name="price" type="number" min="1" required
+                    defaultValue={productToEdit?.price ?? ""}
+                    placeholder="3200" style={inputStyle}
+                  />
                 </div>
                 <div>
                   <label htmlFor="pm-cost" style={labelStyle}>Modal (Rp)</label>
-                  <input id="pm-cost" name="cost" type="number" min="0" placeholder="2500" style={inputStyle} />
+                  <input
+                    id="pm-cost" name="cost" type="number" min="0"
+                    defaultValue={productToEdit?.cost ?? ""}
+                    placeholder="2500" style={inputStyle}
+                  />
                 </div>
+              </div>
+
+              {/* Expiry Tracking Section */}
+              <div style={{ borderTop: "1px solid var(--line)", paddingTop: ".8rem", display: "grid", gap: ".6rem" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: ".5rem", cursor: "pointer", fontSize: ".85rem", fontWeight: 600 }}>
+                  <input
+                    type="checkbox"
+                    checked={trackExpiry}
+                    onChange={(e) => setTrackExpiry(e.target.checked)}
+                    style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
+                  />
+                  <span>⏰ Track Tanggal Kadaluwarsa (Expired)</span>
+                </label>
+
+                {trackExpiry && (
+                  <div style={{ background: "#f8fafc", padding: ".75rem", borderRadius: 8, border: "1px solid var(--line)" }}>
+                    <label htmlFor="pm-expiredAt" style={labelStyle}>Tanggal Kadaluwarsa</label>
+                    <input
+                      id="pm-expiredAt" name="expiredAt" type="date"
+                      value={expiredAt}
+                      onChange={(e) => setExpiredAt(e.target.value)}
+                      style={{ ...inputStyle, background: "#fff" }}
+                    />
+                    <p style={{ margin: ".3rem 0 0", fontSize: ".72rem", color: "var(--muted)" }}>
+                      Aplikasi akan memberikan notifikasi jika produk mendekati tanggal kadaluwarsa.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {error && (
@@ -239,7 +287,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
                   marginTop: ".25rem", cursor: loading ? "wait" : "pointer",
                 }}
               >
-                {loading ? "Menyimpan…" : "Simpan Produk"}
+                {loading ? "Menyimpan…" : isEdit ? "Simpan Perubahan" : "Simpan Produk"}
               </button>
             </form>
           </div>
@@ -248,3 +296,22 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
     </>
   );
 }
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: ".76rem",
+  fontWeight: 700,
+  marginBottom: ".35rem",
+  color: "var(--ink)",
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  height: 44,
+  padding: "0 .85rem",
+  borderRadius: 10,
+  border: "1px solid var(--line)",
+  fontSize: ".88rem",
+  outline: "none",
+  boxSizing: "border-box",
+};
