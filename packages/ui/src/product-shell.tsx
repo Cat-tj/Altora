@@ -129,8 +129,20 @@ export function ProductShell({
     .map((group) => ({ ...group, items: group.items.filter((item) => item.roles.includes(role)) }))
     .filter((group) => group.items.length > 0);
 
-  const isActive = (item: ShellNavItem) =>
-    pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
+  const isActive = (item: ShellNavItem) => {
+    if (item.exact) return pathname === item.href;
+    if (pathname === item.href) return true;
+    const hasMoreSpecificMatch = groups.some((g) =>
+      g.items.some(
+        (other) =>
+          other.href !== item.href &&
+          other.href.startsWith(`${item.href}/`) &&
+          (pathname === other.href || pathname.startsWith(`${other.href}/`))
+      )
+    );
+    if (hasMoreSpecificMatch) return false;
+    return pathname.startsWith(`${item.href}/`);
+  };
 
   const mobileItems = groups.flatMap((group) => group.items).slice(0, 5);
 

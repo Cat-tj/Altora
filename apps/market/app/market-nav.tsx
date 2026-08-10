@@ -205,6 +205,7 @@ export const marketNav: ShellNavGroup[] = [
         href: "/produk",
         label: "Produk & Stok",
         roles: ["OWNER", "MANAGER"],
+        exact: true,
         icon: <IconBox />,
       },
       {
