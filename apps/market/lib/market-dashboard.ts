@@ -13,6 +13,7 @@ export type SalesTrendPoint = {
 export type MarketDashboardAlert = {
   id: string;
   productName: string;
+  outletName: string | null;
   qty: number;
   minQty: number;
   title: string;
@@ -59,16 +60,17 @@ export async function getMarketDashboard({ tenantId, userId, role }: DashboardIn
        LIMIT 5`,
       values,
     ).catch(() => ({ rows: [] })),
-    db.query<{ id: string; name: string; qty: string; min_qty: string }>(
-      `WITH outlets AS (SELECT o.id FROM "Outlet" o WHERE ${outletCondition} AND o."isActive" = true)
-       SELECT ps.id, p.name, ps.qty::text, COALESCE(rp."minQty", 5)::text AS min_qty
+    db.query<{ id: string; name: string; outlet_name: string; qty: string; min_qty: string }>(
+      `WITH outlets AS (SELECT o.id, o.name AS outlet_name FROM "Outlet" o WHERE ${outletCondition} AND o."isActive" = true)
+       SELECT ps.id, p.name, o2.outlet_name, ps.qty::text, COALESCE(rp."minQty", 5)::text AS min_qty
        FROM "ProductStock" ps
        INNER JOIN "Product" p ON p.id = ps."productId" AND p."tenantId" = $1
+       INNER JOIN outlets o2 ON o2.id = ps."outletId"
        LEFT JOIN "StockReorderPoint" rp ON rp."productId" = ps."productId" AND rp."outletId" = ps."outletId"
        WHERE ps."tenantId" = $1 AND ps."outletId" IN (SELECT id FROM outlets)
          AND p."isActive" = true AND p.kind = 'GOODS' AND ps.qty <= COALESCE(rp."minQty", 5)
        ORDER BY ps.qty ASC, p.name ASC
-       LIMIT 5`,
+       LIMIT 10`,
       values,
     ).catch(() => ({ rows: [] })),
     db.query<{ full_date: string; date_label: string; omzet: string; transactions: string }>(
@@ -135,6 +137,7 @@ export async function getMarketDashboard({ tenantId, userId, role }: DashboardIn
     alerts: alertResult.rows.map((item) => ({
       id: item.id,
       productName: item.name,
+      outletName: item.outlet_name ?? null,
       qty: Number(item.qty),
       minQty: Number(item.min_qty),
       title: `${item.name} stok menipis`,

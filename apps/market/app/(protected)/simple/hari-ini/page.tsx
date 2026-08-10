@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { auth } from "../../../../auth";
 import { getMarketDashboard } from "../../../../lib/market-dashboard";
-import { EmptyMarketState, formatRupiah } from "../../market-page-ui";
+import { formatRupiah } from "../../market-page-ui";
 import { SalesTrendChart } from "./sales-trend-chart";
+import { DashboardActionCenter } from "./_components/action-center-v2";
+import { DashboardStockAlerts } from "./_components/stock-alerts-v2";
+import { DashboardAdaptivePanel } from "./_components/adaptive-panel";
+import { DashboardSyncStatus } from "./_components/sync-status";
 
 export default async function MarketHomePage() {
   const session = await auth();
@@ -14,177 +18,112 @@ export default async function MarketHomePage() {
       ? Math.round(((summary.todaySales - summary.yesterdaySales) / summary.yesterdaySales) * 100)
       : null;
 
+  const avgTx = summary.transactionCount > 0
+    ? Math.round(summary.todaySales / summary.transactionCount)
+    : 0;
+
+  const hasSales = summary.transactionCount > 0;
+
   return (
-    <div className="market-stack">
-      {/* Top Header */}
-      <div className="market-page-title">
-        <div>
-          <p>Beranda toko</p>
-          <h1>Operasional hari ini</h1>
-          <span>Ringkasan transaksi, grafik tren sales, dan kontrol stok retail.</span>
+    <div className="op-page">
+      {/* ── Page Header ────────────────────────────────── */}
+      <header className="op-header">
+        <div className="op-header-text">
+          <p className="op-breadcrumb">Beranda toko</p>
+          <h1 className="op-title">Operasional hari ini</h1>
+          <span className="op-subtitle">Pantau penjualan, stok, dan operasional toko.</span>
         </div>
-        <div className="market-primary-actions">
-          <Link href="/kasir">Buka Kasir</Link>
-          <Link href="/produk">Lihat Produk</Link>
+        <div className="op-header-actions">
+          <DashboardSyncStatus />
+          <Link href="/kasir" className="op-btn-primary">Buka Kasir</Link>
+          <Link href="/produk" className="op-btn-ghost">Lihat Produk</Link>
         </div>
-      </div>
+      </header>
 
-      {/* Smart AI Summary Banner (Project Raphael Touch) */}
-      <div className="raphael-summary-banner">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--market-teal)", flexShrink: 0 }}>
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-        </svg>
-        <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--market-ink)" }}>
-          <strong>Smart Summary:</strong> Omzet hari ini mencapai <strong>{formatRupiah(summary.todaySales)}</strong> dari <strong>{summary.transactionCount} transaksi</strong>. {summary.alerts.length > 0 ? `Perhatian: Ada ${summary.alerts.length} pemberitahuan stok & operasional toko.` : "Semua operasional toko dalam kondisi aman."}
-        </span>
-      </div>
-
-      {/* 4 Stat KPI Cards */}
-      <section className="market-stat-grid" aria-label="Ringkasan hari ini">
-        <article className="market-stat-card is-primary">
-          <div className="market-stat-header">
-            <span>Omzet hari ini</span>
+      {/* ── KPI Row ────────────────────────────────────── */}
+      <section className="op-kpi-grid" aria-label="Ringkasan hari ini">
+        {/* Omzet */}
+        <article className="op-kpi-card">
+          <div className="op-kpi-top">
+            <span className="op-kpi-label">Omzet hari ini</span>
+            <span className="op-kpi-icon op-kpi-icon--revenue" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </span>
+          </div>
+          <strong className="op-kpi-value">{formatRupiah(summary.todaySales)}</strong>
+          <div className="op-kpi-meta">
+            <span>Kemarin {formatRupiah(summary.yesterdaySales)}</span>
             {changePercent !== null && (
-              <span className={`market-stat-badge ${changePercent >= 0 ? "is-up" : "is-down"}`}>
+              <span className={`op-kpi-badge ${changePercent >= 0 ? "is-up" : "is-down"}`}>
                 {changePercent >= 0 ? `↑ +${changePercent}%` : `↓ ${changePercent}%`}
               </span>
             )}
           </div>
-          <strong>{formatRupiah(summary.todaySales)}</strong>
-          <small>Kemarin {formatRupiah(summary.yesterdaySales)}</small>
         </article>
 
-        <article className="market-stat-card">
-          <div className="market-stat-header">
-            <span>Transaksi</span>
+        {/* Transaksi */}
+        <article className="op-kpi-card">
+          <div className="op-kpi-top">
+            <span className="op-kpi-label">Transaksi</span>
+            <span className="op-kpi-icon op-kpi-icon--txn" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </span>
           </div>
-          <strong>{summary.transactionCount}</strong>
-          <small>Penjualan selesai hari ini</small>
+          <strong className="op-kpi-value">{summary.transactionCount}</strong>
+          <span className="op-kpi-meta">Penjualan selesai hari ini</span>
         </article>
 
-        <article className="market-stat-card">
-          <div className="market-stat-header">
-            <span>Rata-rata belanja</span>
+        {/* Rata-rata Belanja */}
+        <article className="op-kpi-card">
+          <div className="op-kpi-top">
+            <span className="op-kpi-label">Rata-rata belanja</span>
+            <span className="op-kpi-icon op-kpi-icon--avg" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </span>
           </div>
-          <strong>{formatRupiah(summary.averageTransaction)}</strong>
-          <small>Berdasarkan transaksi selesai</small>
+          <strong className="op-kpi-value">{formatRupiah(avgTx)}</strong>
+          <span className="op-kpi-meta">Per transaksi selesai</span>
         </article>
 
-        <article className="market-stat-card">
-          <div className="market-stat-header">
-            <span>Shift aktif</span>
+        {/* Shift Aktif */}
+        <article className={`op-kpi-card${summary.openShiftCount === 0 ? " op-kpi-card--alert" : ""}`}>
+          <div className="op-kpi-top">
+            <span className="op-kpi-label">Shift aktif</span>
+            <span className={`op-kpi-icon ${summary.openShiftCount > 0 ? "op-kpi-icon--shift-on" : "op-kpi-icon--shift-off"}`} aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
           </div>
-          <strong>{summary.openShiftCount}</strong>
-          <small>{summary.openShiftCount ? "Kasir sedang berjalan" : "Belum ada shift dibuka"}</small>
+          <strong className="op-kpi-value">{summary.openShiftCount}</strong>
+          <span className="op-kpi-meta">
+            {summary.openShiftCount > 0 ? "Kasir sedang berjalan" : "Belum ada shift dibuka"}
+          </span>
         </article>
       </section>
 
-      {/* Sales Trend Line Chart */}
-      <SalesTrendChart data={summary.salesTrend} />
+      {/* ── Main Grid: Chart (8col) + Action Center (4col) ─ */}
+      <div className="op-main-grid">
+        <div className="op-chart-area">
+          <SalesTrendChart data={summary.salesTrend} />
+        </div>
+        <div className="op-action-area">
+          <DashboardActionCenter
+            alerts={summary.alerts}
+            openShifts={summary.openShiftCount}
+          />
+        </div>
+      </div>
 
-      {/* 2-Column Content Tables: Perlu Ditindak & Produk Terlaris */}
-      <div className="market-content-grid">
-        {/* Table 1: Perlu Ditindak */}
-        <section className="bento-card p-4">
-          <div className="market-panel-heading">
-            <div>
-              <h2>Perlu ditindak</h2>
-              <p>Stok retail yang berada di bawah batas minimum.</p>
-            </div>
-            <Link href="/produk">Buka Produk</Link>
-          </div>
-
-          {summary.alerts.length ? (
-            <div className="market-table-scroll">
-              <table className="market-dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Status</th>
-                    <th>Nama Produk</th>
-                    <th className="text-right">Stok</th>
-                    <th className="text-right">Batas Min</th>
-                    <th className="text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.alerts.map((alert) => (
-                    <tr key={alert.id}>
-                      <td>
-                        <span className="market-pill is-warning">Stok Menipis</span>
-                      </td>
-                      <td>
-                        <strong>{alert.productName}</strong>
-                      </td>
-                      <td className="text-right text-amber">
-                        <strong>{alert.qty} unit</strong>
-                      </td>
-                      <td className="text-right">{alert.minQty} unit</td>
-                      <td className="text-center">
-                        <Link className="market-table-action" href={alert.href}>
-                          Buka
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <EmptyMarketState
-              title="Tidak ada stok kritis"
-              description="Semua produk retail Anda berada di atas batas minimum."
-            />
-          )}
-        </section>
-
-        {/* Table 2: Produk Terlaris */}
-        <section className="bento-card p-4">
-          <div className="market-panel-heading">
-            <div>
-              <h2>Produk terlaris</h2>
-              <p>Penjualan selesai hari ini.</p>
-            </div>
-          </div>
-
-          {summary.topProducts.length ? (
-            <div className="market-table-scroll">
-              <table className="market-dashboard-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "50px" }}>No</th>
-                    <th>Nama Produk</th>
-                    <th className="text-right">Terjual</th>
-                    <th className="text-right">Total Omzet</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.topProducts.map((product, index) => (
-                    <tr key={product.name}>
-                      <td className="text-center">
-                        <span className="market-rank-badge">{index + 1}</span>
-                      </td>
-                      <td>
-                        <strong>{product.name}</strong>
-                      </td>
-                      <td className="text-right">
-                        <span>{product.quantity} item</span>
-                      </td>
-                      <td className="text-right text-accent">
-                        <strong>{formatRupiah(product.omzet)}</strong>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <EmptyMarketState
-              title="Belum ada penjualan hari ini"
-              description="Mulai dari Kasir agar ringkasan terisi."
-              action={{ href: "/kasir", label: "Buka Kasir" }}
-            />
-          )}
-        </section>
+      {/* ── Secondary Grid: Stock + Adaptive Panel ────── */}
+      <div className="op-secondary-grid">
+        <div className="op-stock-area">
+          <DashboardStockAlerts alerts={summary.alerts} />
+        </div>
+        <div className="op-adaptive-area">
+          <DashboardAdaptivePanel
+            hasSales={hasSales}
+            topProducts={summary.topProducts}
+          />
+        </div>
       </div>
     </div>
   );
