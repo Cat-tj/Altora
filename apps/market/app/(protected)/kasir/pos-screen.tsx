@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, type KeyboardEvent } from "react";
+import { useMemo, useState, useEffect, useRef, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { formatRupiah } from "../../../lib/format";
 import { computeBestPromoDiscount, type PromoForCalc, type PromoCartLine } from "../../../lib/promo-calc";
@@ -74,6 +74,26 @@ function checkNearExpiryDiscount(
   return null;
 }
 
+function playScanBeep() {
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  } catch {
+    // Ignore audio autoplay restrictions
+  }
+}
+
 export function MarketPosScreen({
   products,
   shift,
@@ -96,6 +116,8 @@ export function MarketPosScreen({
   const [variantProduct, setVariantProduct] = useState<PosProduct | null>(null);
   const [posMember, setPosMember] = useState<MemberOption | null>(null);
   const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [autoFocusMode, setAutoFocusMode] = useState(true);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { toastMessage, showToast } = useToast();
 
   const categories = useMemo(() => {
@@ -142,6 +164,70 @@ export function MarketPosScreen({
   const promoDiscountAmount = promoResult?.discountAmount || 0;
   const total = Math.max(0, afterDiscount - promoDiscountAmount);
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
+
+  // Auto focus management for continuous scanning
+  useEffect(() => {
+    if (autoFocusMode && !showPayment && !variantProduct && !showMemberPicker) {
+      searchInputRef.current?.focus();
+    }
+  }, [autoFocusMode, showPayment, variantProduct, showMemberPicker]);
+
+  useEffect(() => {
+    function handleGlobalKeyDown(e: globalThis.KeyboardEvent) {
+      if (!autoFocusMode || showPayment || variantProduct || showMemberPicker) return;
+      const activeEl = document.activeElement;
+      const isInput = activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA" || activeEl?.tagName === "SELECT";
+      if (!isInput && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        searchInputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [autoFocusMode, showPayment, variantProduct, showMemberPicker]);
+
+  function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const q = search.trim().toLowerCase();
+      if (!q) return;
+
+      // 1. Match exact SKU or exact product name
+      const exactMatch = products.find(
+        (p) => (p.sku && p.sku.toLowerCase() === q) || p.name.toLowerCase() === q
+      );
+
+      // 2. Fallback to single search match if filtered result is 1 product
+      const target = exactMatch || (filteredProducts.length === 1 ? filteredProducts[0] : null);
+
+      if (target) {
+        const qtyInCart = cart.filter((l) => l.productId === target.id).reduce((s, l) => s + l.qty, 0);
+        const outOfStock = target.trackStock && target.stock <= 0;
+        const atLimit = target.trackStock && qtyInCart >= target.stock;
+
+        if (outOfStock) {
+          showToast(`⚠️ Stok ${target.name} habis!`);
+        } else if (atLimit) {
+          showToast(`⚠️ Stok ${target.name} sudah maksimal (${target.stock})`);
+        } else {
+          if (target.variantGroups && target.variantGroups.length > 0) {
+            setVariantProduct(target);
+          } else {
+            addToCart(target);
+            playScanBeep();
+            showToast(`✅ +1 ${target.name}`);
+          }
+        }
+        setSearch("");
+      } else {
+        showToast(`❌ Barcode / SKU "${search}" tidak ditemukan`);
+        setSearch("");
+      }
+
+      if (autoFocusMode) {
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+    }
+  }
 
   function productPromos(product: PosProduct) {
     return promos.filter((p) => {
@@ -237,6 +323,8 @@ export function MarketPosScreen({
       setVariantProduct(product);
     } else {
       addToCart(product);
+      playScanBeep();
+      showToast(`✅ +1 ${product.name}`);
     }
   }
 
@@ -250,14 +338,27 @@ export function MarketPosScreen({
         <div className="pos-search-wrap">
           <span className="pos-search-icon">🔍</span>
           <input
+            ref={searchInputRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari produk (nama / SKU / barcode)…"
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Scan Barcode / ketik nama / SKU lalu tekan Enter…"
             className="pos-search-input"
           />
         </div>
+
         <div className="pos-actions">
+          <button
+            type="button"
+            onClick={() => setAutoFocusMode(!autoFocusMode)}
+            className={`pos-btn ${autoFocusMode ? "pos-btn-primary" : ""}`}
+            title="Sistem akan otomatis mempertahankan fokus ke kolom scan barcode"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.8rem", padding: "6px 12px" }}
+          >
+            <span>{autoFocusMode ? "⚡ Scan Mode: ON" : "⏸️ Scan Mode: OFF"}</span>
+          </button>
+
           <Link href="/kasir/riwayat" className="pos-btn">
             📋 Riwayat
           </Link>
@@ -393,6 +494,8 @@ export function MarketPosScreen({
           groups={variantProduct.variantGroups}
           onConfirm={({ optionIds, priceDelta, label }) => {
             addToCart(variantProduct, optionIds, priceDelta, label);
+            playScanBeep();
+            showToast(`✅ +1 ${variantProduct.name}`);
             setVariantProduct(null);
           }}
           onClose={() => setVariantProduct(null)}
@@ -484,7 +587,7 @@ function CartPanel({
         <div className="pos-empty flex-1">
           <span style={{ fontSize: "2.5rem" }}>🛒</span>
           <p>Keranjang masih kosong.</p>
-          <span style={{ fontSize: "0.75rem", color: "var(--market-muted)" }}>Klik produk di sebelah kiri untuk menambah ke keranjang.</span>
+          <span style={{ fontSize: "0.75rem", color: "var(--market-muted)" }}>Klik produk atau scan barcode untuk menambah ke keranjang.</span>
         </div>
       ) : (
         <div className="flex flex-1 flex-col overflow-hidden">
