@@ -27,6 +27,8 @@ export type MarketPosProduct = {
   price: number;
   stock: number;
   trackStock: boolean;
+  trackExpiry: boolean;
+  expiredAt: string | null;
   variantGroups: MarketVariantGroup[];
   categoryId: string | null;
   categoryName: string | null;
@@ -41,7 +43,7 @@ export type MarketCartLine = {
   discountAmount?: number;
 };
 export type MarketSale = { id: string; invoiceNumber: string; outletName: string; cashierName: string; total: number; paymentMethod: PaymentMethod; amountPaid: number; changeAmount: number; status: "COMPLETED" | "VOIDED"; voidReason: string | null; createdAt: Date; items: { id: string; productName: string; price: number; qty: number; subtotal: number }[] };
-export type MarketShiftSummary = { shift: OpenMarketShift; cashSales: number; cashTransactions: number; digitalSales: number; digitalTransactions: number; expectedCash: number };
+export type MarketShiftSummary = { shift: OpenMarketShift; cashSales: number; cashTransactions: number; digitalSales: number; digitalTransactions: number; expectedCash: number; paymentBreakdown: { method: string; total: number; count: number }[] };
 
 function outletScope(role: MarketRole) {
   return role === "OWNER"
@@ -105,8 +107,8 @@ export async function openMarketShift(input: AccessibleUser & { outletId: string
 }
 
 export async function listMarketPosProducts({ tenantId, outletId }: { tenantId: string; outletId: string }): Promise<MarketPosProduct[]> {
-  const result = await db.query<{ id: string; name: string; sku: string | null; price: string; stock: string; track_stock: boolean; category_id: string | null; category_name: string | null }>(
-    `SELECT p.id, p.name, p.sku, p.price::text, COALESCE(ps.qty, 0)::text AS stock, p."trackStock" AS track_stock, p."categoryId" AS category_id, c.name AS category_name
+  const result = await db.query<{ id: string; name: string; sku: string | null; price: string; stock: string; track_stock: boolean; track_expiry: boolean; expired_at: Date | null; category_id: string | null; category_name: string | null }>(
+    `SELECT p.id, p.name, p.sku, p.price::text, COALESCE(ps.qty, 0)::text AS stock, p."trackStock" AS track_stock, COALESCE(p."trackExpiry", false) AS track_expiry, p."expiredAt" AS expired_at, p."categoryId" AS category_id, c.name AS category_name
        FROM "Product" p
        LEFT JOIN "Category" c ON c.id = p."categoryId" AND c."tenantId" = p."tenantId"
        LEFT JOIN "ProductStock" ps ON ps."productId" = p.id AND ps."outletId" = $2 AND ps."tenantId" = p."tenantId"
@@ -145,6 +147,8 @@ export async function listMarketPosProducts({ tenantId, outletId }: { tenantId: 
     price: Number(row.price),
     stock: Number(row.stock),
     trackStock: row.track_stock,
+    trackExpiry: row.track_expiry,
+    expiredAt: row.expired_at ? new Date(row.expired_at).toISOString() : null,
     variantGroups: Array.from(groupsByProduct.get(row.id)?.values() ?? []),
     categoryId: row.category_id ?? null,
     categoryName: row.category_name ?? null,
@@ -541,8 +545,16 @@ export async function getMarketShiftSummary({ tenantId, userId, shiftId }: Pick<
     [tenantId, shiftId],
   );
   const row = totals.rows[0] ?? { cash_sales: "0", cash_transactions: "0", digital_sales: "0", digital_transactions: "0" };
+  const breakdown = await db.query<{ method: string; total: string; count: string }>(
+    `SELECT s."paymentMethod" AS method, SUM(s.total)::text AS total, COUNT(*)::text AS count
+       FROM "Sale" s
+      WHERE s."shiftId" = $1 AND s."tenantId" = $2 AND s.status = 'COMPLETED'
+      GROUP BY s."paymentMethod"
+      ORDER BY SUM(s.total) DESC`,
+    [shiftId, tenantId],
+  );
   const cashSales = Number(row.cash_sales);
-  return { shift, cashSales, cashTransactions: Number(row.cash_transactions), digitalSales: Number(row.digital_sales), digitalTransactions: Number(row.digital_transactions), expectedCash: shift.openingCash + cashSales };
+  return { shift, cashSales, cashTransactions: Number(row.cash_transactions), digitalSales: Number(row.digital_sales), digitalTransactions: Number(row.digital_transactions), expectedCash: shift.openingCash + cashSales, paymentBreakdown: breakdown.rows.map((item) => ({ method: item.method, total: Number(item.total), count: Number(item.count) })) };
 }
 
 export async function closeMarketShift(input: Pick<AccessibleUser, "tenantId" | "userId"> & { shiftId: string; closingCash: number; varianceNote?: string }) {

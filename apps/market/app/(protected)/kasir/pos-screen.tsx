@@ -19,6 +19,8 @@ export type PosProduct = {
   price: number;
   trackStock: boolean;
   stock: number;
+  trackExpiry?: boolean;
+  expiredAt?: string | null;
   categoryId: string | null;
   categoryName: string | null;
   variantGroups: VariantGroup[];
@@ -35,101 +37,142 @@ export type CartLine = {
   stock: number;
   variantOptionIds: string[];
   variantLabel: string | null;
+  isExpireDiscount?: boolean;
+  expireDiscountPercent?: number;
 };
+
+export type ExpireDiscountSettings = {
+  enabled: boolean;
+  mode: "auto" | "manual";
+  days: number;
+  percent: number;
+};
+
+function checkNearExpiryDiscount(
+  product: PosProduct,
+  settings?: ExpireDiscountSettings
+): { isNearExpiry: boolean; diffDays: number; discountPercent: number; discountAmount: number } | null {
+  if (!settings?.enabled) return null;
+  if (!product.trackExpiry || !product.expiredAt) return null;
+
+  const expDate = new Date(product.expiredAt);
+  const now = new Date();
+  const diffTime = expDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+
+  if (diffDays > 0 && diffDays <= settings.days) {
+    const pct = settings.percent;
+    const discountAmount = Math.round(product.price * (pct / 100));
+    return {
+      isNearExpiry: true,
+      diffDays,
+      discountPercent: pct,
+      discountAmount,
+    };
+  }
+
+  return null;
+}
 
 export function MarketPosScreen({
   products,
   shift,
   members,
   promos = [],
+  expireDiscountSettings,
 }: {
   products: PosProduct[];
   shift: { id: string; outletName: string };
   members: MemberOption[];
   promos: PromoForCalc[];
+  expireDiscountSettings?: ExpireDiscountSettings;
 }) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("ALL");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartDiscount, setCartDiscount] = useState(0);
-  const [showCartSheet, setShowCartSheet] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
-  const [variantPickerProduct, setVariantPickerProduct] = useState<PosProduct | null>(null);
+  const [showCartSheet, setShowCartSheet] = useState(false);
+  const [variantProduct, setVariantProduct] = useState<PosProduct | null>(null);
   const [posMember, setPosMember] = useState<MemberOption | null>(null);
   const [showMemberPicker, setShowMemberPicker] = useState(false);
-
-  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
-  const [result, setResult] = useState<{ error?: string; success?: string }>({});
   const { toastMessage, showToast } = useToast();
 
-  // Category chips dari data produk asli
   const categories = useMemo(() => {
     const map = new Map<string, { id: string; name: string; count: number }>();
     for (const p of products) {
       if (!p.categoryId || !p.categoryName) continue;
-      const key = p.categoryId;
-      const existing = map.get(key);
-      if (existing) existing.count += 1;
-      else map.set(key, { id: key, name: p.categoryName, count: 1 });
+      const cur = map.get(p.categoryId);
+      if (cur) cur.count++;
+      else map.set(p.categoryId, { id: p.categoryId, name: p.categoryName, count: 1 });
     }
-    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return products.filter((p) => {
-      const matchCat = activeCategory === "ALL" || p.categoryId === activeCategory;
-      const matchQ = !q || p.name.toLowerCase().includes(q) || (p.sku?.toLowerCase().includes(q) ?? false);
-      return matchCat && matchQ;
-    });
-  }, [products, activeCategory, search]);
+    let list = products;
+    if (selectedCategory) list = list.filter((p) => p.categoryId === selectedCategory);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((p) => p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q)));
+    }
+    return list;
+  }, [products, selectedCategory, search]);
 
   const subtotal = cart.reduce((s, l) => s + l.price * l.qty - l.discountAmount, 0);
   const afterDiscount = Math.max(0, subtotal - cartDiscount);
 
-  // Promo aktif — hitung diskon terbesar (BOGO / diskon / bulk)
-  const activePromos = promos;
   const promoCart: PromoCartLine[] = cart.map((l) => {
-    const product = products.find((p) => p.id === l.productId);
+    const prod = products.find((p) => p.id === l.productId);
     return {
       productId: l.productId,
-      categoryId: product?.categoryId ?? null,
-      lineTotal: l.price * l.qty,
+      categoryId: prod?.categoryId ?? null,
+      lineTotal: l.price * l.qty - l.discountAmount,
       price: l.price,
       qty: l.qty,
       name: l.name,
     };
   });
-  const promoResult = computeBestPromoDiscount(activePromos, promoCart, afterDiscount);
-  const promoDiscount = promoResult?.discountAmount ?? 0;
-  const total = Math.max(0, afterDiscount - promoDiscount);
+
+  const promoResult = useMemo(
+    () => computeBestPromoDiscount(promos, promoCart, subtotal),
+    [promos, promoCart, subtotal],
+  );
+
+  const promoDiscountAmount = promoResult?.discountAmount || 0;
+  const total = Math.max(0, afterDiscount - promoDiscountAmount);
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
 
-  // Badge promo per produk
-  function productPromos(product: PosProduct): PromoForCalc[] {
-    return activePromos.filter((p) => {
-      const rule = (p.ruleType ?? "DISCOUNT").toUpperCase();
-      const normalized = rule === "BUY_X_GET_Y" ? "BOGO" : rule;
-      if (normalized === "BOGO" || normalized === "BULK") {
-        if (p.qualifyingProductId && p.qualifyingProductId !== product.id) return false;
-        if (p.qualifyingCategoryId && p.qualifyingCategoryId !== product.categoryId) return false;
-        return true;
-      }
+  function productPromos(product: PosProduct) {
+    return promos.filter((p) => {
+      if (!p.qualifyingProductId && !p.qualifyingCategoryId) return true;
+      if (p.qualifyingProductId && p.qualifyingProductId === product.id) return true;
+      if (p.qualifyingCategoryId && p.qualifyingCategoryId === product.categoryId) return true;
       return false;
     });
   }
 
   function addToCart(product: PosProduct, variantOptionIds: string[] = [], priceDelta = 0, variantLabel: string | null = null) {
     const cartKey = `${product.id}::${[...variantOptionIds].sort().join(",")}`;
+    const unitPrice = product.price + priceDelta;
+    const expiryDiscount = checkNearExpiryDiscount(product, expireDiscountSettings);
+    const isAutoDiscount = expiryDiscount && expireDiscountSettings?.mode === "auto";
+    const unitDiscount = isAutoDiscount ? Math.round(unitPrice * (expiryDiscount.discountPercent / 100)) : 0;
+
     setCart((prev) => {
       const existing = prev.find((l) => l.cartKey === cartKey);
       const targetQty = existing ? existing.qty + 1 : 1;
       const clampedQty = product.trackStock ? Math.min(targetQty, product.stock) : targetQty;
-      if (existing) return prev.map((l) => l.cartKey === cartKey ? { ...l, qty: clampedQty } : l);
+      if (existing) {
+        const newDiscount = isAutoDiscount ? unitDiscount * clampedQty : existing.discountAmount;
+        return prev.map((l) => l.cartKey === cartKey ? { ...l, qty: clampedQty, discountAmount: newDiscount } : l);
+      }
       return [...prev, {
-        cartKey, productId: product.id, name: product.name, price: product.price + priceDelta,
-        qty: clampedQty, discountAmount: 0, trackStock: product.trackStock, stock: product.stock,
+        cartKey, productId: product.id, name: product.name, price: unitPrice,
+        qty: clampedQty, discountAmount: unitDiscount * clampedQty, trackStock: product.trackStock, stock: product.stock,
         variantOptionIds, variantLabel,
+        isExpireDiscount: Boolean(isAutoDiscount),
+        expireDiscountPercent: expiryDiscount?.discountPercent,
       }];
     });
   }
@@ -139,8 +182,12 @@ export function MarketPosScreen({
       if (qty <= 0) return prev.filter((l) => l.cartKey !== cartKey);
       return prev.map((l) => {
         if (l.cartKey !== cartKey) return l;
-        const clamped = l.trackStock ? Math.min(qty, l.stock) : qty;
-        return { ...l, qty: clamped };
+        let newDiscount = l.discountAmount;
+        if (l.isExpireDiscount && l.expireDiscountPercent) {
+          const unitDiscount = Math.round(l.price * (l.expireDiscountPercent / 100));
+          newDiscount = unitDiscount * qty;
+        }
+        return { ...l, qty, discountAmount: newDiscount };
       });
     });
   }
@@ -153,90 +200,99 @@ export function MarketPosScreen({
     setCart((prev) => prev.filter((l) => l.cartKey !== cartKey));
   }
 
-  function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key !== "Enter") return;
-    const q = search.trim().toLowerCase();
-    if (!q) return;
-    const found = products.find((p) => p.sku?.toLowerCase() === q);
-    if (found) { addToCart(found); setSearch(""); }
-    else showToast(`Barcode "${search.trim()}" tidak ditemukan`);
-  }
-
-  async function checkout(payments: { method: PaymentMethod; amount: number }[], memberId?: string) {
-    setResult({});
-    const single = payments.length === 1;
-    const res = await createMarketSaleAction({
+  async function handlePaymentComplete(method: PaymentMethod, amountPaid: number) {
+    const payload = {
       shiftId: shift.id,
-      requestId,
-      items: cart.map((l) => ({ productId: l.productId, quantity: l.qty, variantOptionIds: l.variantOptionIds.length ? l.variantOptionIds : undefined, discountAmount: l.discountAmount || undefined })),
-      paymentMethod: single ? payments[0]!.method : undefined,
-      amountPaid: single ? payments[0]!.amount : undefined,
-      payments: single ? undefined : payments,
-      memberId,
+      requestId: typeof window !== "undefined" && window.crypto?.randomUUID ? window.crypto.randomUUID() : `req_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      items: cart.map((l) => ({
+        productId: l.productId,
+        quantity: l.qty,
+        variantOptionIds: l.variantOptionIds.length ? l.variantOptionIds : undefined,
+        discountAmount: l.discountAmount || undefined,
+      })),
+      paymentMethod: method,
+      amountPaid: method === "CASH" ? amountPaid : total,
       cartDiscount: cartDiscount || undefined,
-    });
-    if (res.error) { setResult({ error: res.error }); return; }
-    setCart([]); setCartDiscount(0); setPosMember(null); setRequestId(crypto.randomUUID()); setShowPayment(false); setShowCartSheet(false);
-    setResult({ success: `Transaksi ${res.sale!.invoiceNumber} tersimpan. Total ${formatRupiah(res.sale!.total)}${res.sale!.change ? `; kembalian ${formatRupiah(res.sale!.change)}.` : "."}` });
-    showToast("Transaksi berhasil!");
+      memberId: posMember?.id,
+      appliedPromoId: promoResult?.promoId || undefined,
+      promoDiscountAmount: promoDiscountAmount > 0 ? promoDiscountAmount : undefined,
+    };
+
+    const res = await createMarketSaleAction(payload);
+    if (res.sale) {
+      setCart([]);
+      setCartDiscount(0);
+      setPosMember(null);
+      setShowPayment(false);
+      showToast(res.sale.invoiceNumber ? `Transaksi ${res.sale.invoiceNumber} berhasil!` : "Transaksi berhasil!");
+      return { ok: true, invoiceNumber: res.sale.invoiceNumber };
+    } else {
+      showToast(res.error || "Gagal memproses transaksi");
+      return { ok: false, error: res.error || "Gagal memproses transaksi" };
+    }
   }
 
-  // Global keyboard: fokus ke search
-  useEffect(() => {
-    const h = (e: globalThis.KeyboardEvent) => {
-      const t = e.target as HTMLElement;
-      if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable) return;
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key.length === 1) (document.getElementById("pos-search-input") as HTMLInputElement)?.focus();
-    };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, []);
+  function handleProductClick(product: PosProduct) {
+    if (product.variantGroups && product.variantGroups.length > 0) {
+      setVariantProduct(product);
+    } else {
+      addToCart(product);
+    }
+  }
 
   return (
     <div className="pos-layout">
-      {/* Row 1: search + actions */}
-      <div className="pos-row pos-row-top">
+      {/* Toast alert */}
+      {toastMessage && <Toast message={toastMessage} />}
+
+      {/* Header bar */}
+      <header className="pos-row pos-row-top">
         <div className="pos-search-wrap">
-          <svg aria-hidden viewBox="0 0 24 24" className="pos-search-icon" fill="none" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" strokeLinecap="round" />
-          </svg>
+          <span className="pos-search-icon">🔍</span>
           <input
-            id="pos-search-input"
-            type="search"
+            type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            placeholder="Cari produk atau scan barcode…"
+            placeholder="Cari produk (nama / SKU / barcode)…"
             className="pos-search-input"
           />
         </div>
         <div className="pos-actions">
-          <Link href="/kasir/riwayat" className="pos-btn">Riwayat</Link>
-          <Link href={`/kasir/tutup/${shift.id}`} className="pos-btn pos-btn-primary">Tutup Shift</Link>
+          <Link href="/kasir/riwayat" className="pos-btn">
+            📋 Riwayat
+          </Link>
+          <Link href={`/kasir/tutup/${shift.id}`} className="pos-btn pos-btn-primary">
+            🔒 Tutup Shift ({shift.outletName})
+          </Link>
         </div>
-      </div>
+      </header>
 
-      {result.error && <div className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }} role="alert">{result.error}</div>}
-      {result.success && <div className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-good-bg)", color: "var(--color-good-text)" }} role="status">{result.success}</div>}
-
-      {/* Main 2-col: products + cart */}
+      {/* Main 2-column: catalog | cart */}
       <div className="pos-body">
-        {/* Products */}
-        <div className="pos-products">
-          {/* Category chips */}
+        {/* Left: Products */}
+        <section className="pos-products">
+          {/* Category Chips */}
           <div className="pos-chips">
-            <button onClick={() => setActiveCategory("ALL")} className="pos-chip" style={activeCategory === "ALL" ? { backgroundColor: "var(--accent)", color: "var(--accent-ink, #fff)", borderColor: "var(--accent)" } : {}}>
-              Semua <span className="pos-chip-count">{products.length}</span>
+            <button
+              type="button"
+              onClick={() => setSelectedCategory(null)}
+              className={`pos-chip ${selectedCategory === null ? "is-active" : ""}`}
+            >
+              Semua produk <span className="pos-chip-count">{products.length}</span>
             </button>
-            {categories.map((c) => (
-              <button key={c.id} onClick={() => setActiveCategory(c.id)} className="pos-chip" style={activeCategory === c.id ? { backgroundColor: "var(--accent)", color: "var(--accent-ink, #fff)", borderColor: "var(--accent)" } : {}}>
-                {c.name} <span className="pos-chip-count">{c.count}</span>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`pos-chip ${selectedCategory === cat.id ? "is-active" : ""}`}
+              >
+                {cat.name} <span className="pos-chip-count">{cat.count}</span>
               </button>
             ))}
           </div>
 
-          {/* Product grid */}
+          {/* Product Grid */}
           <div className="pos-grid-scroll">
             {filteredProducts.length === 0 ? (
               <div className="pos-empty">
@@ -250,12 +306,14 @@ export function MarketPosScreen({
                   const atLimit = product.trackStock && qtyInCart >= product.stock;
                   const disabled = outOfStock || atLimit;
                   const promos = disabled ? [] : productPromos(product);
+                  const expiryInfo = checkNearExpiryDiscount(product, expireDiscountSettings);
+
                   return (
                     <button
                       key={product.id}
                       type="button"
                       disabled={disabled}
-                      onClick={() => { if (!disabled) addToCart(product); }}
+                      onClick={() => { if (!disabled) handleProductClick(product); }}
                       className={`pos-card ${outOfStock ? "pos-card-out" : ""}`}
                     >
                       <div className="pos-card-top">
@@ -274,6 +332,11 @@ export function MarketPosScreen({
                           {promos.length > 0 && (
                             <span className="pos-promo-badge">{promos[0]?.name}</span>
                           )}
+                          {expiryInfo && (
+                            <span className="pos-expire-badge">
+                              🏷️ -{expiryInfo.discountPercent}% ({expiryInfo.diffDays}d)
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -282,143 +345,219 @@ export function MarketPosScreen({
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Cart — desktop sidebar */}
+        {/* Right: Cart */}
         <aside className="pos-cart-panel">
-          <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} promoResult={promoResult} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => setShowPayment(true)} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
+          <CartPanel
+            cart={cart}
+            cartDiscount={cartDiscount}
+            setCartDiscount={setCartDiscount}
+            subtotal={subtotal}
+            total={total}
+            promoDiscountAmount={promoDiscountAmount}
+            promoName={promoResult?.promoName || null}
+            onUpdateQty={updateQty}
+            onUpdateLineDiscount={updateLineDiscount}
+            onRemoveLine={removeLine}
+            onCheckout={() => setShowPayment(true)}
+            posMember={posMember}
+            onPickMember={() => setShowMemberPicker(true)}
+            onClearMember={() => setPosMember(null)}
+          />
         </aside>
       </div>
 
-      {/* Mobile cart bar */}
+      {/* Mobile cart bottom bar */}
       {cart.length > 0 && !showCartSheet && (
-        <button onClick={() => setShowCartSheet(true)} className="fixed inset-x-4 bottom-20 z-20 flex min-h-[52px] items-center justify-between gap-3 rounded-xl px-5 text-white shadow-lg md:hidden" style={{ backgroundColor: "var(--color-primary)" }}>
-          <span className="shrink-0 text-sm font-medium">{cartCount} item</span>
-          <span className="min-w-0 truncate text-right tabular-nums text-base font-bold">Lihat Invoice • {formatRupiah(total)}</span>
-        </button>
-      )}
-
-      {/* Mobile cart sheet */}
-      {showCartSheet && (
-        <div className="fixed inset-0 z-40 flex flex-col justify-end md:hidden" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
-          <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-2xl p-4" style={{ backgroundColor: "var(--color-bg)" }}>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-bold" style={{ color: "var(--color-text)" }}>Invoice</h2>
-              <button onClick={() => setShowCartSheet(false)} className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ color: "var(--color-text-secondary)" }}>
-                <XIcon className="h-5 w-5" />
-              </button>
-            </div>
-            <CartPanel cart={cart} cartDiscount={cartDiscount} setCartDiscount={setCartDiscount} subtotal={subtotal} total={total} promoResult={promoResult} onUpdateQty={updateQty} onUpdateLineDiscount={updateLineDiscount} onRemoveLine={removeLine} onCheckout={() => { setShowCartSheet(false); setShowPayment(true); }} posMember={posMember} onPickMember={() => setShowMemberPicker(true)} onClearMember={() => setPosMember(null)} />
+        <div className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-between border-t bg-white p-3 shadow-lg md:hidden">
+          <div>
+            <span className="shrink-0 text-sm font-medium">{cartCount} item</span>
+            <p className="text-base font-bold" style={{ color: "var(--accent)" }}>{formatRupiah(total)}</p>
           </div>
+          <button
+            onClick={() => setShowCartSheet(true)}
+            className="rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-sm"
+            style={{ backgroundColor: "var(--accent)" }}
+          >
+            Lihat Keranjang
+          </button>
         </div>
       )}
 
-      {/* Modals */}
+      {/* Variant Picker Modal */}
+      {variantProduct && (
+        <VariantPickerModal
+          productName={variantProduct.name}
+          basePrice={variantProduct.price}
+          groups={variantProduct.variantGroups}
+          onConfirm={({ optionIds, priceDelta, label }) => {
+            addToCart(variantProduct, optionIds, priceDelta, label);
+            setVariantProduct(null);
+          }}
+          onClose={() => setVariantProduct(null)}
+        />
+      )}
+
+      {/* Member Picker Modal */}
+      {showMemberPicker && (
+        <MemberPicker
+          members={members}
+          onSelect={(m) => { setPosMember(m); setShowMemberPicker(false); }}
+          onClose={() => setShowMemberPicker(false)}
+        />
+      )}
+
+      {/* Payment Sheet */}
       {showPayment && (
         <PaymentSheet
           total={total}
-          initialMember={posMember} onClose={() => setShowPayment(false)}
-          onConfirm={(payments, memberId) => { setShowPayment(false); void checkout(payments, memberId); }}
+          initialMember={posMember ? { id: posMember.id, name: posMember.name, depositBalance: posMember.depositBalance || 0 } : null}
+          onClose={() => setShowPayment(false)}
+          onConfirm={(paymentsArr) => {
+            const primaryPayment = paymentsArr[0];
+            handlePaymentComplete(primaryPayment?.method || "CASH", primaryPayment?.amount || total);
+          }}
         />
       )}
-      {variantPickerProduct && (
-        <VariantPickerModal productName={variantPickerProduct.name} basePrice={variantPickerProduct.price} groups={variantPickerProduct.variantGroups}
-          onClose={() => setVariantPickerProduct(null)} onConfirm={({ optionIds, priceDelta, label }) => addToCart(variantPickerProduct, optionIds, priceDelta, label)} />
-      )}
-      {showMemberPicker && (
-        <MemberPicker members={members} onSelect={(m) => { setPosMember(m); setShowMemberPicker(false); }} onClose={() => setShowMemberPicker(false)} />
-      )}
-      <Toast message={toastMessage} />
     </div>
   );
 }
 
-/* ─── Cart Panel (shared by desktop sidebar + mobile sheet) ─── */
 function CartPanel({
-  cart, cartDiscount, setCartDiscount, subtotal, total, promoResult, onUpdateQty, onUpdateLineDiscount, onRemoveLine, onCheckout, posMember, onPickMember, onClearMember,
+  cart,
+  cartDiscount,
+  setCartDiscount,
+  subtotal,
+  total,
+  promoDiscountAmount,
+  promoName,
+  onUpdateQty,
+  onUpdateLineDiscount,
+  onRemoveLine,
+  onCheckout,
+  posMember,
+  onPickMember,
+  onClearMember,
 }: {
-  cart: CartLine[]; cartDiscount: number; setCartDiscount: (v: number) => void;
-  subtotal: number; total: number;
-  promoResult: { promoId: string; promoName: string; discountAmount: number; label: string } | null;
-  onUpdateQty: (key: string, qty: number) => void; onUpdateLineDiscount: (key: string, d: number) => void; onRemoveLine: (key: string) => void;
-  onCheckout: () => void; posMember: MemberOption | null; onPickMember: () => void; onClearMember: () => void;
+  cart: CartLine[];
+  cartDiscount: number;
+  setCartDiscount: (v: number) => void;
+  subtotal: number;
+  total: number;
+  promoDiscountAmount: number;
+  promoName: string | null;
+  onUpdateQty: (cartKey: string, qty: number) => void;
+  onUpdateLineDiscount: (cartKey: string, discount: number) => void;
+  onRemoveLine: (cartKey: string) => void;
+  onCheckout: () => void;
+  posMember: MemberOption | null;
+  onPickMember: () => void;
+  onClearMember: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col p-4">
+      {/* Cart Header */}
       <div className="pos-cart-header">
-        <h2>Keranjang</h2>
+        <h2>Keranjang Belanja</h2>
         <span className="pos-cart-count">{cart.reduce((s, l) => s + l.qty, 0)} item</span>
       </div>
+
+      {/* Member Selection */}
+      <div className="my-2 rounded-xl border p-2.5" style={{ borderColor: "var(--market-line)", background: "#fafbfa" }}>
+        {posMember ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>👤 Member: {posMember.name}</span>
+              <p className="text-xs text-gray-500">{posMember.phone} • Poin: {posMember.points || 0}</p>
+            </div>
+            <button onClick={onClearMember} className="text-xs text-red-500 underline font-semibold">Ganti</button>
+          </div>
+        ) : (
+          <button onClick={onPickMember} className="w-full text-left text-xs font-bold text-teal-700 hover:underline">
+            + Pilih Member / Pelanggan
+          </button>
+        )}
+      </div>
+
       {cart.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-3 text-center">
-          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Belum ada produk. Ketuk produk untuk menambahkan →</p>
+        <div className="pos-empty flex-1">
+          <span style={{ fontSize: "2.5rem" }}>🛒</span>
+          <p>Keranjang masih kosong.</p>
+          <span style={{ fontSize: "0.75rem", color: "var(--market-muted)" }}>Klik produk di sebelah kiri untuk menambah ke keranjang.</span>
         </div>
       ) : (
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto pr-0.5 mb-2 min-h-[120px] space-y-2" style={{ scrollbarWidth: "none" }}>
+          <div className="flex-1 overflow-y-auto pr-0.5 mb-2 space-y-2" style={{ scrollbarWidth: "none" }}>
             {cart.map((line) => (
-              <div key={line.cartKey} className="border-b pb-2 last:border-0 last:pb-0" style={{ borderColor: "var(--color-border)" }}>
+              <div key={line.cartKey} className="border-b pb-2 last:border-0 last:pb-0" style={{ borderColor: "var(--market-line)" }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold" style={{ color: "var(--color-text)" }}>{line.name}</p>
-                    {line.variantLabel && <p className="truncate text-xs" style={{ color: "var(--color-text-secondary)" }}>{line.variantLabel}</p>}
-                    <p className="tabular-nums text-xs" style={{ color: "var(--color-text-secondary)" }}>{formatRupiah(line.price)} / item</p>
+                    <p className="truncate text-sm font-semibold" style={{ color: "var(--market-ink)" }}>{line.name}</p>
+                    {line.variantLabel && <p className="truncate text-xs text-gray-500">{line.variantLabel}</p>}
+                    <p className="tabular-nums text-xs text-gray-500">{formatRupiah(line.price)} / item</p>
+
+                    {line.isExpireDiscount && line.expireDiscountPercent && (
+                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#c2410c", background: "#ffedd5", padding: "1px 6px", borderRadius: 4, display: "inline-block", marginTop: 2 }}>
+                        🏷️ Clearance (-{line.expireDiscountPercent}%)
+                      </span>
+                    )}
                   </div>
-                  <button onClick={() => onRemoveLine(line.cartKey)} className="flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-medium" style={{ color: "var(--color-danger)" }}>
+                  <button onClick={() => onRemoveLine(line.cartKey)} className="flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 text-xs font-medium text-red-600">
                     <XIcon className="h-3.5 w-3.5" /> Hapus
                   </button>
                 </div>
-                <div className="mt-1 flex items-center justify-between">
+
+                <div className="mt-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => onUpdateQty(line.cartKey, line.qty - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border text-sm font-semibold" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>−</button>
-                    <span className="min-w-[1.25rem] text-center tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{line.qty}</span>
-                    <button onClick={() => onUpdateQty(line.cartKey, line.qty + 1)} disabled={line.trackStock && line.qty >= line.stock} className="flex h-7 w-7 items-center justify-center rounded-lg border text-sm font-semibold disabled:opacity-40" style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}>+</button>
+                    <button onClick={() => onUpdateQty(line.cartKey, line.qty - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg border text-sm font-semibold">−</button>
+                    <span className="min-w-[1.25rem] text-center tabular-nums text-sm font-bold">{line.qty}</span>
+                    <button onClick={() => onUpdateQty(line.cartKey, line.qty + 1)} disabled={line.trackStock && line.qty >= line.stock} className="flex h-7 w-7 items-center justify-center rounded-lg border text-sm font-semibold disabled:opacity-40">+</button>
                   </div>
-                  <span className="tabular-nums text-sm font-bold" style={{ color: "var(--color-text)" }}>{formatRupiah(line.price * line.qty - line.discountAmount)}</span>
+                  <span className="tabular-nums text-sm font-bold">{formatRupiah(line.price * line.qty - line.discountAmount)}</span>
                 </div>
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <label className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>Diskon/item (Rp)</label>
-                  <input type="number" min={0} inputMode="numeric" value={line.discountAmount || ""} onChange={(e) => onUpdateLineDiscount(line.cartKey, Number(e.target.value) || 0)} placeholder="0" className="h-7 w-24 rounded border px-2 text-xs tabular-nums outline-none" style={{ borderColor: "var(--color-border)" }} />
-                </div>
+
+                {!line.isExpireDiscount && (
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-gray-500">Diskon/item (Rp)</label>
+                    <input type="number" min={0} inputMode="numeric" value={line.discountAmount || ""} onChange={(e) => onUpdateLineDiscount(line.cartKey, Number(e.target.value) || 0)} placeholder="0" className="h-7 w-24 rounded border px-2 text-xs tabular-nums outline-none" style={{ borderColor: "var(--market-line)" }} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto border-t pt-3 flex flex-col gap-3" style={{ borderColor: "var(--color-border)" }}>
-            <div className="flex items-center justify-between gap-2">
-              <label className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>Diskon transaksi</label>
-              <input type="number" min={0} inputMode="numeric" value={cartDiscount || ""} onChange={(e) => setCartDiscount(Number(e.target.value) || 0)} placeholder="0" className="h-8 w-24 rounded border px-2 text-sm tabular-nums outline-none" style={{ borderColor: "var(--color-border)" }} />
+
+          {/* Cart Summary */}
+          <div className="border-t pt-3 space-y-2" style={{ borderColor: "var(--market-line)" }}>
+            <div className="flex items-center justify-between text-xs text-gray-600">
+              <span>Subtotal</span>
+              <span className="tabular-nums font-semibold">{formatRupiah(subtotal)}</span>
             </div>
-            {/* Member chip */}
-            {posMember ? (
-              <div className="flex items-center justify-between rounded-lg border px-3 py-2" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface)" }}>
-                <span className="text-sm font-medium" style={{ color: "var(--color-text)" }}>👤 {posMember.name}</span>
-                <button type="button" onClick={onClearMember} className="text-xs font-semibold" style={{ color: "var(--color-primary)" }}>Ganti</button>
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-600">Diskon Transaksi</span>
+              <input type="number" min={0} inputMode="numeric" value={cartDiscount || ""} onChange={(e) => setCartDiscount(Number(e.target.value) || 0)} placeholder="0" className="h-7 w-24 rounded border px-2 text-xs tabular-nums text-right outline-none" style={{ borderColor: "var(--market-line)" }} />
+            </div>
+
+            {promoDiscountAmount > 0 && (
+              <div className="flex items-center justify-between text-xs text-emerald-600 font-semibold">
+                <span>Promo: {promoName || "Diskon Promo"}</span>
+                <span className="tabular-nums">−{formatRupiah(promoDiscountAmount)}</span>
               </div>
-            ) : (
-              <button type="button" onClick={onPickMember} className="text-xs font-semibold" style={{ color: "var(--color-primary)" }}>+ Pilih member</button>
             )}
-            {/* Summary */}
-            <div className="rounded-xl p-3" style={{ backgroundColor: "var(--color-bg)" }}>
-              <div className="flex justify-between text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                <span>Subtotal</span><span className="tabular-nums">{formatRupiah(subtotal)}</span>
-              </div>
-              {cartDiscount > 0 && (
-                <div className="mt-1 flex justify-between text-xs" style={{ color: "var(--color-good-text, #15803d)" }}>
-                  <span>Diskon transaksi</span><span className="tabular-nums">−{formatRupiah(cartDiscount)}</span>
-                </div>
-              )}
-              {promoResult && (
-                <div className="mt-1 flex justify-between text-xs" style={{ color: "var(--color-good-text, #15803d)" }}>
-                  <span className="truncate pr-2">🎉 {promoResult.label}</span><span className="tabular-nums shrink-0">−{formatRupiah(promoResult.discountAmount)}</span>
-                </div>
-              )}
-              <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2" style={{ borderColor: "var(--color-border)" }}>
-                <span className="shrink-0 text-xs font-semibold" style={{ color: "var(--color-text)" }}>Total belanja</span>
-                <span className="truncate tabular-nums text-xl font-bold leading-tight" style={{ color: "var(--color-text)" }}>{formatRupiah(total)}</span>
-              </div>
+
+            <div className="flex items-center justify-between border-t pt-2 text-base font-bold" style={{ borderColor: "var(--market-line)" }}>
+              <span>Total</span>
+              <span className="tabular-nums text-lg" style={{ color: "var(--accent)" }}>{formatRupiah(total)}</span>
             </div>
-            <button onClick={onCheckout} disabled={cart.length === 0} className="flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold text-white disabled:opacity-40 hover:opacity-95 transition-opacity" style={{ backgroundColor: "var(--color-primary)" }}>
-              <span>Bayar</span><span className="truncate tabular-nums">• {formatRupiah(total)}</span>
+
+            <button
+              onClick={onCheckout}
+              disabled={cart.length === 0}
+              className="flex min-h-[46px] w-full items-center justify-center gap-1.5 rounded-xl px-3 text-base font-bold text-white disabled:opacity-40 hover:opacity-95 transition-opacity"
+              style={{ backgroundColor: "var(--accent)" }}
+            >
+              Bayar {formatRupiah(total)}
             </button>
           </div>
         </div>
