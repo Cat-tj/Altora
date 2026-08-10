@@ -8,6 +8,7 @@ import { ProductVisual } from "./product-visual";
 import { PaymentSheet, type PaymentMethod } from "./payment-sheet";
 import { VariantPickerModal, type VariantGroup } from "./variant-picker-modal";
 import { MemberPicker, type MemberOption } from "./member-picker";
+import { CameraBarcodeModal } from "./camera-barcode-modal";
 import { useToast, Toast } from "./toast";
 import { XIcon } from "./icons";
 import { createMarketSaleAction } from "./actions";
@@ -116,6 +117,8 @@ export function MarketPosScreen({
   const [variantProduct, setVariantProduct] = useState<PosProduct | null>(null);
   const [posMember, setPosMember] = useState<MemberOption | null>(null);
   const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [lastScannedStatus, setLastScannedStatus] = useState<string | null>(null);
   const [autoFocusMode, setAutoFocusMode] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { toastMessage, showToast } = useToast();
@@ -167,14 +170,14 @@ export function MarketPosScreen({
 
   // Auto focus management for continuous scanning
   useEffect(() => {
-    if (autoFocusMode && !showPayment && !variantProduct && !showMemberPicker) {
+    if (autoFocusMode && !showPayment && !variantProduct && !showMemberPicker && !showCameraScanner) {
       searchInputRef.current?.focus();
     }
-  }, [autoFocusMode, showPayment, variantProduct, showMemberPicker]);
+  }, [autoFocusMode, showPayment, variantProduct, showMemberPicker, showCameraScanner]);
 
   useEffect(() => {
     function handleGlobalKeyDown(e: globalThis.KeyboardEvent) {
-      if (!autoFocusMode || showPayment || variantProduct || showMemberPicker) return;
+      if (!autoFocusMode || showPayment || variantProduct || showMemberPicker || showCameraScanner) return;
       const activeEl = document.activeElement;
       const isInput = activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA" || activeEl?.tagName === "SELECT";
       if (!isInput && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -183,7 +186,49 @@ export function MarketPosScreen({
     }
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [autoFocusMode, showPayment, variantProduct, showMemberPicker]);
+  }, [autoFocusMode, showPayment, variantProduct, showMemberPicker, showCameraScanner]);
+
+  function handleCameraScan(barcode: string) {
+    const q = barcode.trim().toLowerCase();
+    if (!q) return;
+
+    const exactMatch = products.find(
+      (p) => (p.sku && p.sku.toLowerCase() === q) || p.name.toLowerCase() === q
+    );
+
+    const target = exactMatch || (filteredProducts.length === 1 ? filteredProducts[0] : null);
+
+    if (target) {
+      const qtyInCart = cart.filter((l) => l.productId === target.id).reduce((s, l) => s + l.qty, 0);
+      const outOfStock = target.trackStock && target.stock <= 0;
+      const atLimit = target.trackStock && qtyInCart >= target.stock;
+
+      if (outOfStock) {
+        setLastScannedStatus(`⚠️ Stok ${target.name} habis!`);
+        showToast(`⚠️ Stok ${target.name} habis!`);
+      } else if (atLimit) {
+        setLastScannedStatus(`⚠️ Stok ${target.name} maksimal (${target.stock})`);
+        showToast(`⚠️ Stok ${target.name} sudah maksimal (${target.stock})`);
+      } else {
+        if (target.variantGroups && target.variantGroups.length > 0) {
+          setVariantProduct(target);
+          setShowCameraScanner(false);
+        } else {
+          addToCart(target);
+          playScanBeep();
+          setLastScannedStatus(`✅ +1 ${target.name}`);
+          showToast(`✅ +1 ${target.name}`);
+        }
+      }
+    } else {
+      setLastScannedStatus(`❌ Kode "${barcode}" tidak ditemukan`);
+      showToast(`❌ Kode "${barcode}" tidak ditemukan`);
+    }
+
+    setTimeout(() => {
+      setLastScannedStatus(null);
+    }, 2500);
+  }
 
   function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
@@ -351,6 +396,16 @@ export function MarketPosScreen({
         <div className="pos-actions">
           <button
             type="button"
+            onClick={() => setShowCameraScanner(true)}
+            className="pos-btn"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.8rem", padding: "6px 12px" }}
+            title="Scan barcode menggunakan kamera HP / laptop"
+          >
+            <span>📷 Scan Kamera</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setAutoFocusMode(!autoFocusMode)}
             className={`pos-btn ${autoFocusMode ? "pos-btn-primary" : ""}`}
             title="Sistem akan otomatis mempertahankan fokus ke kolom scan barcode"
@@ -508,6 +563,15 @@ export function MarketPosScreen({
           members={members}
           onSelect={(m) => { setPosMember(m); setShowMemberPicker(false); }}
           onClose={() => setShowMemberPicker(false)}
+        />
+      )}
+
+      {/* Camera Barcode Scanner Modal */}
+      {showCameraScanner && (
+        <CameraBarcodeModal
+          onScan={handleCameraScan}
+          onClose={() => setShowCameraScanner(false)}
+          lastScannedItem={lastScannedStatus}
         />
       )}
 
