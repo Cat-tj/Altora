@@ -1105,3 +1105,231 @@
     display: flex;
   }
 }
+/* ─── BUKA SHIFT KASIR (CENTERED & POLISHED) ───────────────────── */
+.market-open-shift-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 140px);
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+.market-open-shift-card {
+  width: min(100%, 28rem);
+  background: #ffffff;
+  border: 1px solid var(--line, #EAECF0);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.03);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: op-shift-fadein 0.25s ease-out;
+}
+
+@keyframes op-shift-fadein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.market-open-shift-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.market-open-shift-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(13, 148, 136, 0.1);
+  color: var(--accent, #0d9488);
+  flex-shrink: 0;
+}
+
+.market-open-shift-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.market-open-shift-title-group h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink, #172554);
+  letter-spacing: -0.02em;
+}
+
+.market-open-shift-title-group p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted, #667085);
+  line-height: 1.4;
+}
+
+.market-open-shift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.market-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.market-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink, #172554);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.market-select-styled {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--line, #EAECF0);
+  border-radius: 9px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink, #172554);
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.market-select-styled:focus {
+  outline: none;
+  border-color: var(--accent, #0d9488);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.market-input-prefix-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line, #EAECF0);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.market-input-prefix-group:focus-within {
+  border-color: var(--accent, #0d9488);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.market-input-prefix {
+  padding: 0 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted, #667085);
+  background: var(--paper, #F7F8FA);
+  border-right: 1px solid var(--line, #EAECF0);
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  user-select: none;
+}
+
+.market-input-styled {
+  flex: 1;
+  min-height: 2.75rem;
+  border: none;
+  padding: 0.6rem 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink, #172554);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  background: transparent;
+}
+
+.market-preset-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.market-preset-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--line, #EAECF0);
+  background: var(--paper, #F7F8FA);
+  color: var(--ink, #172554);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.market-preset-btn:hover {
+  border-color: var(--accent, #0d9488);
+  color: var(--accent, #0d9488);
+  background: #ffffff;
+}
+
+.market-hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(13, 148, 136, 0.06);
+  border: 1px solid rgba(13, 148, 136, 0.15);
+  font-size: 0.76rem;
+  color: var(--ink, #172554);
+  line-height: 1.4;
+}
+
+.market-hint-icon {
+  color: var(--accent, #0d9488);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.market-btn-submit {
+  width: 100%;
+  min-height: 2.85rem;
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.market-btn-submit:hover:not(:disabled) {
+  opacity: 0.92;
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35);
+}
+
+.market-btn-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.market-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
