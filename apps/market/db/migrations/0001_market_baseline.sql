@@ -49,6 +49,9 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE IF NOT EXISTS "Tenant" (
   id          text PRIMARY KEY,
+  slug        text NOT NULL DEFAULT 'default-tenant',
+  "businessType" text NOT NULL DEFAULT 'RETAIL',
+  plan        text NOT NULL DEFAULT 'FREE',
   name        text NOT NULL,
   "isActive"  boolean NOT NULL DEFAULT true,
   "createdAt" timestamptz NOT NULL DEFAULT NOW(),

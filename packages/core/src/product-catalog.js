@@ -3,6 +3,7 @@ export const products = [
   { id: "resto", name: "Altora Resto", version: "0.1.0", host: "https://resto.altora.my.id", type: "application", appDirectory: "resto", releaseTagPrefix: "resto" },
   { id: "market", name: "Altora Market", version: "0.2.6", host: "https://market.altora.my.id", type: "application", appDirectory: "market", releaseTagPrefix: "market" },
   { id: "admin", name: "Altora Admin", version: "0.1.0", host: "https://admin.altora.my.id", type: "application", appDirectory: "admin", releaseTagPrefix: "admin" },
+  { id: "service", name: "Altora Service", version: "0.1.0", host: "https://service.altora.my.id", type: "application", appDirectory: "service", releaseTagPrefix: "service" },
 ];
 
 export function getProduct(productId) {

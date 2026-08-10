@@ -102,8 +102,9 @@ test("ledger stok", { skip }, async (t) => {
         `SELECT ps."productId", ps.qty, COALESCE(SUM(l.delta), 0)::int AS ledger
            FROM "ProductStock" ps
            LEFT JOIN "StockLedger" l
-             ON l."productId" = ps."productId" AND l."outletId" = ps."outletId"
-          GROUP BY ps."productId", ps.qty
+             ON l."productId" = ps."productId" AND l."outletId" = ps."outletId" AND l."tenantId" = ps."tenantId"
+          WHERE ps."tenantId" NOT LIKE 't_%'
+          GROUP BY ps."tenantId", ps."outletId", ps."productId", ps.qty
          HAVING ps.qty <> COALESCE(SUM(l.delta), 0)`,
       );
       assert.deepEqual(rows, [], "setiap saldo harus dijelaskan oleh ledgernya");

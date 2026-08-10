@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "slices": {
+    "baseline": {
+      "status": "blocked",
+      "evidence": "evidence/baseline.json",
+      "updatedAt": "2026-08-10T13:20:25.137Z"
+    },
+    "service-runtime": {
+      "status": "passed",
+      "evidence": "evidence/service-runtime.json",
+      "updatedAt": "2026-08-10T11:21:42.355Z"
+    },
+    "inventory-contracts": {
+      "status": "passed",
+      "evidence": "evidence/inventory-contracts.json",
+      "updatedAt": "2026-08-10T11:21:42.928Z"
+    },
+    "all-app-builds": {
+      "status": "blocked",
+      "evidence": "evidence/all-app-builds.json",
+      "updatedAt": "2026-08-10T13:17:38.438Z"
+    },
+    "all-workspace-tests": {
+      "status": "passed",
+      "evidence": "evidence/all-workspace-tests.json",
+      "updatedAt": "2026-08-10T11:28:08.245Z"
+    },
+    "database-contracts": {
+      "status": "passed",
+      "evidence": "evidence/database-contracts.json",
+      "updatedAt": "2026-08-10T13:11:27.156Z"
+    },
+    "tenant-isolation": {
+      "status": "passed",
+      "evidence": "evidence/tenant-isolation.json",
+      "updatedAt": "2026-08-10T12:03:32.984Z"
+    },
+    "service-database-contracts": {
+      "status": "passed",
+      "evidence": "evidence/service-database-contracts.json",
+      "updatedAt": "2026-08-10T12:29:08.266Z"
+    }
+  }
+}

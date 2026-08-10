@@ -20,8 +20,14 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- Backfill: schema legacy memakai saleReturnId → salin ke returnId
-UPDATE "SaleReturnItem" SET "returnId" = "saleReturnId" WHERE "returnId" IS NULL AND "saleReturnId" IS NOT NULL;
+-- Backfill hanya bila schema legacy memang memiliki saleReturnId.
+-- Database baru dari 0003 sudah memakai returnId dan tidak memiliki kolom legacy.
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'SaleReturnItem' AND column_name = 'saleReturnId') THEN
+    EXECUTE 'UPDATE "SaleReturnItem" SET "returnId" = "saleReturnId" WHERE "returnId" IS NULL AND "saleReturnId" IS NOT NULL';
+  END IF;
+END $$;
 
 ALTER TABLE "SaleReturnItem" ADD COLUMN IF NOT EXISTS "productId" text;
 ALTER TABLE "SaleReturnItem" ADD COLUMN IF NOT EXISTS "productName" text;
@@ -38,9 +44,15 @@ ALTER TABLE "StockReceiptItem" ADD COLUMN IF NOT EXISTS notes text;
 CREATE INDEX IF NOT EXISTS "StockReceiptItem_tenantId_idx" ON "StockReceiptItem" ("tenantId");
 
 -- ── 3. PromoDiscountType: kode baru memakai 'PERCENTAGE' ────
+-- Enum hanya ada pada schema production legacy; schema CI tertentu memakai text.
 DO $$ BEGIN
-  ALTER TYPE "PromoDiscountType" ADD VALUE IF NOT EXISTS 'PERCENTAGE';
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'PromoDiscountType') THEN
+    BEGIN
+      ALTER TYPE "PromoDiscountType" ADD VALUE IF NOT EXISTS 'PERCENTAGE';
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END;
+  END IF;
+END $$;
 
 -- ── 4. Koneksi tenant: pastikan kolom tenantId legacy terisi ──
 DO $$ BEGIN

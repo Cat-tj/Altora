@@ -358,8 +358,9 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
 
     const day = new Date().toISOString().slice(0, 10).replaceAll("-", "");
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`market-invoice:${day}`]);
-    const sequence = await client.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM "Sale" WHERE "invoiceNumber" LIKE $1`, [`MKT-${day}-%`]);
-    const invoiceNumber = `MKT-${day}-${String(Number(sequence.rows[0]?.count ?? 0) + 1).padStart(4, "0")}`;
+    const prefix = `MKT-${day}-${randomUUID().slice(0, 4)}-`;
+    const sequence = await client.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM "Sale" WHERE "tenantId" = $1 AND "invoiceNumber" LIKE $2`, [input.tenantId, `MKT-${day}-%`]);
+    const invoiceNumber = `MKT-${day}-${randomUUID().slice(0, 4)}-${String(Number(sequence.rows[0]?.count ?? 0) + 1).padStart(4, "0")}`;
     const saleId = randomUUID();
     const totalLineDiscounts = saleItems.reduce((sum, item) => sum + item.lineDiscount, 0);
     const totalDiscount = totalLineDiscounts + cartDiscount + promoDiscount;

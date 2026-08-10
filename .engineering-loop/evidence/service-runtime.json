@@ -1,0 +1,18 @@
+{
+  "slice": "service-runtime",
+  "title": "Altora Service runtime",
+  "status": "passed",
+  "startedAt": "2026-08-10T11:21:38.630Z",
+  "commands": [
+    {
+      "command": "npm run build --workspace=@altora/service",
+      "startedAt": "2026-08-10T11:21:38.631Z",
+      "finishedAt": "2026-08-10T11:21:42.355Z",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "\n> @altora/service@0.1.0 build\n> next build\n\n▲ Next.js 16.2.12 (Turbopack)\n\n  Creating an optimized production build ...\n✓ Compiled successfully in 940ms\n  Running TypeScript ...\n  Finished TypeScript in 1138ms ...\n  Collecting page data using 4 workers ...\n  Generating static pages using 4 workers (0/3) ...\n✓ Generating static pages using 4 workers (3/3) in 219ms\n  Finalizing page optimization ...\n\nRoute (app)\n┌ ○ /\n└ ○ /_not-found\n\n\n○  (Static)  prerendered as static content\n\n",
+      "stderr": "⚠ Warning: Next.js inferred your workspace root, but it may not be correct.\n We detected multiple lockfiles and selected the directory of /Users/icat/package-lock.json as the root directory.\n To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.\n   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.\n Detected additional lockfiles: \n   * /Users/icat/Projects/Altora/package-lock.json\n\n"
+    }
+  ],
+  "finishedAt": "2026-08-10T11:21:42.355Z"
+}

@@ -14,12 +14,20 @@ test("checkout is idempotent, changes stock once, void restores stock, and shift
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      const tenant = (await client.query(`SELECT t.id FROM "Tenant" t WHERE EXISTS (SELECT 1 FROM "User" u WHERE u."tenantId" = t.id AND u.role = 'OWNER' AND NOT EXISTS (SELECT 1 FROM "CashierShift" cs WHERE cs."tenantId" = u."tenantId" AND cs."userId" = u.id AND cs.status = 'OPEN')) AND EXISTS (SELECT 1 FROM "Outlet" o WHERE o."tenantId" = t.id AND o."isActive") AND EXISTS (SELECT 1 FROM "Product" p INNER JOIN "ProductStock" ps ON ps."productId" = p.id AND ps."tenantId" = p."tenantId" INNER JOIN "Outlet" o ON o.id = ps."outletId" AND o."tenantId" = ps."tenantId" WHERE p."tenantId" = t.id AND p.kind = 'GOODS' AND p."isActive" = true AND p."trackStock" = true AND ps.qty >= 2 AND o."isActive" = true) ORDER BY t."createdAt" LIMIT 1`)).rows[0];
-      assert.ok(tenant?.id, "tenant test harus tersedia");
-      const owner = (await client.query(`SELECT u.id FROM "User" u WHERE u."tenantId" = $1 AND u.role = 'OWNER' AND NOT EXISTS (SELECT 1 FROM "CashierShift" cs WHERE cs."tenantId" = u."tenantId" AND cs."userId" = u.id AND cs.status = 'OPEN') ORDER BY u."createdAt" LIMIT 1`, [tenant.id])).rows[0];
-      const outlet = (await client.query(`SELECT o.id FROM "Outlet" o WHERE o."tenantId" = $1 AND o."isActive" = true AND EXISTS (SELECT 1 FROM "Product" p INNER JOIN "ProductStock" ps ON ps."productId" = p.id AND ps."tenantId" = p."tenantId" AND ps."outletId" = o.id WHERE p."tenantId" = o."tenantId" AND p.kind = 'GOODS' AND p."isActive" = true AND p."trackStock" = true AND ps.qty >= 2) ORDER BY o."createdAt" LIMIT 1`, [tenant.id])).rows[0];
-      const product = (await client.query(`SELECT p.id, p.price, ps.qty FROM "Product" p INNER JOIN "ProductStock" ps ON ps."productId" = p.id AND ps."tenantId" = p."tenantId" AND ps."outletId" = $2 WHERE p."tenantId" = $1 AND p.kind = 'GOODS' AND p."isActive" = true AND p."trackStock" = true AND ps.qty >= 2 LIMIT 1`, [tenant.id, outlet.id])).rows[0];
-      assert.ok(owner?.id && outlet?.id && product?.id, "data retail test harus tersedia");
+      const suffix = randomUUID().slice(0, 8);
+      const tenant = { id: `t_${suffix}` };
+      const owner = { id: `u_${suffix}` };
+      const outlet = { id: `o_${suffix}` };
+      const product = { id: `p_${suffix}`, price: 10000, qty: 10 };
+
+      await client.query(`INSERT INTO "Tenant" (id, name) VALUES ($1, 'Test Tenant')`, [tenant.id]);
+      await client.query(`INSERT INTO "Outlet" (id, "tenantId", name, "isActive", "createdAt") VALUES ($1, $2, 'Test Outlet', true, NOW())`, [outlet.id, tenant.id]);
+      await client.query(`INSERT INTO "User" (id, "tenantId", name, email, "passwordHash", role) VALUES ($1, $2, 'Test Owner', $3, 'hash', 'OWNER')`, [owner.id, tenant.id, `owner-${suffix}@test.com`]);
+      await client.query(`INSERT INTO "UserOutlet" (id, "tenantId", "userId", "outletId") VALUES ($1, $2, $3, $4)`, [`uo_${suffix}`, tenant.id, owner.id, outlet.id]);
+      await client.query(`INSERT INTO "Category" (id, "tenantId", name) VALUES ($1, $2, 'Test Category')`, [`cat_${suffix}`, tenant.id]);
+      await client.query(`INSERT INTO "Product" (id, "tenantId", "categoryId", name, price, kind, "isActive", "trackStock") VALUES ($1, $2, $3, 'Test Product', $4, 'GOODS', true, true)`, [product.id, tenant.id, `cat_${suffix}`, product.price]);
+      await client.query(`INSERT INTO "ProductStock" (id, "tenantId", "outletId", "productId", qty) VALUES ($1, $2, $3, $4, $5)`, [`ps_${suffix}`, tenant.id, outlet.id, product.id, product.qty]);
+      await client.query("COMMIT");
       const user = { tenantId: tenant.id, userId: owner.id, role: "OWNER" };
       const shift = await openMarketShift({ ...user, outletId: outlet.id, openingCash: 1_000 });
       const requestId = randomUUID();

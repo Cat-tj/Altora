@@ -1,0 +1,18 @@
+{
+  "slice": "tenant-isolation",
+  "title": "Tenant isolation contracts",
+  "status": "passed",
+  "startedAt": "2026-08-10T12:03:32.827Z",
+  "commands": [
+    {
+      "command": "node --test packages/db/src/tenant.test.mjs",
+      "startedAt": "2026-08-10T12:03:32.828Z",
+      "finishedAt": "2026-08-10T12:03:32.984Z",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "✔ tenant query builder always adds tenant predicate and preserves params (1.552333ms)\n✔ tenant query builder rejects missing context (0.209083ms)\n✔ tenant query builder rejects unscoped query (0.091125ms)\n✔ tenant query builder rejects duplicate manual tenant predicate (0.079167ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 87.788458\n",
+      "stderr": ""
+    }
+  ],
+  "finishedAt": "2026-08-10T12:03:32.984Z"
+}

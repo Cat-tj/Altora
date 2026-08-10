@@ -1,0 +1,18 @@
+{
+  "slice": "inventory-contracts",
+  "title": "Inventory core contracts",
+  "status": "passed",
+  "startedAt": "2026-08-10T11:21:42.603Z",
+  "commands": [
+    {
+      "command": "npm run test --workspace=@altora/inventory-core",
+      "startedAt": "2026-08-10T11:21:42.604Z",
+      "finishedAt": "2026-08-10T11:21:42.928Z",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "\n> @altora/inventory-core@0.1.0 test\n> node --test src/*.test.mjs\n\n✔ buildStockIdempotencyKey creates deterministic lowercase key (0.755333ms)\n✔ calculateNextBalance updates balance correctly and throws on negative balance (0.230834ms)\n✔ canTransitionTransfer enforces stock transfer lifecycle (0.069083ms)\n✔ transitionTransferStatus throws on invalid transition (0.073917ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 93.428083\n",
+      "stderr": ""
+    }
+  ],
+  "finishedAt": "2026-08-10T11:21:42.928Z"
+}

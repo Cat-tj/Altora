@@ -64,9 +64,9 @@ try {
   await client.query("BEGIN");
 
   await client.query(
-    `INSERT INTO "Tenant" (id, name) VALUES ($1, $2)
-     ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
-    [TENANT, "Toko Berkah Sejahtera"],
+    `INSERT INTO "Tenant" (id, name, slug, "businessType", plan) VALUES ($1, $2, $3, 'RETAIL', 'FREE')
+     ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, slug = EXCLUDED.slug`,
+    [TENANT, "Toko Berkah Sejahtera", "toko-berkah-sejahtera"],
   );
 
   await client.query(

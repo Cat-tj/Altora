@@ -3,9 +3,23 @@
 -- ============================================================
 
 -- ── 1. Promo ────────────────────────────────────────────────
-ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "discountPercent" integer;
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS slug text;
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS "businessType" text DEFAULT 'RETAIL';
+ALTER TABLE "Tenant" ADD COLUMN IF NOT EXISTS plan text DEFAULT 'FREE';
+
+ALTER TABLE "Sale" ADD COLUMN IF NOT EXISTS "promotionSnapshot" jsonb;
 ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "discountAmount" integer;
 ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "minPurchase" integer DEFAULT 0;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "ruleType" text;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "qualifyingQty" integer;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "rewardQty" integer;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "qualifyingProductId" text;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "qualifyingCategoryId" text;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "rewardProductId" text;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "rewardCategoryId" text;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "rewardDiscountPercent" integer;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "maxRewardQty" integer;
+ALTER TABLE "Promo" ADD COLUMN IF NOT EXISTS "archivedAt" timestamptz;
 
 DO $$
 BEGIN

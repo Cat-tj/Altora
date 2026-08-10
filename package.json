@@ -15,6 +15,7 @@
     "test:repository": "node --test scripts/check-repository-health.test.mjs",
     "check:repository": "node scripts/check-repository-health.mjs",
     "check:boundaries": "node scripts/check-boundaries.mjs",
+    "engineering-loop": "node scripts/verified-engineering-loop.mjs",
     "test:e2e:market": "playwright test",
     "dev:landing": "npm run dev --workspace=@altora/landing",
     "dev:resto": "npm run dev --workspace=@altora/resto",
