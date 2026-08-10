@@ -228,13 +228,12 @@ try {
     // Stok di semua outlet
     for (const o of OUTLETS) {
       const qtyVariation = Math.max(1, p.qty + Math.floor((Math.random() - 0.5) * p.qty * 0.3));
-      const psResult = await client.query(
+      await client.query(
         `INSERT INTO "ProductStock" (id, "tenantId", "productId", "outletId", qty, "updatedAt")
          VALUES ($1, $2, $3, $4, $5, NOW())
          ON CONFLICT ("productId", "outletId") DO UPDATE SET qty = EXCLUDED.qty RETURNING id`,
         [uid("ps"), TENANT.id, pid, o.id, qtyVariation]
       );
-      const psId = psResult.rows[0].id;
 
       await client.query(
         `INSERT INTO "StockLedger" (id, "tenantId", "outletId", "productId", delta, "balanceAfter", source, note, "idempotencyKey", "createdAt")

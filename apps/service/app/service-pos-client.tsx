@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PosShell } from "@altora/pos-ui/pos-shell";
 import { CartPanel } from "@altora/pos-ui/cart-panel";
-import { Scissors, UserCheck, Sparkles, ShoppingBag } from "lucide-react";
+import { Scissors, UserCheck, Sparkles } from "lucide-react";
 import type { ServiceCatalogItem, ServiceStaff } from "../lib/service-db";
 
 export function ServicePosClient({ catalog, staff }: { catalog: ServiceCatalogItem[]; staff: ServiceStaff[] }) {

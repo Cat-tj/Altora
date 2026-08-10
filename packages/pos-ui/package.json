@@ -3,16 +3,44 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
-    ".": "./src/index.ts",
-    "./pos-shell": "./src/pos-shell.tsx",
-    "./cart-panel": "./src/cart-panel.tsx",
-    "./quantity-control": "./src/quantity-control.tsx",
-    "./scanner-dialog": "./src/scanner-dialog.tsx",
-    "./empty-cart": "./src/empty-cart.tsx"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./pos-shell": {
+      "types": "./dist/pos-shell.d.ts",
+      "import": "./dist/pos-shell.js",
+      "default": "./dist/pos-shell.js"
+    },
+    "./cart-panel": {
+      "types": "./dist/cart-panel.d.ts",
+      "import": "./dist/cart-panel.js",
+      "default": "./dist/cart-panel.js"
+    },
+    "./quantity-control": {
+      "types": "./dist/quantity-control.d.ts",
+      "import": "./dist/quantity-control.js",
+      "default": "./dist/quantity-control.js"
+    },
+    "./scanner-dialog": {
+      "types": "./dist/scanner-dialog.d.ts",
+      "import": "./dist/scanner-dialog.js",
+      "default": "./dist/scanner-dialog.js"
+    },
+    "./empty-cart": {
+      "types": "./dist/empty-cart.d.ts",
+      "import": "./dist/empty-cart.js",
+      "default": "./dist/empty-cart.js"
+    }
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@altora/pos-core": "*",

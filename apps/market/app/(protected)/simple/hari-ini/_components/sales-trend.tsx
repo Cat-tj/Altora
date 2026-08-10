@@ -35,7 +35,6 @@ export function SalesTrend({ data }: { data: TrendData }) {
   }
 
   const maxOmzet = Math.max(...data.map((d) => d.omzet), 1);
-  const maxTxn = Math.max(...data.map((d) => d.transactions), 1);
 
   // Fill missing days
   const today = new Date();

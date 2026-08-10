@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 
 /**
  * QRIS Scanner — live camera scan via Html5Qrcode.
@@ -20,7 +20,7 @@ export default function QrisScanner({
   const [scanning, setScanning] = useState(false);
   const [status, setStatus] = useState("");
   const [errorPopup, setErrorPopup] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<{ stop: () => Promise<void>; clear?: () => void } | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function QrisScanner({
   function stopCamera() {
     if (scannerRef.current) {
       scannerRef.current.stop().catch(() => {});
-      scannerRef.current.clear().catch(() => {});
+      try { scannerRef.current?.clear?.(); } catch (err) { console.warn("Failed to clear scanner", err); }
       scannerRef.current = null;
     }
     setScanning(false);
@@ -97,9 +97,9 @@ export default function QrisScanner({
       );
       setScanning(true);
       setStatus("📷 Arahkan kamera ke QRIS...");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("");
-      showError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
+      showError("Kamera tidak tersedia: " + (err instanceof Error ? err.message : "Pastikan izin kamera diberikan."));
     }
   }
 

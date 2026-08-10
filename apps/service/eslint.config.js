@@ -5,7 +5,8 @@ import globals from "globals";
 export default [
   ...nextJsConfig,
   {
-    files: ["scripts/**/*.mjs"],
+    // MJS scripts (migration runners, contract tests) run in Node.js
+    files: ["scripts/**/*.mjs", "db/**/*.mjs"],
     languageOptions: {
       globals: {
         ...globals.node,

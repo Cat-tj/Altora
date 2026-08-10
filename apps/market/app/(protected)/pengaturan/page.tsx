@@ -1,6 +1,5 @@
 import { requireRole } from "../../../lib/market-authz";
 import { getTenantSettings, listOutlets, listStaff } from "../../../lib/market-settings";
-import QrisScanner from "./qris-scanner";
 import { SettingsFormClient } from "./settings-form-client";
 
 export default async function PengaturanPage() {

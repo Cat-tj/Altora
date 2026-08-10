@@ -3,13 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
-    "./pool": "./src/pool.ts",
-    "./tenant": "./src/tenant.ts"
+    "./pool": {
+      "types": "./dist/pool.d.ts",
+      "import": "./dist/pool.js",
+      "default": "./dist/pool.js"
+    },
+    "./tenant": {
+      "types": "./dist/tenant.d.ts",
+      "import": "./dist/tenant.js",
+      "default": "./dist/tenant.js"
+    }
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "pg": "^8.16.3"
@@ -17,7 +28,6 @@
   "devDependencies": {
     "@repo/typescript-config": "*",
     "@types/pg": "^8.15.6",
-    "eslint": "^9.39.1",
     "typescript": "5.9.2"
   }
 }

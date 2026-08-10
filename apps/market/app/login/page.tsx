@@ -37,6 +37,7 @@ export default async function LoginPage() {
           <div className="mb-6 flex flex-col items-center gap-3 text-center">
             {/* Altora Logo SVG Mark */}
             <div className="flex h-24 w-24 items-center justify-center rounded-2xl p-2 shadow-lg" style={{ background: "transparent" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/altora-icon.svg" alt="Altora Logo" className="h-full w-full object-contain" />
             </div>
             <div className="flex flex-col gap-1">

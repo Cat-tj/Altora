@@ -17,7 +17,7 @@ try {
   const requestId = `contract-${randomUUID()}`;
   saleId = `contract_sale_${randomUUID()}`;
   await pool.query("BEGIN");
-  await pool.query(`INSERT INTO "ServiceSale" (id, "tenantId", "staffId", total, "paymentMethod") VALUES ($1, $2, $3, $4, 'CASH')`, [saleId, tenant, staff.id, catalog.price]);
+  await pool.query(`INSERT INTO "ServiceSale" (id, "tenantId", "outletId", "staffId", total, "paymentMethod") VALUES ($1, $2, 'outlet_market_1', $3, $4, 'CASH')`, [saleId, tenant, staff.id, catalog.price]);
   await pool.query(`INSERT INTO "ServiceSaleItem" (id, "tenantId", "saleId", "catalogItemId", name, price, quantity, subtotal) VALUES ($1, $2, $3, $4, 'contract item', $5, 1, $5)`, [`contract_item_${randomUUID()}`, tenant, saleId, catalog.id, catalog.price]);
   await pool.query(`INSERT INTO "ServiceCheckoutRequest" (id, "tenantId", "requestId", "saleId") VALUES ($1, $2, $3, $4)`, [`contract_request_${randomUUID()}`, tenant, requestId, saleId]);
   await pool.query("COMMIT");

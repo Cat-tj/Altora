@@ -3,15 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
-    "./resto-settings": "./src/resto-settings.ts",
-    "./resto-settings.js": "./src/resto-settings.ts",
-    "./router": "./src/router.ts",
-    "./router.js": "./src/router.ts"
+    "./resto-settings": {
+      "types": "./dist/resto-settings.d.ts",
+      "import": "./dist/resto-settings.js",
+      "default": "./dist/resto-settings.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js",
+      "default": "./dist/router.js"
+    }
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@altora/db": "*",
@@ -20,7 +29,6 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "eslint": "^9.39.1",
     "typescript": "5.9.2"
   }
 }

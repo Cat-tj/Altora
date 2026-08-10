@@ -7,7 +7,7 @@ const initial: CountState = {};
 
 function CameraModal({ onScan, onClose }: { onScan: (code: string) => void; onClose: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<{ stop: () => Promise<void>; clear?: () => void } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +30,7 @@ function CameraModal({ onScan, onClose }: { onScan: (code: string) => void; onCl
     return () => {
       cancelled = true;
       scannerRef.current?.stop().catch(() => {});
-      scannerRef.current?.clear().catch(() => {});
+      try { scannerRef.current?.clear?.(); } catch (err) { console.warn("Failed to clear scanner", err); }
     };
   }, [onScan, onClose]);
 

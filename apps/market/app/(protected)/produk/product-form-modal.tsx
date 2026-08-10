@@ -29,7 +29,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
   const [error, setError] = useState("");
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<{ stop: () => Promise<void>; clear?: () => void } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
   function stopCamera() {
     if (scannerRef.current) {
       scannerRef.current.stop().catch(() => {});
-      scannerRef.current.clear().catch(() => {});
+      try { scannerRef.current?.clear?.(); } catch (err) { console.warn("Failed to clear scanner", err); }
       scannerRef.current = null;
     }
     setScanning(false);
@@ -69,8 +69,8 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
         () => {},
       );
       setScanning(true);
-    } catch (err: any) {
-      setCameraError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
+    } catch (err: unknown) {
+      setCameraError(err instanceof Error ? err.message : "Tidak dapat membuka kamera");
     }
   }
 
@@ -91,8 +91,8 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
       }
       setOpen(false);
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }

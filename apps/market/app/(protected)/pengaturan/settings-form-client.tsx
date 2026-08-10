@@ -44,8 +44,8 @@ export function SettingsFormClient({
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      showError(err.message || "Terjadi kesalahan saat menyimpan");
+    } catch (err: unknown) {
+      showError(err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan");
     } finally {
       setLoading(false);
     }

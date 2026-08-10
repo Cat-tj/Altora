@@ -3,17 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
-    "./resto-notifications": "./src/resto-notifications.ts",
-    "./resto-notifications.js": "./src/resto-notifications.ts",
-    "./triggers": "./src/triggers.ts",
-    "./triggers.js": "./src/triggers.ts",
-    "./router": "./src/router.ts",
-    "./router.js": "./src/router.ts"
+    "./resto-notifications": {
+      "types": "./dist/resto-notifications.d.ts",
+      "import": "./dist/resto-notifications.js",
+      "default": "./dist/resto-notifications.js"
+    },
+    "./triggers": {
+      "types": "./dist/triggers.d.ts",
+      "import": "./dist/triggers.js",
+      "default": "./dist/triggers.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js",
+      "default": "./dist/router.js"
+    }
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@altora/db": "*",
@@ -22,7 +34,6 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "eslint": "^9.39.1",
     "typescript": "5.9.2"
   }
 }

@@ -44,8 +44,8 @@ export function createTenantContext(input) {
     throw new Error(`Unauthorized outlet access: Outlet '${input.activeOutletId}' is not accessible by user '${input.userId}' in tenant '${input.tenantId}'`);
   }
 
-  // Security Gate: Check product entitlement
-  const entitlements = input.productEntitlements || ['MARKET', 'RESTO', 'SERVICE'];
+  // Security Gate: Check product entitlement (FAIL CLOSED: defaults to [] if omitted)
+  const entitlements = input.productEntitlements || [];
   if (input.activeProduct !== 'ADMIN' && !entitlements.includes(input.activeProduct)) {
     throw new Error(`Tenant '${input.tenantId}' does not have an active entitlement for product '${input.activeProduct}'`);
   }

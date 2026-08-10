@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { ShellNavGroup } from "@altora/ui/product-shell";
 
 function IconHome() {
