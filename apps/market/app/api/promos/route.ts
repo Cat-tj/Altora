@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.redirect(new URL("/promo?created=1", request.url));
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Create promo failed:", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Gagal membuat promo" }, { status: 500 });

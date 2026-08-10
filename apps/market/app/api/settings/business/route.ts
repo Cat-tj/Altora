@@ -36,5 +36,5 @@ export async function POST(request: Request) {
     [user.tenantId, taxPercent, receiptFooter, staticQrisPayload],
   );
 
-  return NextResponse.redirect(new URL("/pengaturan?saved=1", request.url));
+  return NextResponse.json({ success: true });
 }

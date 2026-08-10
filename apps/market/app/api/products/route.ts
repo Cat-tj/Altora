@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       trackStock: true,
     });
 
-    return NextResponse.redirect(new URL("/produk?created=1", request.url));
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Create product failed:", error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Gagal menambah produk" }, { status: 500 });
