@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { createTenantContext } from "@altora/control-plane-core";
+import { resolveServiceContext, ServiceAuthError } from "../apps/service/lib/service-auth.js";
 
 const databaseUrl =
   process.env.DATABASE_URL ||
@@ -22,6 +23,11 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
   await pool.query(
     `INSERT INTO "Tenant" (id, name) VALUES ($1, 'Tenant A'), ($2, 'Tenant B')`,
     [tenantA, tenantB],
+  );
+
+  await pool.query(
+    `INSERT INTO "Outlet" (id, "tenantId", name) VALUES ($1, $2, 'Outlet A1'), ($3, $4, 'Outlet A2'), ($5, $6, 'Outlet B1')`,
+    [outletA1, tenantA, outletA2, tenantA, outletB1, tenantB],
   );
 
   const staffA = `staff_a_${randomUUID().slice(0, 8)}`;
@@ -60,13 +66,17 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
       `DELETE FROM "ServiceStaff" WHERE "tenantId" IN ($1, $2)`,
       [tenantA, tenantB],
     );
+    await pool.query(
+      `DELETE FROM "Outlet" WHERE id IN ($1, $2, $3)`,
+      [outletA1, outletA2, outletB1],
+    );
     await pool.query(`DELETE FROM "Tenant" WHERE id IN ($1, $2)`, [
       tenantA,
       tenantB,
     ]);
   });
 
-  await t.test("1. Tenant A reads own data → PASS", async () => {
+  await t.test("1. Tenant A reads own data -> PASS", async () => {
     const res = await pool.query(
       `SELECT id FROM "ServiceCatalogItem" WHERE "tenantId" = $1`,
       [tenantA],
@@ -75,7 +85,7 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
     assert.equal(res.rows[0].id, catalogA);
   });
 
-  await t.test("2. Tenant A reads Tenant B → zero rows", async () => {
+  await t.test("2. Tenant A reads Tenant B -> zero rows", async () => {
     const res = await pool.query(
       `SELECT id FROM "ServiceCatalogItem" WHERE "tenantId" = $1 AND id = $2`,
       [tenantA, catalogB],
@@ -83,7 +93,7 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
     assert.equal(res.rows.length, 0);
   });
 
-  await t.test("3. Tenant A modifies Tenant B → zero affected rows", async () => {
+  await t.test("3. Tenant A modifies Tenant B -> zero affected rows", async () => {
     const res = await pool.query(
       `UPDATE "ServiceCatalogItem" SET price = 99999 WHERE "tenantId" = $1 AND id = $2`,
       [tenantA, catalogB],
@@ -91,7 +101,7 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
     assert.equal(res.rowCount, 0);
   });
 
-  await t.test("4. User without SERVICE entitlement → DENY", async () => {
+  await t.test("4. User without SERVICE entitlement -> DENY", async () => {
     assert.throws(
       () =>
         createTenantContext({
@@ -107,7 +117,7 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
     );
   });
 
-  await t.test("5. Manager Outlet A accesses Outlet A → PASS", async () => {
+  await t.test("5. Manager Outlet A accesses Outlet A -> PASS", async () => {
     const ctx = createTenantContext({
       userId: userA,
       tenantId: tenantA,
@@ -120,7 +130,7 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
     assert.equal(ctx.activeOutletId, outletA1);
   });
 
-  await t.test("6. Manager Outlet A accesses Outlet B → DENY", async () => {
+  await t.test("6. Manager Outlet A accesses Outlet B -> DENY", async () => {
     assert.throws(
       () =>
         createTenantContext({
@@ -136,7 +146,7 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
     );
   });
 
-  await t.test("7. Service Sale tenant A + Staff tenant B → DB REJECT (FK violation)", async () => {
+  await t.test("7. Service Sale tenant A + Staff tenant B -> DB REJECT (FK violation)", async () => {
     const saleId = `sale_bad_staff_${randomUUID().slice(0, 8)}`;
     await assert.rejects(
       async () => {
@@ -146,13 +156,11 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
           [saleId, tenantA, outletA1, staffB], // tenantA sale with staffB from tenantB!
         );
       },
-      (err) => {
-        return err.code === "23503"; // foreign_key_violation
-      },
+      (err) => err.code === "23503", // foreign_key_violation
     );
   });
 
-  await t.test("8. ServiceSaleItem tenant A + Catalog tenant B → DB REJECT (FK violation)", async () => {
+  await t.test("8. ServiceSaleItem tenant A + Catalog tenant B -> DB REJECT (FK violation)", async () => {
     const saleId = `sale_good_${randomUUID().slice(0, 8)}`;
     await pool.query(
       `INSERT INTO "ServiceSale" (id, "tenantId", "outletId", "staffId", total, "paymentMethod")
@@ -169,13 +177,11 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
           [itemId, tenantA, saleId, catalogB], // tenantA sale item with catalogB from tenantB!
         );
       },
-      (err) => {
-        return err.code === "23503"; // foreign_key_violation
-      },
+      (err) => err.code === "23503", // foreign_key_violation
     );
   });
 
-  await t.test("9. Duplicate Service checkout request → idempotent (same transaction)", async () => {
+  await t.test("9. Duplicate Service checkout request -> idempotent (same transaction)", async () => {
     const requestId = `req_idemp_${randomUUID().slice(0, 8)}`;
     const saleId1 = `sale_idemp_1_${randomUUID().slice(0, 8)}`;
     const reqId1 = `req_row_1_${randomUUID().slice(0, 8)}`;
@@ -191,7 +197,6 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
       [reqId1, tenantA, requestId, saleId1],
     );
 
-    // Duplicate request with same (tenantId, requestId) must be rejected by DB unique constraint
     const saleId2 = `sale_idemp_2_${randomUUID().slice(0, 8)}`;
     const reqId2 = `req_row_2_${randomUUID().slice(0, 8)}`;
     await pool.query(
@@ -210,5 +215,71 @@ test("PostgreSQL Adversarial Tenant & Outlet Isolation", async (t) => {
       },
       (err) => err.code === "23505", // unique_violation
     );
+  });
+
+  await t.test("10. ServiceSale tenant A + outlet A1 (owned by tenant A) -> PASS", async () => {
+    const saleId = `sale_good_outlet_${randomUUID().slice(0, 8)}`;
+    await pool.query(
+      `INSERT INTO "ServiceSale" (id, "tenantId", "outletId", "staffId", total, "paymentMethod")
+       VALUES ($1, $2, $3, $4, 50000, 'CASH')`,
+      [saleId, tenantA, outletA1, staffA],
+    );
+    const res = await pool.query(`SELECT id FROM "ServiceSale" WHERE id = $1`, [saleId]);
+    assert.equal(res.rows.length, 1);
+  });
+
+  await t.test("11. ServiceSale tenant A + outlet B1 (owned by tenant B) -> DB REJECT (FK violation)", async () => {
+    const saleId = `sale_cross_outlet_${randomUUID().slice(0, 8)}`;
+    await assert.rejects(
+      async () => {
+        await pool.query(
+          `INSERT INTO "ServiceSale" (id, "tenantId", "outletId", "staffId", total, "paymentMethod")
+           VALUES ($1, $2, $3, $4, 50000, 'CASH')`,
+          [saleId, tenantA, outletB1, staffA], // tenantA sale with outletB1 from tenantB!
+        );
+      },
+      (err) => err.code === "23503", // foreign_key_violation
+    );
+  });
+
+  await t.test("12. Adversarial Auth: Anonymous request without auth -> 401 Unauthenticated", async () => {
+    const origEnv = process.env.ALTORA_TEST_HARNESS;
+    const origNodeEnv = process.env.NODE_ENV;
+    try {
+      process.env.ALTORA_TEST_HARNESS = "false";
+      process.env.NODE_ENV = "production";
+      const req = new Request("http://localhost/api/service/checkout");
+      await assert.rejects(
+        async () => resolveServiceContext(req),
+        (err) => err instanceof ServiceAuthError && err.statusCode === 401,
+      );
+    } finally {
+      process.env.ALTORA_TEST_HARNESS = origEnv;
+      process.env.NODE_ENV = origNodeEnv;
+    }
+  });
+
+  await t.test("13. Adversarial Auth: Forged x-altora-tenant-id header in production -> 401 Unauthenticated", async () => {
+    const origEnv = process.env.ALTORA_TEST_HARNESS;
+    const origNodeEnv = process.env.NODE_ENV;
+    try {
+      process.env.ALTORA_TEST_HARNESS = "false";
+      process.env.NODE_ENV = "production";
+      const req = new Request("http://localhost/api/service/checkout", {
+        headers: {
+          "x-altora-tenant-id": tenantB,
+          "x-altora-user-id": userA,
+          "x-altora-outlet-id": outletB1,
+        },
+      });
+      // Headers must be ignored in production mode -> missing valid session token -> 401
+      await assert.rejects(
+        async () => resolveServiceContext(req),
+        (err) => err instanceof ServiceAuthError && err.statusCode === 401,
+      );
+    } finally {
+      process.env.ALTORA_TEST_HARNESS = origEnv;
+      process.env.NODE_ENV = origNodeEnv;
+    }
   });
 });

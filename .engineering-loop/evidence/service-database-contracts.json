@@ -2,21 +2,21 @@
   "slice": "service-database-contracts",
   "title": "Altora Service PostgreSQL persistence",
   "status": "passed",
-  "startedAt": "2026-08-10T12:29:06.080Z",
+  "startedAt": "2026-08-10T16:23:45.297Z",
   "commands": [
     {
       "command": "env DATABASE_URL=postgresql://altora:altora@127.0.0.1:5432/altora_market_ci npm run db:migrate --workspace=@altora/service",
-      "startedAt": "2026-08-10T12:29:06.081Z",
-      "finishedAt": "2026-08-10T12:29:06.559Z",
+      "startedAt": "2026-08-10T16:23:45.297Z",
+      "finishedAt": "2026-08-10T16:23:45.584Z",
       "exitCode": 0,
       "signal": null,
-      "stdout": "\n> @altora/service@0.1.0 db:migrate\n> node scripts/ensure-service-schema.mjs\n\n✓ 0001_service_baseline.sql\nSchema Service siap (1 migrasi).\n",
+      "stdout": "\n> @altora/service@0.1.0 db:migrate\n> node scripts/ensure-service-schema.mjs\n\n✓ 0001_service_baseline.sql\n✓ 0002_service_cross_tenant_fk.sql\n✓ 0003_service_outlet_scoping.sql\nSchema Service siap (3 migrasi).\n",
       "stderr": ""
     },
     {
       "command": "npm run check-types --workspace=@altora/service",
-      "startedAt": "2026-08-10T12:29:06.559Z",
-      "finishedAt": "2026-08-10T12:29:08.125Z",
+      "startedAt": "2026-08-10T16:23:45.584Z",
+      "finishedAt": "2026-08-10T16:23:46.745Z",
       "exitCode": 0,
       "signal": null,
       "stdout": "\n> @altora/service@0.1.0 check-types\n> next typegen && tsc --noEmit\n\nGenerating route types...\n✓ Types generated successfully\n",
@@ -24,13 +24,13 @@
     },
     {
       "command": "env DATABASE_URL=postgresql://altora:altora@127.0.0.1:5432/altora_market_ci node apps/service/scripts/service-persistence-contract.mjs",
-      "startedAt": "2026-08-10T12:29:08.125Z",
-      "finishedAt": "2026-08-10T12:29:08.266Z",
+      "startedAt": "2026-08-10T16:23:46.745Z",
+      "finishedAt": "2026-08-10T16:23:46.864Z",
       "exitCode": 0,
       "signal": null,
       "stdout": "{\"status\":\"passed\",\"catalog_price\":150000,\"replay_same_sale\":true,\"cross_tenant_catalog_rows\":0,\"persisted\":{\"sale_count\":1,\"item_count\":1}}\n",
       "stderr": ""
     }
   ],
-  "finishedAt": "2026-08-10T12:29:08.266Z"
+  "finishedAt": "2026-08-10T16:23:46.864Z"
 }

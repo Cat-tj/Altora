@@ -1,41 +1,47 @@
 import { db } from "@altora/db/pool";
 
-export type ServiceContext = { tenantId: string; userId: string; outletId: string };
+export interface ServiceContext {
+  tenantId: string;
+  userId: string;
+  outletId: string;
+}
 
-export type ServiceCatalogItem = {
+export interface ServiceCatalogItem {
   id: string;
   name: string;
   category: string;
   price: number;
   durationMinutes: number;
-  itemType: "SERVICE" | "RETAIL";
-};
+  itemType: "SERVICE" | "PRODUCT";
+}
 
-export type ServiceStaff = { id: string; name: string };
+export interface ServiceStaff {
+  id: string;
+  name: string;
+}
 
-export async function listServiceCatalog(ctx: ServiceContext): Promise<ServiceCatalogItem[]> {
-  const result = await db.query<{
-    id: string;
-    name: string;
-    category: string;
-    price: number;
-    durationMinutes: number;
-    itemType: "SERVICE" | "RETAIL";
-  }>(
+export async function listServiceCatalog(
+  ctx: ServiceContext | string,
+): Promise<ServiceCatalogItem[]> {
+  const tenantId = typeof ctx === "string" ? ctx : ctx.tenantId;
+  const result = await db.query<ServiceCatalogItem>(
     `SELECT id, name, category, price, "durationMinutes", "itemType"
        FROM "ServiceCatalogItem"
       WHERE "tenantId" = $1 AND "isActive" = true
       ORDER BY category, name`,
-    [ctx.tenantId],
+    [tenantId],
   );
   return result.rows;
 }
 
-export async function listServiceStaff(ctx: ServiceContext): Promise<ServiceStaff[]> {
+export async function listServiceStaff(
+  ctx: ServiceContext | string,
+): Promise<ServiceStaff[]> {
+  const tenantId = typeof ctx === "string" ? ctx : ctx.tenantId;
   const result = await db.query<ServiceStaff>(
     `SELECT id, name FROM "ServiceStaff"
       WHERE "tenantId" = $1 AND "isActive" = true ORDER BY name`,
-    [ctx.tenantId],
+    [tenantId],
   );
   return result.rows;
 }
@@ -59,64 +65,82 @@ export async function createServiceSale(input: {
       [input.ctx.tenantId, input.requestId],
     );
 
-    if (existing.rows[0]) {
+    const existingRow = existing.rows[0];
+    if (existingRow) {
       await client.query("COMMIT");
-      return { id: existing.rows[0].id, idempotent: true };
+      return { id: existingRow.id, duplicate: true };
     }
 
-    const ids = input.items.map((item) => item.catalogItemId);
-    const catalog = await client.query<{ id: string; name: string; price: number }>(
-      `SELECT id, name, price FROM "ServiceCatalogItem"
-        WHERE "tenantId" = $1 AND "isActive" = true AND id = ANY($2::text[]) FOR SHARE`,
-      [input.ctx.tenantId, ids],
-    );
-
-    if (catalog.rows.length !== new Set(ids).size) {
-      throw new Error("Katalog tidak ditemukan dalam tenant ini.");
+    if (input.staffId) {
+      const staffCheck = await client.query(
+        `SELECT id FROM "ServiceStaff" WHERE "tenantId" = $1 AND id = $2 AND "isActive" = true`,
+        [input.ctx.tenantId, input.staffId],
+      );
+      if (!staffCheck.rows.length) {
+        throw new Error(
+          "Terapis / staff tidak ditemukan pada tenant ini.",
+        );
+      }
     }
 
-    const byId = new Map<string, { id: string; name: string; price: number }>(
-      catalog.rows.map((item) => [item.id, item]),
-    );
-    const total = input.items.reduce(
-      (sum, item) => sum + Number(byId.get(item.catalogItemId)!.price) * item.quantity,
-      0,
-    );
+    let total = 0;
+    const saleItems = [];
+    for (const item of input.items) {
+      const catalogRes = await client.query<ServiceCatalogItem>(
+        `SELECT id, name, price FROM "ServiceCatalogItem"
+          WHERE "tenantId" = $1 AND id = $2 AND "isActive" = true`,
+        [input.ctx.tenantId, item.catalogItemId],
+      );
+      const catalog = catalogRes.rows[0];
+      if (!catalog) {
+        throw new Error(`Item catalog '${item.catalogItemId}' tidak valid.`);
+      }
+      const subtotal = Number(catalog.price) * item.quantity;
+      total += subtotal;
+      saleItems.push({ ...catalog, quantity: item.quantity, subtotal });
+    }
 
-    const saleId = `svc_${crypto.randomUUID()}`;
-
+    const saleId = `sale_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     await client.query(
       `INSERT INTO "ServiceSale" (id, "tenantId", "outletId", "staffId", total, "paymentMethod")
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [saleId, input.ctx.tenantId, input.ctx.outletId, input.staffId ?? null, total, input.paymentMethod],
+      [
+        saleId,
+        input.ctx.tenantId,
+        input.ctx.outletId,
+        input.staffId ?? null,
+        total,
+        input.paymentMethod,
+      ],
     );
 
-    for (const item of input.items) {
-      const catalogItem = byId.get(item.catalogItemId)!;
+    for (const item of saleItems) {
+      const itemId = `ssi_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
       await client.query(
         `INSERT INTO "ServiceSaleItem" (id, "tenantId", "saleId", "catalogItemId", name, price, quantity, subtotal)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
-          `svci_${crypto.randomUUID()}`,
+          itemId,
           input.ctx.tenantId,
           saleId,
-          item.catalogItemId,
-          catalogItem.name,
-          catalogItem.price,
+          item.id,
+          item.name,
+          item.price,
           item.quantity,
-          Number(catalogItem.price) * item.quantity,
+          item.subtotal,
         ],
       );
     }
 
+    const reqRowId = `scr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     await client.query(
       `INSERT INTO "ServiceCheckoutRequest" (id, "tenantId", "requestId", "saleId")
        VALUES ($1, $2, $3, $4)`,
-      [`svcr_${crypto.randomUUID()}`, input.ctx.tenantId, input.requestId, saleId],
+      [reqRowId, input.ctx.tenantId, input.requestId, saleId],
     );
 
     await client.query("COMMIT");
-    return { id: saleId, idempotent: false, total };
+    return { id: saleId, total, duplicate: false };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

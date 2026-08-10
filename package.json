@@ -24,7 +24,7 @@
     "dev:admin": "npm run dev --workspace=@altora/admin",
     "dev:service": "npm run dev --workspace=@altora/service",
     "test:market": "npm run test --workspace=@altora/market",
-    "test:tenant-isolation": "node --test tests/tenant-isolation.integration.test.mjs",
+    "test:tenant-isolation": "node --import tsx --test tests/tenant-isolation.integration.test.mjs",
     "test:market:integration": "npm run test:integration --workspace=@altora/market"
   },
   "devDependencies": {
