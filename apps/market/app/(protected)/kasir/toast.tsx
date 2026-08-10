@@ -15,10 +15,15 @@ export function Toast({ message }: { message: string | null }) {
   if (!message) return null;
   return (
     <div
-      className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm font-medium text-white shadow-lg transition-all"
-      style={{ backgroundColor: "var(--color-text, #0a1f44)" }}
+      className="fixed top-6 left-1/2 z-[100] -translate-x-1/2 flex items-center gap-2.5 rounded-2xl px-6 py-3.5 text-sm font-bold shadow-2xl transition-all"
+      style={{
+        backgroundColor: "#0f172a",
+        color: "#ffffff",
+        border: "1.5px solid #334155",
+        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3)",
+      }}
     >
-      {message}
+      <span>{message}</span>
     </div>
   );
 }
