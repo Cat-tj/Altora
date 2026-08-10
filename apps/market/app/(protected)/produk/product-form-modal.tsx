@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { startHtml5Scanner } from "../../../lib/camera-scanner";
 
 type Category = { id: string; name: string };
 
@@ -54,24 +55,24 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
 
   async function startCamera() {
     setCameraError("");
-    try {
-      const { Html5Qrcode } = await import("html5-qrcode");
-      const scanner = new Html5Qrcode("pm-barcode-camera");
-      scannerRef.current = scanner;
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 120 }, aspectRatio: 2 },
-        (text: string) => {
-          const skuInput = document.getElementById("pm-sku") as HTMLInputElement | null;
-          if (skuInput) skuInput.value = text;
-          stopCamera();
-        },
-        () => {},
-      );
-      setScanning(true);
-    } catch (err: any) {
-      setCameraError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
-    }
+    setScanning(true);
+    setTimeout(async () => {
+      try {
+        const scanner = await startHtml5Scanner(
+          "pm-barcode-camera",
+          (text: string) => {
+            const skuInput = document.getElementById("pm-sku") as HTMLInputElement | null;
+            if (skuInput) skuInput.value = text;
+            stopCamera();
+          },
+          { qrbox: { width: 250, height: 120 }, aspectRatio: 2 }
+        );
+        scannerRef.current = scanner;
+      } catch (err: any) {
+        setScanning(false);
+        setCameraError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
+      }
+    }, 50);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -185,9 +186,15 @@ export function ProductFormModal({ categories }: { categories: Category[] }) {
               </div>
 
               {/* Camera viewfinder — Html5Qrcode mounts here */}
-              {scanning && (
-                <div id="pm-barcode-camera" style={{ borderRadius: 10, overflow: "hidden", minHeight: 180 }} />
-              )}
+              <div
+                id="pm-barcode-camera"
+                style={{
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  minHeight: scanning ? 180 : 0,
+                  display: scanning ? "block" : "none",
+                }}
+              />
 
               {cameraError && (
                 <p style={{ margin: 0, padding: ".5rem .75rem", borderRadius: 8, background: "#fff7ed", color: "#c2410c", fontSize: ".8rem" }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
+import { startHtml5Scanner } from "../../../lib/camera-scanner";
 
 /**
  * QRIS Scanner — live camera scan via Html5Qrcode.
@@ -70,37 +71,34 @@ export default function QrisScanner({
 
   async function startCamera() {
     setStatus("Memulai kamera...");
-    try {
-      const { Html5Qrcode } = await import("html5-qrcode");
-      const scanner = new Html5Qrcode("qris-camera-container");
-      scannerRef.current = scanner;
-
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
-        (decodedText: string) => {
-          // Validate the scanned QR content
-          const validation = validateQrisPayload(decodedText);
-          if (validation.valid) {
-            const hex = decodedText.trim().toUpperCase();
-            setPayload(hex);
-            onPayloadChange?.(hex);
-            setStatus(`✅ QRIS terbaca! (${hex.substring(0, 30)}...)`);
-            stopCamera();
-          } else {
-            showError(validation.error!);
-            setStatus("❌ " + validation.error);
-            // Don't stop camera — let user try again
-          }
-        },
-        () => {}, // ignore errors during scanning
-      );
-      setScanning(true);
-      setStatus("📷 Arahkan kamera ke QRIS...");
-    } catch (err: any) {
-      setStatus("");
-      showError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
-    }
+    setScanning(true);
+    setTimeout(async () => {
+      try {
+        const scanner = await startHtml5Scanner(
+          "qris-camera-container",
+          (decodedText: string) => {
+            const validation = validateQrisPayload(decodedText);
+            if (validation.valid) {
+              const hex = decodedText.trim().toUpperCase();
+              setPayload(hex);
+              onPayloadChange?.(hex);
+              setStatus(`✅ QRIS terbaca! (${hex.substring(0, 30)}...)`);
+              stopCamera();
+            } else {
+              showError(validation.error!);
+              setStatus("❌ " + validation.error);
+            }
+          },
+          { qrbox: { width: 250, height: 250 }, aspectRatio: 1 }
+        );
+        scannerRef.current = scanner;
+        setStatus("📷 Arahkan kamera ke QRIS...");
+      } catch (err: any) {
+        setScanning(false);
+        setStatus("");
+        showError("Kamera tidak tersedia: " + (err?.message || "Pastikan izin kamera diberikan."));
+      }
+    }, 50);
   }
 
   return (
@@ -129,7 +127,7 @@ export default function QrisScanner({
       )}
 
       {/* Camera container */}
-      <div id="qris-camera-container" style={{ borderRadius: 10, overflow: "hidden", minHeight: scanning ? 200 : 0 }} />
+      <div id="qris-camera-container" style={{ borderRadius: 10, overflow: "hidden", minHeight: scanning ? 200 : 0, display: scanning ? "block" : "none" }} />
 
       {/* Status */}
       {status && !errorPopup.show && (

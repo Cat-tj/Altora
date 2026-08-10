@@ -2,33 +2,38 @@
 
 import { useCallback, useEffect, useActionState, useRef, useState } from "react";
 import { applyCountAction, cancelCountAction, createCountAction, type CountState } from "./actions";
+import { startHtml5Scanner } from "../../../lib/camera-scanner";
 
 const initial: CountState = {};
 
 function CameraModal({ onScan, onClose }: { onScan: (code: string) => void; onClose: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scannerRef = useRef<any>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { Html5Qrcode } = await import("html5-qrcode");
-      if (cancelled || !containerRef.current) return;
-      const scanner = new Html5Qrcode("opname-camera");
-      scannerRef.current = scanner;
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
-        (text: string) => {
-          onScan(text);
-          scanner.stop().catch(() => {});
-          onClose();
-        },
-        () => {},
-      );
-    })();
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      try {
+        const scanner = await startHtml5Scanner(
+          "opname-camera",
+          (text: string) => {
+            onScan(text);
+            scanner?.stop().catch(() => {});
+            onClose();
+          },
+          { qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 }
+        );
+        scannerRef.current = scanner;
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message || "Gagal membuka kamera.");
+      }
+    }, 50);
+
     return () => {
       cancelled = true;
+      clearTimeout(timer);
       scannerRef.current?.stop().catch(() => {});
       scannerRef.current?.clear().catch(() => {});
     };
@@ -47,11 +52,17 @@ function CameraModal({ onScan, onClose }: { onScan: (code: string) => void; onCl
         display: "flex", flexDirection: "column", gap: ".6rem",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <strong style={{ fontSize: ".85rem" }}>📷 Scan Barcode</strong>
+          <strong style={{ fontSize: ".85rem" }}>📷 Scan Barcode Produk</strong>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
         </div>
-        <div id="opname-camera" ref={containerRef} style={{ width: "100%", borderRadius: 8, overflow: "hidden" }} />
-        <p style={{ fontSize: ".7rem", color: "#888", textAlign: "center" }}>Arahkan kamera ke barcode produk</p>
+        <div id="opname-camera" ref={containerRef} style={{ width: "100%", borderRadius: 8, overflow: "hidden", minHeight: 180 }} />
+        {error ? (
+          <p style={{ margin: 0, padding: ".5rem", borderRadius: 6, background: "#fef2f2", color: "#dc2626", fontSize: ".75rem", textAlign: "center" }}>
+            {error}
+          </p>
+        ) : (
+          <p style={{ fontSize: ".7rem", color: "#888", textAlign: "center", margin: 0 }}>Arahkan kamera ke barcode produk (HP / Laptop)</p>
+        )}
       </div>
     </div>
   );
