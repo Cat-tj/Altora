@@ -1,9 +1,9 @@
-import { auth } from "../../../../auth";
+import { requireRole } from "../../../../lib/market-authz";
 import { listStockTransfers } from "../../../../lib/market-stock-transfer";
+import TransferStokButton from "./transfer-stok-button";
 
 export default async function TransferStokPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const transfers = await listStockTransfers(user.tenantId);
 
   return (
@@ -14,6 +14,7 @@ export default async function TransferStokPage() {
           <h1>Transfer Stok Inter-Outlet</h1>
           <span>Mutasi pengiriman barang dan persediaan stok antar cabang outlet.</span>
         </div>
+        <TransferStokButton />
       </div>
 
       <section className="market-panel">

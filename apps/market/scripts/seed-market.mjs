@@ -119,11 +119,24 @@ try {
       [product.id, TENANT, product.categoryId, product.name, product.sku, product.price],
     );
 
-    await client.query(
+    const psResult = await client.query(
       `INSERT INTO "ProductStock" (id, "tenantId", "productId", "outletId", qty)
        VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT ("productId", "outletId") DO UPDATE SET qty = EXCLUDED.qty`,
+       ON CONFLICT ("productId", "outletId") DO UPDATE SET qty = EXCLUDED.qty
+       RETURNING id`,
       [id("ps"), TENANT, product.id, OUTLET, product.qty],
+    );
+    const psId = psResult.rows[0].id;
+
+    // Saldo awal wajib dijelaskan ledger (invariant akuntansi: qty == SUM(delta)).
+    // Idempoten via idempotencyKey — seed ulang tidak menggandakan baris.
+    // Konvensi 'opening:' sama dengan backfill di migration 0002.
+    await client.query(
+      `INSERT INTO "StockLedger"
+        (id, "tenantId", "outletId", "productId", delta, "balanceAfter", source, "sourceId", note, "idempotencyKey")
+       VALUES ($1, $2, $3, $4, $5, $5, 'OPENING', $6, $7, $8)
+       ON CONFLICT ("idempotencyKey") DO NOTHING`,
+      [id("sl"), TENANT, OUTLET, product.id, product.qty, psId, "Saldo awal (seed)", `opening:${psId}`],
     );
   }
 

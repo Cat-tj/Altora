@@ -1,6 +1,5 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { listReturns } from "../../../lib/market-returns";
-import type { MarketRole } from "../../../lib/market-user";
 import { EmptyMarketState, formatRupiah } from "../market-page-ui";
 import { ReturnWorkflow } from "./return-forms";
 
@@ -9,8 +8,7 @@ function formatDate(value: string) {
 }
 
 export default async function ReturnsPage() {
-  const session = await auth();
-  const sessionUser = session!.user as { id: string; tenantId: string; role: MarketRole };
+  const sessionUser = await requireRole(["OWNER", "MANAGER"]);
   const user = { tenantId: sessionUser.tenantId, userId: sessionUser.id, role: sessionUser.role };
 
   const returns = await listReturns(user);

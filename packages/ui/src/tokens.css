@@ -54,7 +54,7 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* layout shell */
-  --sidebar-w: 250px;
+  --sidebar-w: 232px;
   --topbar-h: 64px;
 
   /* Aksen produk. Tiap aplikasi menimpanya di :root sesuai warnanya

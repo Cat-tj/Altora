@@ -1,11 +1,16 @@
 import type { NextAuthConfig } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 
 export const authConfig: NextAuthConfig = {
   trustHost: true,
   secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
-  providers: [],
+  providers: [
+    Credentials({
+      credentials: { email: {}, password: {} },
+    }),
+  ],
   callbacks: {
     jwt: ({ token, user }) => {
       if (user) {

@@ -1,8 +1,7 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { db } from "../../../lib/db";
 import { listMarketProducts } from "../../../lib/market-products";
 import { listReceipts, listSuppliers } from "../../../lib/market-receiving";
-import type { MarketRole } from "../../../lib/market-user";
 import { EmptyMarketState, formatRupiah } from "../market-page-ui";
 import { CancelReceiptButton, CompleteReceiptButton, NewReceiptForm } from "./receipt-forms";
 
@@ -17,9 +16,8 @@ function formatDate(value: string) {
 }
 
 export default async function ReceivingPage() {
-  const session = await auth();
-  const session_user = session!.user as { id: string; tenantId: string; role: MarketRole };
-  const user = { tenantId: session_user.tenantId, userId: session_user.id, role: session_user.role };
+  const sessionUser = await requireRole(["OWNER", "MANAGER"]);
+  const user = { tenantId: sessionUser.tenantId, userId: sessionUser.id, role: sessionUser.role };
 
   const [receipts, suppliers, products, outlets] = await Promise.all([
     listReceipts(user),

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Altora Icon</title>
+  <defs>
+    <linearGradient id="mainGrad" x1="220" y1="150" x2="790" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9B5ED0"/>
+      <stop offset="1" stop-color="#8746BC"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="310" y1="580" x2="790" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D35ACB"/>
+      <stop offset="1" stop-color="#A96BDD"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="230" fill="#9B5ED0"/>
+  <g transform="translate(112 92) scale(1.42)">
+    <path fill="#FFFFFF" d="M287 22c24 0 44 13 57 36l209 360c14 24 6 54-18 68-23 14-54 6-68-18L287 157 107 468c-14 24-44 32-68 18-24-14-32-44-18-68L230 58c13-23 33-36 57-36z"/>
+    <path fill="#9B5ED0" d="M287 196c10 0 18 5 23 14l72 124H192l72-124c5-9 13-14 23-14z"/>
+    <path fill="url(#accentGrad)" d="M118 354c36-38 78-60 126-60 53 0 91 24 127 58 31 29 56 43 90 43h103c31 0 56 25 56 56s-25 56-56 56H457c-65 0-111-28-154-68-30-28-49-35-67-35-24 0-45 10-68 35-21 22-57 23-79 2-22-21-23-57-2-79l31-8z"/>
+  </g>
+</svg>

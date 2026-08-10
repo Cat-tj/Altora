@@ -1,9 +1,8 @@
-import { auth } from "../../../auth";
+import { requireRole } from "../../../lib/market-authz";
 import { listAuditLogs } from "../../../lib/market-audit-logs";
 
 export default async function AuditLogPage() {
-  const session = await auth();
-  const user = session!.user as { tenantId: string };
+  const user = await requireRole(["OWNER"]);
   const logs = await listAuditLogs(user.tenantId);
 
   return (

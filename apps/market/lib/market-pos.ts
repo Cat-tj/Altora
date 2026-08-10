@@ -2,18 +2,48 @@ import { randomUUID } from "node:crypto";
 import { normalizeCheckoutRequestId, normalizeRetailCart, validateRetailPayment } from "@altora/pos-core";
 import { db } from "./db";
 import { InsufficientStockError, applyStockMovement } from "./market-stock-ledger";
+import { computeBestPromoDiscount, type PromoCartLine } from "./promo-calc";
 import type { MarketRole } from "./market-user";
 
 type AccessibleUser = { tenantId: string; userId: string; role: MarketRole };
-type PaymentMethod = "CASH" | "QRIS" | "TRANSFER" | "EWALLET";
+export type PaymentMethod = "CASH" | "QRIS" | "TRANSFER" | "EWALLET" | "DEPOSIT" | "GIFT_CARD";
 const CASH_VARIANCE_THRESHOLD = 10_000;
 const MAX_AUDIT_NOTE_LENGTH = 500;
+const POINTS_PER_THOUSAND = 1; // 1 poin per Rp1.000
 
 export type MarketOutlet = { id: string; name: string; suggestedOpeningCash: number | null };
 export type OpenMarketShift = { id: string; outletId: string; outletName: string; openingCash: number; openedAt: Date };
-export type MarketPosProduct = { id: string; name: string; sku: string | null; price: number; stock: number; trackStock: boolean };
+export type MarketVariantGroup = {
+  id: string;
+  name: string;
+  type: "SINGLE" | "MULTIPLE";
+  required: boolean;
+  options: { id: string; name: string; priceDelta: number }[];
+};
+export type MarketPosProduct = {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number;
+  stock: number;
+  trackStock: boolean;
+  trackExpiry: boolean;
+  expiredAt: string | null;
+  variantGroups: MarketVariantGroup[];
+  categoryId: string | null;
+  categoryName: string | null;
+};
+export type MarketCartLine = {
+  productId: string;
+  quantity: number;
+  variantOptionIds?: string[];
+  variantLabel?: string | null;
+  unitPrice?: number;
+  /** Diskon manual per item (Rp), divalidasi server. */
+  discountAmount?: number;
+};
 export type MarketSale = { id: string; invoiceNumber: string; outletName: string; cashierName: string; total: number; paymentMethod: PaymentMethod; amountPaid: number; changeAmount: number; status: "COMPLETED" | "VOIDED"; voidReason: string | null; createdAt: Date; items: { id: string; productName: string; price: number; qty: number; subtotal: number }[] };
-export type MarketShiftSummary = { shift: OpenMarketShift; cashSales: number; cashTransactions: number; digitalSales: number; digitalTransactions: number; expectedCash: number };
+export type MarketShiftSummary = { shift: OpenMarketShift; cashSales: number; cashTransactions: number; digitalSales: number; digitalTransactions: number; expectedCash: number; paymentBreakdown: { method: string; total: number; count: number }[] };
 
 function outletScope(role: MarketRole) {
   return role === "OWNER"
@@ -77,19 +107,72 @@ export async function openMarketShift(input: AccessibleUser & { outletId: string
 }
 
 export async function listMarketPosProducts({ tenantId, outletId }: { tenantId: string; outletId: string }): Promise<MarketPosProduct[]> {
-  const result = await db.query<{ id: string; name: string; sku: string | null; price: string; stock: string; track_stock: boolean }>(
-    `SELECT p.id, p.name, p.sku, p.price::text, COALESCE(ps.qty, 0)::text AS stock, p."trackStock" AS track_stock
+  const result = await db.query<{ id: string; name: string; sku: string | null; price: string; stock: string; track_stock: boolean; track_expiry: boolean; expired_at: Date | null; category_id: string | null; category_name: string | null }>(
+    `SELECT p.id, p.name, p.sku, p.price::text, COALESCE(ps.qty, 0)::text AS stock, p."trackStock" AS track_stock, COALESCE(p."trackExpiry", false) AS track_expiry, p."expiredAt" AS expired_at, p."categoryId" AS category_id, c.name AS category_name
        FROM "Product" p
+       LEFT JOIN "Category" c ON c.id = p."categoryId" AND c."tenantId" = p."tenantId"
        LEFT JOIN "ProductStock" ps ON ps."productId" = p.id AND ps."outletId" = $2 AND ps."tenantId" = p."tenantId"
       WHERE p."tenantId" = $1 AND p."isActive" = true AND p.kind = 'GOODS'
       ORDER BY p.name`,
     [tenantId, outletId],
   );
-  return result.rows.map((row) => ({ id: row.id, name: row.name, sku: row.sku, price: Number(row.price), stock: Number(row.stock), trackStock: row.track_stock }));
+  if (result.rows.length === 0) return [];
+
+  const variantResult = await db.query<{ product_id: string; group_id: string; group_name: string; group_type: string; group_required: boolean; option_id: string; option_name: string; option_delta: string }>(
+    `SELECT g."productId" AS product_id, g.id AS group_id, g.name AS group_name, g.type AS group_type, g.required AS group_required,
+            o.id AS option_id, o.name AS option_name, o."priceDelta"::text AS option_delta
+       FROM "ProductVariantGroup" g
+       LEFT JOIN "ProductVariantOption" o ON o."variantGroupId" = g.id
+      WHERE g."tenantId" = $1 AND g."productId" = ANY($2::text[])
+      ORDER BY g."sortOrder", o."sortOrder"`,
+    [tenantId, result.rows.map((row) => row.id)],
+  );
+
+  const groupsByProduct = new Map<string, Map<string, MarketVariantGroup>>();
+  for (const v of variantResult.rows) {
+    if (!groupsByProduct.has(v.product_id)) groupsByProduct.set(v.product_id, new Map());
+    const groups = groupsByProduct.get(v.product_id)!;
+    let group = groups.get(v.group_id);
+    if (!group) {
+      group = { id: v.group_id, name: v.group_name, type: v.group_type as "SINGLE" | "MULTIPLE", required: v.group_required, options: [] };
+      groups.set(v.group_id, group);
+    }
+    if (v.option_id) group.options.push({ id: v.option_id, name: v.option_name, priceDelta: Number(v.option_delta) });
+  }
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    sku: row.sku,
+    price: Number(row.price),
+    stock: Number(row.stock),
+    trackStock: row.track_stock,
+    trackExpiry: row.track_expiry,
+    expiredAt: row.expired_at ? new Date(row.expired_at).toISOString() : null,
+    variantGroups: Array.from(groupsByProduct.get(row.id)?.values() ?? []),
+    categoryId: row.category_id ?? null,
+    categoryName: row.category_name ?? null,
+  }));
 }
 
-export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | "userId"> & { shiftId: string; requestId: string; items: { productId: string; quantity: number }[]; paymentMethod: PaymentMethod; amountPaid: number }) {
-  const items = normalizeRetailCart(input.items);
+export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | "userId"> & {
+  shiftId: string;
+  requestId: string;
+  items: MarketCartLine[];
+  paymentMethod?: PaymentMethod;
+  amountPaid?: number;
+  payments?: { method: PaymentMethod; amount: number }[];
+  memberId?: string;
+  /** Diskon manual transaksi (Rp), divalidasi server. */
+  cartDiscount?: number;
+}) {
+  const normalizedBase = normalizeRetailCart(input.items);
+  const items: MarketCartLine[] = input.items.map((item, index) => ({
+    productId: item.productId,
+    quantity: normalizedBase[index]?.quantity ?? item.quantity,
+    variantOptionIds: item.variantOptionIds,
+    discountAmount: item.discountAmount,
+  }));
   const requestId = normalizeCheckoutRequestId(input.requestId);
   const client = await db.connect();
   try {
@@ -115,8 +198,8 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
     const shift = shiftResult.rows[0];
     if (!shift) throw new Error("Shift aktif tidak ditemukan. Muat ulang halaman.");
     const productIds = items.map((item) => item.productId);
-    const products = await client.query<{ id: string; name: string; price: string; track_stock: boolean }>(
-      `SELECT p.id, p.name, p.price::text, p."trackStock" AS track_stock
+    const products = await client.query<{ id: string; name: string; price: string; track_stock: boolean; category_id: string | null }>(
+      `SELECT p.id, p.name, p.price::text, p."trackStock" AS track_stock, p."categoryId" AS category_id
          FROM "Product" p
         WHERE p."tenantId" = $1 AND p.id = ANY($2::text[]) AND p."isActive" = true AND p.kind = 'GOODS'
         FOR UPDATE`,
@@ -133,29 +216,167 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
       : { rows: [] as { product_id: string; qty: string }[] };
     const stockByProduct = new Map(stockResult.rows.map((stock) => [stock.product_id, Number(stock.qty)]));
     const productById = new Map(products.rows.map((product) => [product.id, product]));
+
+    // ── Resolusi varian: opsi wajib milik tenant & produk yang sama ──
+    const linesWithVariants = items.filter((item) => item.variantOptionIds && item.variantOptionIds.length > 0);
+    const variantById = new Map<string, { option_name: string; delta: number; product_id: string }>();
+    if (linesWithVariants.length > 0) {
+      const allOptionIds = Array.from(new Set(linesWithVariants.flatMap((item) => item.variantOptionIds!)));
+      const variantRows = await client.query<{ option_id: string; option_name: string; delta: string; product_id: string }>(
+        `SELECT o.id AS option_id, o.name AS option_name, o."priceDelta"::text AS delta, g."productId" AS product_id
+           FROM "ProductVariantOption" o
+           INNER JOIN "ProductVariantGroup" g ON g.id = o."variantGroupId" AND g."tenantId" = $1
+          WHERE o."tenantId" = $1 AND o.id = ANY($2::text[])
+          FOR UPDATE`,
+        [input.tenantId, allOptionIds],
+      );
+      for (const row of variantRows.rows) variantById.set(row.option_id, { option_name: row.option_name, delta: Number(row.delta), product_id: row.product_id });
+      for (const item of linesWithVariants) {
+        for (const optionId of item.variantOptionIds!) {
+          const variant = variantById.get(optionId);
+          if (!variant) throw new Error("Opsi varian tidak tersedia. Muat ulang katalog.");
+          if (variant.product_id !== item.productId) throw new Error("Opsi varian tidak cocok dengan produk yang dipilih.");
+        }
+      }
+    }
+
     const saleItems = items.map((item) => {
       const product = productById.get(item.productId);
       if (!product) throw new Error("Produk tidak ditemukan.");
       if (product.track_stock && (stockByProduct.get(item.productId) ?? 0) < item.quantity) throw new Error(`Stok ${product.name} tidak cukup.`);
-      const price = Number(product.price);
-      return { ...item, name: product.name, price, subtotal: price * item.quantity, trackStock: product.track_stock };
+      const optionIds = item.variantOptionIds ?? [];
+      const variantPriceDelta = optionIds.reduce((sum, optionId) => sum + (variantById.get(optionId)?.delta ?? 0), 0);
+      const variantLabel = optionIds.length > 0 ? optionIds.map((optionId) => variantById.get(optionId)?.option_name ?? "").join(" + ") : null;
+      const price = Number(product.price) + variantPriceDelta;
+      const lineDiscount = Math.min(Math.max(0, item.discountAmount ?? 0), price * item.quantity);
+      return { ...item, name: product.name, price, variantPriceDelta, variantLabel, subtotal: price * item.quantity - lineDiscount, lineDiscount, trackStock: product.track_stock, categoryId: product.category_id };
     });
-    const subtotal = saleItems.reduce((total, item) => total + item.subtotal, 0);
-    const payment = validateRetailPayment({ method: input.paymentMethod, total: subtotal, amountPaid: input.amountPaid });
+    // Diskonto manual transaksi — dibatasi maksimum subtotal.
+    const rawCartDiscount = Math.max(0, Math.floor(input.cartDiscount ?? 0));
+    const subtotalAfterLines = saleItems.reduce((total, item) => total + item.subtotal, 0);
+    const cartDiscount = Math.min(rawCartDiscount, subtotalAfterLines);
+    const subtotal = subtotalAfterLines - cartDiscount;
+
+    // ── Promo: server adalah sumber kebenaran (jangan percaya hitungan client) ──
+    // Ambil promo aktif tenant, hitung diskon terbaik (BOGO/DISCOUNT/BULK),
+    // lalu kurangi dari subtotal. Hasilnya dicatat di Sale + promotionSnapshot.
+    const promoRows = await client.query<{
+      id: string; name: string; rule_type: string | null;
+      discount_percent: number | null; discount_amount: number | null; min_purchase: number;
+      qualifying_qty: number | null; reward_qty: number | null;
+      qualifying_product_id: string | null; qualifying_category_id: string | null;
+      reward_product_id: string | null; reward_category_id: string | null;
+      reward_discount_percent: number | null; max_reward_qty: number | null;
+    }>(
+      `SELECT id, name, "ruleType"::text AS rule_type,
+              "discountPercent" AS discount_percent, "discountAmount" AS discount_amount,
+              COALESCE("minPurchase", 0) AS min_purchase,
+              "qualifyingQty" AS qualifying_qty, "rewardQty" AS reward_qty,
+              "qualifyingProductId" AS qualifying_product_id, "qualifyingCategoryId" AS qualifying_category_id,
+              "rewardProductId" AS reward_product_id, "rewardCategoryId" AS reward_category_id,
+              "rewardDiscountPercent" AS reward_discount_percent, "maxRewardQty" AS max_reward_qty
+         FROM "Promo"
+        WHERE "tenantId" = $1 AND "isActive" = true AND "archivedAt" IS NULL`,
+      [input.tenantId],
+    );
+    const promoCart: PromoCartLine[] = saleItems.map((item) => ({
+      productId: item.productId,
+      categoryId: item.categoryId ?? null,
+      lineTotal: item.subtotal,
+      price: item.price,
+      qty: item.quantity,
+      name: item.name,
+    }));
+    const promoResult = computeBestPromoDiscount(
+      promoRows.rows.map((p) => ({
+        id: p.id,
+        name: p.name,
+        ruleType: p.rule_type,
+        discountPercent: p.discount_percent,
+        discountAmount: p.discount_amount,
+        minPurchase: p.min_purchase,
+        qualifyingQty: p.qualifying_qty,
+        rewardQty: p.reward_qty,
+        qualifyingProductId: p.qualifying_product_id,
+        qualifyingCategoryId: p.qualifying_category_id,
+        rewardProductId: p.reward_product_id,
+        rewardCategoryId: p.reward_category_id,
+        rewardDiscountPercent: p.reward_discount_percent,
+        maxRewardQty: p.max_reward_qty,
+      })),
+      promoCart,
+      subtotal,
+    );
+    const promoDiscount = promoResult?.discountAmount ?? 0;
+    const total = Math.max(0, subtotal - promoDiscount);
+    if (total <= 0) throw new Error("Total transaksi tidak boleh nol. Periksa kembali diskon yang diberikan.");
+    const promotionSnapshot = promoResult
+      ? JSON.stringify({ promoId: promoResult.promoId, promoName: promoResult.promoName, discountAmount: promoResult.discountAmount, label: promoResult.label, appliedLines: promoResult.appliedLines })
+      : null;
+
+    // ── Pembayaran: split (payments[]) atau tunggal (backward compat) ──
+    const payments: { method: PaymentMethod; amount: number }[] = input.payments && input.payments.length > 0
+      ? input.payments
+      : [{ method: input.paymentMethod!, amount: input.amountPaid! }];
+    const isSplit = payments.length > 1;
+    let change = 0;
+    if (isSplit) {
+      const sum = payments.reduce((total, p) => total + p.amount, 0);
+      if (sum !== total) throw new Error("Jumlah pembayaran harus sama persis dengan total transaksi.");
+      for (const p of payments) {
+        if (!Number.isSafeInteger(p.amount) || p.amount <= 0) throw new Error("Nominal pembayaran tidak valid.");
+      }
+    } else {
+      const method = payments[0]!.method;
+      const amount = payments[0]!.amount;
+      if (method === "DEPOSIT" || method === "GIFT_CARD") {
+        // Saldo/nilai non-tunai: harus sama persis, tanpa kembalian.
+        if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("Nominal pembayaran tidak valid.");
+        if (amount !== total) throw new Error("Jumlah pembayaran non-tunai harus sama persis dengan total tagihan.");
+      } else {
+        const single = validateRetailPayment({ method, total, amountPaid: amount });
+        change = single.change;
+      }
+    }
+    const depositAmount = payments.filter((p) => p.method === "DEPOSIT").reduce((sum, p) => sum + p.amount, 0);
+
+    // ── Member: lock row (tenant-scoped), validasi deposit, poin ──
+    let member: { id: string; name: string } | null = null;
+    let pointsEarned = 0;
+    if (input.memberId) {
+      const memberRows = await client.query<{ id: string; name: string; balance: string; points: string }>(
+        `SELECT id, name, "depositBalance"::text AS balance, points::text AS points
+           FROM "Member" WHERE id = $1 AND "tenantId" = $2 FOR UPDATE`,
+        [input.memberId, input.tenantId],
+      );
+      const row = memberRows.rows[0];
+      if (!row) throw new Error("Member tidak ditemukan untuk toko ini.");
+      member = { id: row.id, name: row.name };
+      if (depositAmount > 0 && Number(row.balance) < depositAmount) {
+        throw new Error(`Saldo deposit ${row.name} tidak cukup (tersedia Rp${Number(row.balance).toLocaleString("id-ID")}).`);
+      }
+      pointsEarned = Math.floor(subtotal / 1000) * POINTS_PER_THOUSAND;
+    } else if (depositAmount > 0) {
+      throw new Error("Pembayaran deposit membutuhkan member dipilih.");
+    }
+
     const day = new Date().toISOString().slice(0, 10).replaceAll("-", "");
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`market-invoice:${day}`]);
     const sequence = await client.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM "Sale" WHERE "invoiceNumber" LIKE $1`, [`MKT-${day}-%`]);
     const invoiceNumber = `MKT-${day}-${String(Number(sequence.rows[0]?.count ?? 0) + 1).padStart(4, "0")}`;
     const saleId = randomUUID();
+    const totalLineDiscounts = saleItems.reduce((sum, item) => sum + item.lineDiscount, 0);
+    const totalDiscount = totalLineDiscounts + cartDiscount + promoDiscount;
     await client.query(
-      `INSERT INTO "Sale" (id, "tenantId", "outletId", "shiftId", "cashierId", "invoiceNumber", subtotal, "discountAmount", "taxAmount", total, "paymentMethod", "amountPaid", "changeAmount", status, "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 0, $7, $8::"PaymentMethod", $9, $10, 'COMPLETED', NOW(), NOW())`,
-      [saleId, input.tenantId, shift.outlet_id, input.shiftId, input.userId, invoiceNumber, subtotal, input.paymentMethod, payment.amountPaid, payment.change],
+      `INSERT INTO "Sale" (id, "tenantId", "outletId", "shiftId", "cashierId", "invoiceNumber", subtotal, "discountAmount", "taxAmount", total, "paymentMethod", "amountPaid", "changeAmount", status, "memberId", "promotionSnapshot", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10::"PaymentMethod", $11, $12, 'COMPLETED', $13, $14::jsonb, NOW(), NOW())`,
+      [saleId, input.tenantId, shift.outlet_id, input.shiftId, input.userId, invoiceNumber, subtotal, totalDiscount, total, payments[0]!.method, payments.reduce((sum, p) => sum + p.amount, 0), change, member?.id ?? null, promotionSnapshot],
     );
     for (const item of saleItems) {
       await client.query(
-        `INSERT INTO "SaleItem" (id, "tenantId", "saleId", "productId", "productName", price, qty, "discountAmount", subtotal) VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8)`,
-        [randomUUID(), input.tenantId, saleId, item.productId, item.name, item.price, item.quantity, item.subtotal],
+        `INSERT INTO "SaleItem" (id, "tenantId", "saleId", "productId", "productName", price, qty, "discountAmount", subtotal, "variantLabel", "variantPriceDelta")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [randomUUID(), input.tenantId, saleId, item.productId, item.name, item.price, item.quantity, item.lineDiscount, item.subtotal, item.variantLabel, item.variantPriceDelta],
       );
       if (item.trackStock) {
         try {
@@ -166,7 +387,6 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
             delta: -item.quantity,
             source: "SALE",
             sourceId: saleId,
-            actorId: input.userId,
             idempotencyKey: `sale:${saleId}:${item.productId}`,
           });
         } catch (error) {
@@ -177,12 +397,46 @@ export async function createMarketSale(input: Pick<AccessibleUser, "tenantId" | 
         }
       }
     }
+    if (isSplit) {
+      for (const p of payments) {
+        await client.query(
+          `INSERT INTO "SalePayment" (id, "tenantId", "saleId", method, amount) VALUES ($1, $2, $3, $4::"PaymentMethod", $5)`,
+          [randomUUID(), input.tenantId, saleId, p.method, p.amount],
+        );
+      }
+    }
+    if (depositAmount > 0 && member) {
+      const deducted = await client.query(
+        `UPDATE "Member" SET "depositBalance" = "depositBalance" - $3, "updatedAt" = NOW()
+          WHERE id = $1 AND "tenantId" = $2 AND "depositBalance" >= $3 RETURNING id`,
+        [member.id, input.tenantId, depositAmount],
+      );
+      if (!deducted.rows[0]) throw new Error("Saldo deposit berubah saat transaksi. Coba lagi.");
+      await client.query(
+        `INSERT INTO "AuditLog" (id, "tenantId", "userId", action, description) VALUES ($1, $2, $3, 'MEMBER_DEPOSIT_DEBIT', $4)`,
+        [randomUUID(), input.tenantId, input.userId, `Deposit ${member.name} dipakai Rp${depositAmount.toLocaleString("id-ID")} (${invoiceNumber})`],
+      );
+    }
+    if (pointsEarned > 0 && member) {
+      await client.query(
+        `UPDATE "Member" SET points = points + $3, "updatedAt" = NOW() WHERE id = $1 AND "tenantId" = $2 RETURNING id`,
+        [member.id, input.tenantId, pointsEarned],
+      );
+      await client.query(
+        `INSERT INTO "PointTransaction" (id, "tenantId", "memberId", type, points, "saleId", note) VALUES ($1, $2, $3, 'EARN', $4, $5, $6)`,
+        [randomUUID(), input.tenantId, member.id, pointsEarned, saleId, `Poin dari transaksi ${invoiceNumber}`],
+      );
+      await client.query(
+        `INSERT INTO "AuditLog" (id, "tenantId", "userId", action, description) VALUES ($1, $2, $3, 'MEMBER_POINTS_EARN', $4)`,
+        [randomUUID(), input.tenantId, input.userId, `${member.name} dapat ${pointsEarned} poin (${invoiceNumber})`],
+      );
+    }
     await client.query(
       `INSERT INTO "MarketCheckoutRequest" (id, "tenantId", "requestId", "saleId", "createdAt") VALUES ($1, $2, $3, $4, NOW())`,
       [randomUUID(), input.tenantId, requestId, saleId],
     );
     await client.query("COMMIT");
-    return { id: saleId, invoiceNumber, total: subtotal, change: payment.change, reused: false };
+    return { id: saleId, invoiceNumber, total, change, reused: false };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -291,8 +545,16 @@ export async function getMarketShiftSummary({ tenantId, userId, shiftId }: Pick<
     [tenantId, shiftId],
   );
   const row = totals.rows[0] ?? { cash_sales: "0", cash_transactions: "0", digital_sales: "0", digital_transactions: "0" };
+  const breakdown = await db.query<{ method: string; total: string; count: string }>(
+    `SELECT s."paymentMethod" AS method, SUM(s.total)::text AS total, COUNT(*)::text AS count
+       FROM "Sale" s
+      WHERE s."shiftId" = $1 AND s."tenantId" = $2 AND s.status = 'COMPLETED'
+      GROUP BY s."paymentMethod"
+      ORDER BY SUM(s.total) DESC`,
+    [shiftId, tenantId],
+  );
   const cashSales = Number(row.cash_sales);
-  return { shift, cashSales, cashTransactions: Number(row.cash_transactions), digitalSales: Number(row.digital_sales), digitalTransactions: Number(row.digital_transactions), expectedCash: shift.openingCash + cashSales };
+  return { shift, cashSales, cashTransactions: Number(row.cash_transactions), digitalSales: Number(row.digital_sales), digitalTransactions: Number(row.digital_transactions), expectedCash: shift.openingCash + cashSales, paymentBreakdown: breakdown.rows.map((item) => ({ method: item.method, total: Number(item.total), count: Number(item.count) })) };
 }
 
 export async function closeMarketShift(input: Pick<AccessibleUser, "tenantId" | "userId"> & { shiftId: string; closingCash: number; varianceNote?: string }) {
