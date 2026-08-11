@@ -1,9 +1,61 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useCallback, useEffect, useActionState, useRef, useState } from "react";
 import { applyCountAction, cancelCountAction, createCountAction, type CountState } from "./actions";
 
 const initial: CountState = {};
+
+function CameraModal({ onScan, onClose }: { onScan: (code: string) => void; onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scannerRef = useRef<{ stop: () => Promise<void>; clear?: () => void } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      if (cancelled || !containerRef.current) return;
+      const scanner = new Html5Qrcode("opname-camera");
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
+        (text: string) => {
+          onScan(text);
+          scanner.stop().catch(() => {});
+          onClose();
+        },
+        () => {},
+      );
+    })();
+    return () => {
+      cancelled = true;
+      scannerRef.current?.stop().catch(() => {});
+      try { scannerRef.current?.clear?.(); } catch (err) { console.warn("Failed to clear scanner", err); }
+    };
+  }, [onScan, onClose]);
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,.6)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem",
+      }}
+    >
+      <div style={{
+        background: "#fff", borderRadius: 12, padding: "1rem", width: "100%", maxWidth: 360,
+        display: "flex", flexDirection: "column", gap: ".6rem",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <strong style={{ fontSize: ".85rem" }}>📷 Scan Barcode</strong>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
+        </div>
+        <div id="opname-camera" ref={containerRef} style={{ width: "100%", borderRadius: 8, overflow: "hidden" }} />
+        <p style={{ fontSize: ".7rem", color: "#888", textAlign: "center" }}>Arahkan kamera ke barcode produk</p>
+      </div>
+    </div>
+  );
+}
 
 function Notice({ state }: { state: CountState }) {
   if (state.error) return <p className="market-form-error" role="alert">{state.error}</p>;
@@ -20,16 +72,64 @@ export function CountSheetForm({
 }) {
   const [state, action, pending] = useActionState(createCountAction, initial);
   const [counted, setCounted] = useState<Record<string, string>>({});
+  const [scanInput, setScanInput] = useState("");
+  const [scanFeedback, setScanFeedback] = useState<{ type: "found" | "notfound"; name: string } | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const scanRef = useRef<HTMLInputElement>(null);
+  const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
-  /* Saldo sistem sengaja tidak diperlihatkan sebelum diisi. Kalau angkanya
-     terlihat, orang cenderung mengetik ulang angka itu daripada menghitung —
-     dan opname jadi tidak ada gunanya. Selisih baru muncul setelah diisi. */
+  /* Saldo sistem sengaja tidak diperlihatkan sebelum diisi. */
   const filled = Object.entries(counted).filter(([, value]) => value.trim() !== "");
+  const countedIds = new Set(filled.map(([id]) => id));
+
+  /* Scan barcode → cari produk → fokus input hitung */
+  const handleScan = useCallback((code: string) => {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    const match = products.find(
+      (p) => p.sku?.toLowerCase() === trimmed.toLowerCase() || p.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (match) {
+      setScanFeedback({ type: "found", name: match.name });
+      /* Fokus input hitungan produk yang cocok */
+      setTimeout(() => {
+        const el = inputRefs.current[match.id];
+        if (el) {
+          el.closest("tr")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.focus();
+          el.select();
+        }
+      }, 50);
+    } else {
+      setScanFeedback({ type: "notfound", name: trimmed });
+    }
+    setScanInput("");
+    /* Hilangkan feedback setelah 2.5 detik */
+    setTimeout(() => setScanFeedback(null), 2500);
+  }, [products]);
+
+  /* Auto-focus scan input saat mount */
+  useEffect(() => {
+    scanRef.current?.focus();
+  }, []);
+
+  /* Keyboard shortcut: tekan / untuk focus scan input */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "SELECT") {
+        e.preventDefault();
+        scanRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   return (
     <form action={action} className="receipt-form">
       <Notice state={state} />
 
+      {/* ── Outlet & Catatan ── */}
       <div className="receipt-row">
         <label>
           Outlet
@@ -45,28 +145,108 @@ export function CountSheetForm({
         </label>
       </div>
 
-      <div className="market-table-scroll">
-        <table>
+      {/* ── Scan Barcode ── */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: ".6rem",
+        border: "2px solid var(--market-teal)",
+        borderRadius: ".65rem",
+        padding: ".55rem .75rem",
+        background: "#f0faf8",
+      }}>
+        <span style={{ fontSize: "1.3rem" }}>📷</span>
+        <div style={{ flex: 1 }}>
+          <input
+            ref={scanRef}
+            value={scanInput}
+            onChange={(e) => setScanInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleScan(scanInput);
+              }
+            }}
+            placeholder="Scan barcode atau ketik nama produk lalu tekan Enter"
+            autoComplete="off"
+            style={{
+              width: "100%",
+              border: "0",
+              background: "transparent",
+              fontSize: ".95rem",
+              fontWeight: 700,
+              color: "var(--market-ink)",
+              outline: "none",
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setCameraOpen(true)}
+          style={{
+            flexShrink: 0, height: 36, padding: "0 .7rem", borderRadius: 8,
+            border: "1.5px solid var(--market-teal)", background: "#fff",
+            color: "var(--market-teal)", fontWeight: 700, fontSize: ".75rem",
+            cursor: "pointer", whiteSpace: "nowrap",
+          }}
+        >
+          📷 Kamera
+        </button>
+        {scanFeedback && (
+          <span style={{
+            fontSize: ".78rem",
+            fontWeight: 700,
+            color: scanFeedback.type === "found" ? "var(--market-teal)" : "#ad2d16",
+            whiteSpace: "nowrap",
+          }}>
+            {scanFeedback.type === "found" ? `✓ ${scanFeedback.name}` : `✗ "${scanFeedback.name}" tidak ditemukan`}
+          </span>
+        )}
+      </div>
+
+      {/* ── Progress ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: ".78rem", color: "var(--market-muted)" }}>
+        <span>{filled.length} / {products.length} produk dihitung</span>
+        <span>Tekan <kbd style={{ padding: ".1rem .35rem", border: "1px solid #ccc", borderRadius: ".25rem", fontSize: ".72rem" }}>/</kbd> untuk scan</span>
+      </div>
+
+      {/* ── Tabel Hitung ── */}
+      <div className="market-table-scroll" style={{ border: "1px solid var(--market-line)", borderRadius: ".65rem" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <caption className="sr-only">Lembar hitung stok</caption>
           <thead>
-            <tr>
-              <th scope="col">Produk</th>
-              <th scope="col">Hitungan fisik</th>
-              <th scope="col">Selisih</th>
+            <tr style={{ borderBottom: "2px solid var(--market-line)" }}>
+              <th scope="col" style={{ padding: ".6rem .75rem", textAlign: "left", fontSize: ".72rem", fontWeight: 800, color: "var(--market-muted)", textTransform: "uppercase", letterSpacing: ".04em" }}>Produk</th>
+              <th scope="col" style={{ padding: ".6rem .75rem", textAlign: "center", fontSize: ".72rem", fontWeight: 800, color: "var(--market-muted)", textTransform: "uppercase", letterSpacing: ".04em", width: "120px" }}>Fisik</th>
+              <th scope="col" style={{ padding: ".6rem .75rem", textAlign: "center", fontSize: ".72rem", fontWeight: 800, color: "var(--market-muted)", textTransform: "uppercase", letterSpacing: ".04em", width: "140px" }}>Selisih</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product) => {
               const value = counted[product.id] ?? "";
               const delta = value.trim() === "" ? null : Number(value) - product.systemQty;
+              const isCounted = countedIds.has(product.id);
               return (
-                <tr key={product.id}>
-                  <td>
-                    <strong>{product.name}</strong>
-                    <span className="receipt-meta">{product.sku ?? "tanpa barcode"}</span>
+                <tr
+                  key={product.id}
+                  style={{
+                    borderBottom: "1px solid #f0f0f0",
+                    background: isCounted ? "#f8fdf9" : "transparent",
+                    transition: "background .2s",
+                  }}
+                >
+                  <td style={{ padding: ".6rem .75rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+                      {isCounted && <span style={{ color: "var(--market-teal)", fontSize: ".9rem" }}>✓</span>}
+                      <div>
+                        <strong style={{ fontSize: ".85rem" }}>{product.name}</strong>
+                        <span className="receipt-meta" style={{ fontSize: ".72rem" }}>{product.sku ?? "tanpa barcode"}</span>
+                      </div>
+                    </div>
                   </td>
-                  <td>
+                  <td style={{ padding: ".5rem .75rem", textAlign: "center" }}>
                     <input
+                      ref={(el) => { if (el) inputRefs.current[product.id] = el; }}
                       aria-label={`Hitungan fisik ${product.name}`}
                       min={0}
                       name={`count__${product.id}`}
@@ -76,16 +256,26 @@ export function CountSheetForm({
                       placeholder="—"
                       type="number"
                       value={value}
+                      style={{
+                        width: "72px",
+                        textAlign: "center",
+                        padding: ".4rem .5rem",
+                        border: "1px solid #d5ddd9",
+                        borderRadius: ".45rem",
+                        fontSize: ".9rem",
+                        fontWeight: 700,
+                      }}
                     />
                   </td>
-                  <td>
+                  <td style={{ padding: ".5rem .75rem", textAlign: "center" }}>
                     {delta === null ? (
-                      <span className="count-skip">belum dihitung</span>
+                      <span className="count-skip" style={{ fontSize: ".78rem" }}>—</span>
                     ) : delta === 0 ? (
-                      <span className="count-match">cocok</span>
+                      <span className="count-match" style={{ fontSize: ".78rem" }}>✓ Cocok</span>
                     ) : (
-                      <span className={delta > 0 ? "count-surplus" : "count-shortage"}>
-                        {delta > 0 ? `+${delta}` : delta} (sistem {product.systemQty})
+                      <span className={delta > 0 ? "count-surplus" : "count-shortage"} style={{ fontSize: ".78rem" }}>
+                        {delta > 0 ? `+${delta}` : delta}
+                        <span style={{ color: "var(--market-muted)", marginLeft: ".3rem" }}>(sistem {product.systemQty})</span>
                       </span>
                     )}
                   </td>
@@ -96,9 +286,16 @@ export function CountSheetForm({
         </table>
       </div>
 
-      <button className="market-checkout-button" disabled={pending || filled.length === 0} type="submit">
+      <button className="market-checkout-button" disabled={pending || filled.length === 0} type="submit" style={{ marginTop: ".5rem" }}>
         {pending ? "Menyimpan…" : `Simpan draft (${filled.length} produk dihitung)`}
       </button>
+
+      {cameraOpen && (
+        <CameraModal
+          onScan={handleScan}
+          onClose={() => setCameraOpen(false)}
+        />
+      )}
     </form>
   );
 }

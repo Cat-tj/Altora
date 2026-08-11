@@ -1,0 +1,27 @@
+{
+  "slice": "database-contracts",
+  "title": "Market and Resto PostgreSQL migrations",
+  "status": "passed",
+  "startedAt": "2026-08-10T16:24:36.107Z",
+  "commands": [
+    {
+      "command": "env DATABASE_URL=postgresql://altora:altora@127.0.0.1:5432/altora_market_ci npm run db:migrate --workspace=@altora/market",
+      "startedAt": "2026-08-10T16:24:36.107Z",
+      "finishedAt": "2026-08-10T16:24:36.433Z",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "\n> @altora/market@0.2.6 db:migrate\n> node scripts/ensure-market-schema.mjs\n\n✓ 0001_market_baseline.sql\n✓ 0002_stock_ledger_and_receiving.sql\n✓ 0003_returns_and_stock_count.sql\n✓ 0004_market_extended_features.sql\n✓ 0005_market_and_resto_complete_suite.sql\n✓ 0006_fix_production_schema_columns.sql\n✓ 0007_master_supabase_schema_alignment.sql\n✓ 0008_align_promo_and_attendance_columns.sql\n✓ 0009_pos_variants_and_split_payment.sql\n✓ 0010_stock_transfer_ledger_integrity.sql\n✓ 0011_prod_schema_alignment.sql\nSchema Market siap (11 migrasi).\n",
+      "stderr": ""
+    },
+    {
+      "command": "env DATABASE_URL=postgresql://altora:altora@127.0.0.1:5432/altora_resto_dev npm run db:migrate --workspace=@altora/resto",
+      "startedAt": "2026-08-10T16:24:36.433Z",
+      "finishedAt": "2026-08-10T16:24:36.680Z",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "\n> @altora/resto@0.1.0 db:migrate\n> node scripts/ensure-resto-schema.mjs\n\n✓ 0001_resto_baseline.sql\n✓ 0002_notifications.sql\nSchema Resto siap (2 migrasi).\n",
+      "stderr": ""
+    }
+  ],
+  "finishedAt": "2026-08-10T16:24:36.680Z"
+}

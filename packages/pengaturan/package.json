@@ -1,0 +1,34 @@
+{
+  "name": "@altora/pengaturan",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./resto-settings": {
+      "types": "./dist/resto-settings.d.ts",
+      "import": "./dist/resto-settings.js",
+      "default": "./dist/resto-settings.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js",
+      "default": "./dist/router.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@altora/db": "*",
+    "@trpc/server": "^11.1.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "typescript": "5.9.2"
+  }
+}

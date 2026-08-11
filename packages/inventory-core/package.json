@@ -1,0 +1,16 @@
+{
+  "name": "@altora/inventory-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "check-types": "node --check src/*.js",
+    "test": "node --test src/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

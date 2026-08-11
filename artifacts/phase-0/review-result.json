@@ -1,0 +1,12 @@
+{
+  "status": "blocked",
+  "project": "Raphael",
+  "phase_id": "phase-00-baseline",
+  "iteration": 1,
+  "verdict": "BLOCKED",
+  "reason": "ChatGPT Web tidak terautentikasi. Sesi browser belum login. Skill tidak boleh meminta credential user.",
+  "findings": [],
+  "missing_evidence": ["ChatGPT Web authenticated session"],
+  "response_path": null,
+  "result_path": "artifacts/phase-0/review-result.json"
+}

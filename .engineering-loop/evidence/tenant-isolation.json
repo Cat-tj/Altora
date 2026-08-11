@@ -1,0 +1,18 @@
+{
+  "slice": "tenant-isolation",
+  "title": "Tenant isolation contracts",
+  "status": "passed",
+  "startedAt": "2026-08-10T16:24:35.945Z",
+  "commands": [
+    {
+      "command": "node --test packages/db/src/tenant.test.mjs",
+      "startedAt": "2026-08-10T16:24:35.945Z",
+      "finishedAt": "2026-08-10T16:24:36.106Z",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "✔ requireTenant asserts tenantId and userId are present (0.866584ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 82.941084\n",
+      "stderr": ""
+    }
+  ],
+  "finishedAt": "2026-08-10T16:24:36.106Z"
+}

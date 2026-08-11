@@ -14,7 +14,7 @@ import type { PoolClient } from "pg";
  * dari peristiwa yang menyebabkannya.
  */
 
-export type StockLedgerSource = "OPENING" | "SALE" | "SALE_VOID" | "RETURN" | "RECEIPT" | "ADJUSTMENT";
+export type StockLedgerSource = "OPENING" | "SALE" | "SALE_VOID" | "RETURN" | "RECEIPT" | "ADJUSTMENT" | "TRANSFER_OUT" | "TRANSFER_IN";
 
 export type StockMovement = {
   tenantId: string;

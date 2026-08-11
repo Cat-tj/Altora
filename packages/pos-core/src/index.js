@@ -1,2 +1,8 @@
 export { calculateCheckout } from "./checkout.js";
-export { normalizeCheckoutRequestId, normalizeRetailCart, validateRetailPayment } from "./market-sale.js";
+export {
+  normalizeCheckoutRequestId,
+  normalizeCart,
+  normalizeRetailCart,
+  validatePayment,
+  validateRetailPayment,
+} from "./market-sale.js";

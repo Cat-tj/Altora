@@ -28,4 +28,17 @@ export const restoNav: ShellNavGroup[] = [
       { href: "/bahan", label: "Bahan Baku", roles: ["OWNER", "MANAGER"] },
     ],
   },
+  {
+    label: "Laporan",
+    items: [
+      { href: "/laporan", label: "Analytics & Laporan", roles: ["OWNER", "MANAGER"] },
+    ],
+  },
+  {
+    label: "Pengaturan",
+    items: [
+      { href: "/pengaturan", label: "Pengaturan Resto", roles: ["OWNER", "MANAGER"] },
+      { href: "/notifikasi", label: "Notifikasi", roles: ["OWNER", "MANAGER", "STAFF"] },
+    ],
+  },
 ];

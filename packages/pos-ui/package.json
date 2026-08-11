@@ -1,0 +1,59 @@
+{
+  "name": "@altora/pos-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./pos-shell": {
+      "types": "./dist/pos-shell.d.ts",
+      "import": "./dist/pos-shell.js",
+      "default": "./dist/pos-shell.js"
+    },
+    "./cart-panel": {
+      "types": "./dist/cart-panel.d.ts",
+      "import": "./dist/cart-panel.js",
+      "default": "./dist/cart-panel.js"
+    },
+    "./quantity-control": {
+      "types": "./dist/quantity-control.d.ts",
+      "import": "./dist/quantity-control.js",
+      "default": "./dist/quantity-control.js"
+    },
+    "./scanner-dialog": {
+      "types": "./dist/scanner-dialog.d.ts",
+      "import": "./dist/scanner-dialog.js",
+      "default": "./dist/scanner-dialog.js"
+    },
+    "./empty-cart": {
+      "types": "./dist/empty-cart.d.ts",
+      "import": "./dist/empty-cart.js",
+      "default": "./dist/empty-cart.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@altora/pos-core": "*",
+    "@altora/ui": "*",
+    "lucide-react": "^0.475.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.2"
+  }
+}

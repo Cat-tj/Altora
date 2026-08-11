@@ -12,19 +12,24 @@
     "db:migrate": "node scripts/ensure-market-schema.mjs",
     "db:seed": "node scripts/seed-market.mjs",
     "db:setup": "npm run db:migrate && npm run db:seed",
-    "test": "node --test lib/*.test.mjs",
+    "test": "node --import tsx --test lib/*.test.mjs",
     "test:integration": "tsx --test lib/*.integration.test.mjs"
   },
   "dependencies": {
     "@altora/core": "*",
     "@altora/market-pos": "*",
     "@altora/ui": "*",
+    "@tailwindcss/postcss": "^4.3.3",
     "bcryptjs": "^3.0.3",
+    "html5-qrcode": "^2.3.8",
+    "jsqr": "^1.4.0",
     "next": "16.2.12",
     "next-auth": "5.0.0-beta.32",
     "pg": "^8.16.3",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "tailwindcss": "^4.3.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
