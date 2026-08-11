@@ -11,6 +11,7 @@ import { MemberPicker, type MemberOption } from "./member-picker";
 import { useToast, Toast } from "./toast";
 import { XIcon } from "./icons";
 import { createMarketSaleAction } from "./actions";
+import { ContinuousBarcodeScanner, type BarcodeScanResult } from "./continuous-barcode-scanner";
 
 export type PosProduct = {
   id: string;
@@ -54,6 +55,7 @@ export function MarketPosScreen({
   const [cartDiscount, setCartDiscount] = useState(0);
   const [showCartSheet, setShowCartSheet] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [variantPickerProduct, setVariantPickerProduct] = useState<PosProduct | null>(null);
   const [posMember, setPosMember] = useState<MemberOption | null>(null);
   const [showMemberPicker, setShowMemberPicker] = useState(false);
@@ -162,6 +164,17 @@ export function MarketPosScreen({
     else showToast(`Barcode "${search.trim()}" tidak ditemukan`);
   }
 
+  function handleCameraBarcode(barcode: string): BarcodeScanResult {
+    const product = products.find((candidate) => candidate.sku?.trim().toLowerCase() === barcode.toLowerCase());
+    if (!product) return { code: barcode, accepted: false, message: "Barcode belum terdaftar" };
+    const qtyInCart = cart.filter((line) => line.productId === product.id).reduce((sum, line) => sum + line.qty, 0);
+    if (product.trackStock && (product.stock <= 0 || qtyInCart >= product.stock)) {
+      return { code: barcode, accepted: false, message: `${product.name} tidak dapat ditambah — stok mencapai batas` };
+    }
+    addToCart(product);
+    return { code: barcode, accepted: true, message: product.name };
+  }
+
   async function checkout(payments: { method: PaymentMethod; amount: number }[], memberId?: string) {
     setResult({});
     const single = payments.length === 1;
@@ -212,6 +225,7 @@ export function MarketPosScreen({
           />
         </div>
         <div className="pos-actions">
+          <button type="button" className="pos-btn" onClick={() => setShowBarcodeScanner(true)}>Scan Kamera</button>
           <Link href="/kasir/riwayat" className="pos-btn">Riwayat</Link>
           <Link href={`/kasir/tutup/${shift.id}`} className="pos-btn pos-btn-primary">Tutup Shift</Link>
         </div>
@@ -314,6 +328,7 @@ export function MarketPosScreen({
       )}
 
       {/* Modals */}
+      {showBarcodeScanner && <ContinuousBarcodeScanner onScan={handleCameraBarcode} onClose={() => setShowBarcodeScanner(false)} />}
       {showPayment && (
         <PaymentSheet
           total={total}
